@@ -1,0 +1,14 @@
+{
+  "meeting transcript 1.md.txt": {
+    "mtime": 1789481839.4023182,
+    "seen": 1789643635.538855,
+    "ast_hash": "d24cbd6a01fc41663eefe5417ad4d4ab",
+    "semantic_hash": "d24cbd6a01fc41663eefe5417ad4d4ab"
+  },
+  "meeting transcript 2.md.txt": {
+    "mtime": 1789481903.7934656,
+    "seen": 1789643635.538855,
+    "ast_hash": "02103f1f03d3302a8cf7127aec0a2012",
+    "semantic_hash": "02103f1f03d3302a8cf7127aec0a2012"
+  }
+}
