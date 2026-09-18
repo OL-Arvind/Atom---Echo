@@ -1,8 +1,13 @@
 import Link from "next/link";
-import { Users, ArrowUpRight, Shield, CheckCircle2, Clock, Sparkles } from "lucide-react";
-import { INITIAL_CLIENTS, INITIAL_CONTENT_ITEMS, INITIAL_TOOL_EXPENSES } from "@/lib/data/seed-data";
+import { Users, ArrowUpRight, CheckCircle2, Clock, Sparkles } from "lucide-react";
+import { getClientsFromDb } from "@/lib/data/supabase-queries";
+import { INITIAL_CONTENT_ITEMS, INITIAL_TOOL_EXPENSES } from "@/lib/data/seed-data";
 
-export default function ClientsDirectoryPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ClientsDirectoryPage() {
+  const clients = await getClientsFromDb();
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 animate-subtle-fade">
       {/* Header */}
@@ -30,7 +35,7 @@ export default function ClientsDirectoryPage() {
 
       {/* Grid of Client Workspace Cards */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2">
-        {INITIAL_CLIENTS.map((client) => {
+        {clients.map((client: any) => {
           const clientPosts = INITIAL_CONTENT_ITEMS.filter((p) => p.client_id === client.id);
           const pendingReviewCount = clientPosts.filter((p) => p.status === "client_review").length;
           const clientTools = INITIAL_TOOL_EXPENSES.filter((t) => t.client_id === client.id);
@@ -78,7 +83,7 @@ export default function ClientsDirectoryPage() {
                     Active Service Engagements
                   </span>
                   <div className="space-y-1.5">
-                    {client.engagements.map((eng) => (
+                    {(client.engagements || []).map((eng: any) => (
                       <div key={eng.id} className="flex items-center justify-between text-xs">
                         <span className="font-medium text-foreground">
                           {eng.service_type === "linkedin_branding"
@@ -115,19 +120,17 @@ export default function ClientsDirectoryPage() {
                     </span>
                   )}
 
-                  {client.context && (
-                    <span className="flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1 text-[11px] font-semibold text-foreground-muted border border-border-subtle">
-                      <Sparkles className="h-3 w-3 text-brand" />
-                      Context Vault Loaded
-                    </span>
-                  )}
+                  <span className="flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1 text-[11px] font-semibold text-foreground-muted border border-border-subtle">
+                    <Sparkles className="h-3 w-3 text-brand" />
+                    Live Supabase Record
+                  </span>
                 </div>
               </div>
 
               {/* Action Bar */}
               <div className="mt-5 border-t border-border-subtle pt-4 flex items-center justify-between">
                 <span className="text-[11px] text-foreground-muted">
-                  Anchor: Day {client.engagements[0]?.billing_anchor_day || 1} of month
+                  Anchor: Day {client.engagements?.[0]?.billing_anchor_day || 1} of month
                 </span>
                 <Link
                   href={`/clients/${client.id}`}
