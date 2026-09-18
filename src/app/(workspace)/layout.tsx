@@ -7,7 +7,7 @@ export default function WorkspaceLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-[100dvh] bg-black text-white">
       <Sidebar />
       <div className="pl-64">
         <TopNav />
