@@ -7,7 +7,7 @@ export function TopNav() {
   const [quickActionSuccess, setQuickActionSuccess] = useState<string | null>(null);
 
   const handleQuickAdd = () => {
-    setQuickActionSuccess("New Post Draft initialized for Chetan Ahuja");
+    setQuickActionSuccess("New Content Draft ready in editor");
     setTimeout(() => setQuickActionSuccess(null), 3000);
   };
 

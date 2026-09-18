@@ -133,35 +133,23 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Client Fast-Switcher */}
-        <div className="mt-8">
+        {/* Client Management Shortcut */}
+        <div className="mt-8 border-t border-border-subtle pt-4">
           <div className="mb-2 flex items-center justify-between px-3 text-[11px] font-semibold uppercase tracking-wider text-foreground-subtle">
-            <span>Pinned Clients</span>
-            <Link href="/clients" className="text-[10px] text-brand hover:underline">
-              View All
+            <span>Client Workspaces</span>
+            <Link href="/clients" className="text-[10px] text-brand hover:underline font-bold">
+              Directory
             </Link>
           </div>
-          <div className="space-y-1">
+          <div className="px-3 py-2 rounded-lg bg-canvas/60 border border-border-subtle text-xs text-foreground-muted">
+            <p className="text-[11px] leading-relaxed">
+              Manage founder retainers, content pipelines, and tool subscriptions.
+            </p>
             <Link
-              href="/clients/client-chetan"
-              className="flex items-center justify-between rounded-md px-3 py-1.5 text-xs text-foreground-muted hover:bg-canvas hover:text-foreground"
+              href="/clients"
+              className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:underline"
             >
-              <span className="font-medium text-foreground">Debtworks</span>
-              <span className="h-2 w-2 rounded-full bg-status-rose animate-pulse" title="Needs attention" />
-            </Link>
-            <Link
-              href="/clients/client-florian"
-              className="flex items-center justify-between rounded-md px-3 py-1.5 text-xs text-foreground-muted hover:bg-canvas hover:text-foreground"
-            >
-              <span className="font-medium text-foreground">Florian Health</span>
-              <span className="h-2 w-2 rounded-full bg-status-emerald" title="Normal" />
-            </Link>
-            <Link
-              href="/clients/client-orbitxpay"
-              className="flex items-center justify-between rounded-md px-3 py-1.5 text-xs text-foreground-muted hover:bg-canvas hover:text-foreground"
-            >
-              <span className="font-medium text-foreground">OrbitXPay</span>
-              <span className="h-2 w-2 rounded-full bg-status-amber" title="Launch tomorrow" />
+              <span>Go to Client Workspaces &rarr;</span>
             </Link>
           </div>
         </div>
