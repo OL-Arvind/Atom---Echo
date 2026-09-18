@@ -1,32 +1,34 @@
 # Atom & Echo OS — BaseEngine Project
 
-This repository is the working source for the Atom & Echo operating-system deployment by BaseWorks.
+Custom Operating System engineered for **Atom & Echo**, deploying the **BaseEngine** productized architecture by BaseWorks.
 
-## Documentation hierarchy
+---
+
+## 1. Documentation Hierarchy & Source of Truth
 
 ```
-00_REFERENCE  → raw evidence / historical material
-00_PROJECT    → project truth and durable decisions
-01_DISCOVERY  → what the business does today
-02_BLUEPRINT  → what the OS should be
-03_PHASES     → what we build now/later
-04_UX         → how people use it
-05_TECH       → how it is implemented
-06_BUILD      → what is currently built
-07_DECISIONS  → detailed ADRs
-AGENTS.md     → instructions for AI agents
+00_PROJECT    → System truth, evidence hierarchy, and architecture decision records (ADRs)
+01_DISCOVERY  → Audit of live Notion, Google Sheets, friction points, and user personas
+02_BLUEPRINT  → Relational domain model, state machines, event catalog, and security model
+03_PHASES     → Phase 1 core deliverables, Phase 2 roadmap, and explicit anti-goals (Do Not Build)
+04_UX         → Information architecture, screen wireframes, operator UX, and client mobile PWA
+05_TECH       → Modular monolith architecture, authorization model, database schema, and integrations
+06_BUILD      → Vertical slice build plan, acceptance criteria gates, current build state, and tasks
+07_DECISIONS  → Architecture decision records index
+08_REFERENCE  → Meeting transcripts and discovery session records
+09_LEGACY     → Historical proposals, charter documents, and early SOW reference files
+AGENTS.md     → Mandatory rules, prime directives, and constraints for all AI coding agents
 ```
 
-## Agent reading order
+---
 
-AGENTS.md → SOURCE_OF_TRUTH → PROJECT_OVERVIEW → DECISIONS → relevant blueprint/UX/tech docs → CURRENT_STATE → task.
+## 2. Core Architectural Principles
 
-## Current status
-
-The September 18, 2026 client-facing Phase 1 Blueprint is the current proposed scope baseline pending client feedback. Raw client evidence remains authoritative when describing current reality.
-
-The application is not assumed to be implemented until CURRENT_STATE says so.
-
-## Core principle
-
-> The user performs the meaningful work. The OS performs the bookkeeping.
+1. **"Manual by Exception"**:
+   The user should not be maintaining an operating system. The operating system must maintain itself from the work the user is already doing.
+2. **Never Recreate a Notion Clone**:
+   No raw tables with 500 rows to manually edit. Atom & Echo OS is an **attention surface** answering *"What needs attention right now, why, and what happens next?"*
+3. **Single Source of Truth**:
+   The calendar is a temporal projection of operational data (content dates, campaign dates, billing anchors), NOT a database.
+4. **Zero-Login Client Review**:
+   High-ticket founder clients approve content via tokenized 1-click mobile links in under 3 seconds without logins or passwords.

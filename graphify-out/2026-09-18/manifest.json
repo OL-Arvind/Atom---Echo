@@ -1,0 +1,56 @@
+{
+  "meeting transcript 1.md.txt": {
+    "mtime": 1789481839.4023182,
+    "seen": 1789643635.538855,
+    "ast_hash": "d24cbd6a01fc41663eefe5417ad4d4ab",
+    "semantic_hash": "d24cbd6a01fc41663eefe5417ad4d4ab"
+  },
+  "meeting transcript 2.md.txt": {
+    "mtime": 1789481903.7934656,
+    "seen": 1789643635.538855,
+    "ast_hash": "02103f1f03d3302a8cf7127aec0a2012",
+    "semantic_hash": "02103f1f03d3302a8cf7127aec0a2012"
+  },
+  "generate_atom_echo_charter_pdf.py": {
+    "mtime": 1789653631.293016,
+    "seen": 1789657255.8800967,
+    "ast_hash": "222319412a9c3a1f538748f6badd822c",
+    "semantic_hash": ""
+  },
+  "Atom_Echo_BaseEngine_Charter.md": {
+    "mtime": 1789653610.6225946,
+    "seen": 1789657255.8800967,
+    "ast_hash": "7c3175144c89ba9f961f60aac83a5bf9",
+    "semantic_hash": ""
+  },
+  "Debtworks-Proposal-SOW.md": {
+    "mtime": 1786655430.1301005,
+    "seen": 1789657255.8800967,
+    "ast_hash": "8852b2060248e03fe83cb28761f1d5ed",
+    "semantic_hash": ""
+  },
+  "PROJECT_CONTEXT.md": {
+    "mtime": 1789651160.4210565,
+    "seen": 1789657255.8800967,
+    "ast_hash": "98a0f4c495027e7a17b2463d821b0808",
+    "semantic_hash": ""
+  },
+  "Atom_Echo_BaseEngine_Charter.pdf": {
+    "mtime": 1789653639.3199534,
+    "seen": 1789657255.8800967,
+    "ast_hash": "6bc300abfe5bcd40874256b8109b395e",
+    "semantic_hash": ""
+  },
+  "Debtworks_Proposal_SOW.pdf": {
+    "mtime": 1786656283.774043,
+    "seen": 1789657255.8800967,
+    "ast_hash": "733c6bfb77e01a37b4f2849ee89ba18d",
+    "semantic_hash": ""
+  },
+  "Define-Agency-OS-Phases.md": {
+    "mtime": 1789672428.4021552,
+    "seen": 1789673629.0754533,
+    "ast_hash": "d2eafd66348651ee37adba386ab51d18",
+    "semantic_hash": ""
+  }
+}

@@ -1,49 +1,37 @@
-# Database Schema — Logical Model
+# Database Schema — Logical Model & Data Architecture
 
-This is a logical model, not the final migration.
+This document describes the relational data architecture for Atom & Echo OS. The canonical PostgreSQL DDL migration script is maintained in [`05_TECH/DATABASE_SCHEMA.sql`](file:///d:/BaseWorks/Atom%20&%20Echo/05_TECH/DATABASE_SCHEMA.sql).
 
-Core tables:
+---
 
-- `users`, `roles`, `memberships`
-- `clients`
-- `engagements`
-- `content_items`
-- `content_reviews`
-- `client_requests`
-- `tasks`
-- `meetings`
-- `proposed_actions`
-- `context_items`
-- `decisions`
-- `tool_subscriptions`
-- `expenses`
-- `invoices`, `invoice_lines`
-- `credentials`
-- `activity_events`
+## 1. Core Entity Relational Diagram
 
-Important relationships:
-
-```text
-Client 1—N Engagement
-Engagement 1—N Content
-Content 1—N Review
-Client 1—N Request
-Request 1—N Task
-Engagement 1—N Meeting
-Meeting 1—N ProposedAction
-Client 1—N ToolSubscription
-ToolSubscription 1—N Expense
-Client 1—N Invoice
-Client 1—N Credential
-Any important entity 1—N ActivityEvent
+```mermaid
+erDiagram
+    USERS ||--o{ MEMBERSHIPS : has
+    CLIENTS ||--o{ ENGAGEMENTS : contracts
+    CLIENTS ||--o{ CLIENT_CONTEXTS : defines
+    CLIENTS ||--o{ TOOL_EXPENSES : incurs
+    CLIENTS ||--o{ CREDENTIALS : stores
+    CLIENTS ||--o{ INVOICES : bills
+    ENGAGEMENTS ||--o{ CONTENT_ITEMS : produces
+    CONTENT_ITEMS ||--o{ CONTENT_REVIEWS : undergoes
+    CONTENT_ITEMS ||--o{ CONTENT_FEEDBACK : receives
+    CLIENTS ||--o{ CLIENT_REQUESTS : submits
+    CLIENT_REQUESTS ||--o{ TASKS : spawns
+    INVOICES ||--o{ INVOICE_LINES : contains
+    CREDENTIALS ||--o{ CREDENTIAL_AUDIT_LOGS : tracks
 ```
 
-Core constraints:
-- foreign keys;
-- unique provider event IDs/idempotency keys;
-- lifecycle timestamps;
-- client/engagement scoping;
-- no plaintext secrets;
-- no secrets in metadata/logs.
+---
 
-Do not treat this as permission to implement every table immediately. Build the smallest schema needed by the current vertical slice.
+## 2. Core Relational Constraints
+
+1. **Foreign Key Integrity**:
+   All child records (engagements, content items, tool expenses, credentials) are bound to a valid `client_id` with `ON DELETE CASCADE` or `RESTRICT` rules.
+2. **Idempotency Keys**:
+   External inbound event records store provider event IDs to prevent duplicate actions or double billing.
+3. **No Plaintext Secrets**:
+   The `credentials` table encrypts password and API token payloads at rest using AES-256-GCM.
+4. **Row-Level Security (RLS)**:
+   All queries validate tenant and role authorization in Supabase before returning rows.

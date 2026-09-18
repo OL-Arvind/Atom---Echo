@@ -1,80 +1,79 @@
-# Atom & Echo OS — AI Agent Instructions
+# Atom & Echo OS — Agent Instructions & Operating Rules
 
-## Mission
-Build a custom operating system around how Atom & Echo actually operates. Do not build a Notion clone, generic agency SaaS, isolated CRUD modules, or another maintenance burden.
+**Target System**: Custom Operating System for Atom & Echo  
+**Product Architecture**: BaseEngine Productized Operating System (by BaseWorks)  
+**Primary Users**: Sudeesh D S (Founder/Admin), Nikhil (Execution Team), High-tier Founder Clients (Reviewers)  
 
-## Mandatory reading
-Before coding, read:
-1. 00_PROJECT/SOURCE_OF_TRUTH.md
-2. 00_PROJECT/PROJECT_OVERVIEW.md
-3. 00_PROJECT/DECISIONS.md
-4. relevant 02_BLUEPRINT documents
-5. relevant 04_UX documents
-6. relevant 05_TECH documents
-7. 06_BUILD/CURRENT_STATE.md
-8. 06_BUILD/ACCEPTANCE_CRITERIA.md
+---
 
-## Product laws
+## 1. Prime Directives for All AI Coding Agents
 
-### Manual by exception
-Prefer meaningful action → event → derived state → automation → next action.
+Before touching, modifying, or creating any code in this repository, you MUST follow this sequence:
 
-### One source of truth
-Do not duplicate operational state. Calendar is a projection of dated records, not a second content database.
+1. **Read [`00_PROJECT/SOURCE_OF_TRUTH.md`](file:///d:/BaseWorks/Atom%20&%20Echo/00_PROJECT/SOURCE_OF_TRUTH.md)** to understand which documents govern decisions.
+2. **Read [`06_BUILD/CURRENT_STATE.md`](file:///d:/BaseWorks/Atom%20&%20Echo/06_BUILD/CURRENT_STATE.md)** to know the active build slice, what is done, what is next, and what is currently blocked.
+3. **Read the relevant domain spec** in [`02_BLUEPRINT/`](file:///d:/BaseWorks/Atom%20&%20Echo/02_BLUEPRINT/) (`DOMAIN_MODEL.md`, `STATE_MACHINES.md`, `EVENT_MODEL.md`, `AUTOMATION_RULES.md`).
+4. **Check [`00_PROJECT/DECISIONS.md`](file:///d:/BaseWorks/Atom%20&%20Echo/00_PROJECT/DECISIONS.md)** for settled Architecture Decision Records (ADRs). **Never reopen settled decisions.**
+5. **Read [`06_BUILD/ACCEPTANCE_CRITERIA.md`](file:///d:/BaseWorks/Atom%20&%20Echo/06_BUILD/ACCEPTANCE_CRITERIA.md)** to ensure your changes satisfy the objective acceptance gates.
 
-### Action over storage
-The command center answers “what needs attention now?” Every actionable item should have a next action.
+---
 
-### Context compounds
-Meetings, decisions, client preferences, approved/rejected work and history become reusable context.
+## 2. Core Architectural Laws: What We Refuse to Do
 
-### Separate experiences
-Internal operator UI and external client UI are different surfaces.
+### LAW 1: "Manual by Exception"
+> **The user should not be maintaining the operating system. The operating system must maintain itself from the work the user is already doing.**
 
-### Integrate before rebuilding
-Keep external systems that already do their job; build the operational layer around them.
+* **FORBIDDEN**: Creating forms where an operator has to update 5 separate status fields, copy dates across tables, and manually create reminder tasks.
+* **MANDATORY**: Prefer `EVENT → STATE MACHINE TRANSITION → DOWNSTREAM AUTOMATION`. When an event occurs (e.g. client approves a post in the mobile portal), the system automatically updates the content state, confirms calendar scheduling, generates publishing tasks, logs an audit trail, and notifies the team.
 
-### Security is architectural
-Credentials, tokens and API keys are sensitive. Never store plaintext secrets, put secrets in source control, expose provider keys to the browser, or log secret values.
+### LAW 2: Never Recreate a Notion Clone
+* Do **NOT** create a sidebar with 15 database tables (Clients, Posts, Invoices, Tasks, Passwords) where users navigate raw rows and columns.
+* Build an **attention surface**. The Command Center answers: *"What requires attention right now, why, who is waiting, and what happens next?"*
+* The Calendar is a **temporal projection** of operational data (content dates, campaign dates, meetings, renewals), NOT an input database where users type entries.
 
-## Requirement discipline
-Label reasoning:
-- FACT — directly supported by evidence
-- DECISION — approved system decision
-- PROPOSAL — BaseWorks recommendation
-- ASSUMPTION — temporary working assumption
-- UNKNOWN — evidence insufficient
+### LAW 3: Single Source of Truth
+* A client is not a page; an engagement is not a tag; content is an operational work object passing through a state machine.
+* Do not introduce duplicate stores or split state across multiple components.
 
-Never silently convert assumptions into requirements.
+---
 
-## Before implementing a feature
-Answer:
-1. What real workflow is this?
-2. Which entity owns the state?
-3. What event starts/changes it?
-4. What state transition occurs?
-5. What should happen automatically?
-6. What remains manual?
-7. What history is logged?
-8. What is the next action?
-9. Which existing decision constrains it?
+## 3. Seven Questions Mandatory Before Writing Code
 
-If the docs do not answer these, flag the ambiguity instead of inventing behaviour.
+Before generating any component, API route, or database migration, explicitly verify:
+1. **What real-world problem does this solve?** (Matches an identified friction point in [`01_DISCOVERY/FRICTION_MAP.md`](file:///d:/BaseWorks/Atom%20&%20Echo/01_DISCOVERY/FRICTION_MAP.md))
+2. **What domain entity does it belong to?** (Mapped in [`02_BLUEPRINT/DOMAIN_MODEL.md`](file:///d:/BaseWorks/Atom%20&%20Echo/02_BLUEPRINT/DOMAIN_MODEL.md))
+3. **What state machine controls it?** (Follows [`02_BLUEPRINT/STATE_MACHINES.md`](file:///d:/BaseWorks/Atom%20&%20Echo/02_BLUEPRINT/STATE_MACHINES.md))
+4. **What event triggers it?** (Defined in [`02_BLUEPRINT/EVENT_MODEL.md`](file:///d:/BaseWorks/Atom%20&%20Echo/02_BLUEPRINT/EVENT_MODEL.md))
+5. **What happens automatically?** (Defined in [`02_BLUEPRINT/AUTOMATION_RULES.md`](file:///d:/BaseWorks/Atom%20&%20Echo/02_BLUEPRINT/AUTOMATION_RULES.md))
+6. **What should remain manual?** (Never automate without human confirmation on destructive or sensitive actions like billing changes, external messaging, or credential disclosure)
+7. **What other parts of the system are affected?** (Calendar projection, Command Center attention items, client activity stream)
 
-## Scope protection
-Check 03_PHASES/PHASE_1.md and DO_NOT_BUILD.md before adding functionality. Do not pull Phase 2 ideas into V1 because they sound useful.
+---
 
-## Build discipline
-- Work in vertical slices.
-- Keep domain logic separate from UI.
-- Keep provider integrations behind adapters.
-- Use migrations for schema changes.
-- Test state transitions and automation.
-- Do not add dependencies without reason.
-- Do not refactor unrelated code.
-- Avoid microservices unless demonstrated necessary.
+## 4. Design & Performance Standards
 
-## Context maintenance
-After meaningful work update CURRENT_STATE.md. If a durable product/architecture decision changes, update 00_PROJECT/DECISIONS.md or create an ADR.
+All web application code built for Atom & Echo must follow BaseWorks premium design principles:
+* **Rich Aesthetics**: Dark mode first (`#0F0F11`, `#18181B`), BaseWorks deep orange accent (`#d13202`), neo-brutalist border accents, high contrast, clean typography (Inter / Outfit).
+* **Speed & Performance**: Zero layout shifts (CLS < 0.05), instant optimistic UI updates on actions (approving, completing, marking paid), lightweight bundle sizes.
+* **Separation of Concerns**:
+  * **Internal Operator UI**: Rich, dense, keyboard-accessible, desktop-first command surface.
+  * **External Client UI**: Ultra-lightweight, zero-login, tokenized Mobile PWA (loads in <1s on mobile 4G, 1-click Approve or Comment).
 
-The repository must remain understandable to a new agent with no chat history.
+---
+
+## 5. Conflict Resolution Protocol
+
+If you discover a conflict between requirements:
+* **DO NOT** guess or silently invent requirements.
+* Follow the rank in [`00_PROJECT/SOURCE_OF_TRUTH.md`](file:///d:/BaseWorks/Atom%20&%20Echo/00_PROJECT/SOURCE_OF_TRUTH.md).
+* If the conflict involves scope or architecture, check [`00_PROJECT/DECISIONS.md`](file:///d:/BaseWorks/Atom%20&%20Echo/00_PROJECT/DECISIONS.md) or alert the user.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

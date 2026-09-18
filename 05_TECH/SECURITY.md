@@ -1,27 +1,11 @@
-# Security Architecture
+# Security Architecture: Atom & Echo OS
 
-## Credential vault
-Credential secrets are encrypted before persistent storage using an application-controlled encryption design. Database authorization is not a substitute for secret-value encryption.
+The complete cryptographic specification, AES-256-GCM Credential Vault design, and tokenized review security model are documented in [`02_BLUEPRINT/SECURITY_MODEL.md`](file:///d:/BaseWorks/Atom%20&%20Echo/02_BLUEPRINT/SECURITY_MODEL.md).
 
-## Access
-Authorization considers identity, role, client/engagement scope, action and sensitivity.
+---
 
-## Reveal/copy
-1. verify permission;
-2. perform step-up/recent-auth check where appropriate;
-3. decrypt server-side;
-4. return only required value;
-5. audit action without secret value;
-6. prevent logging/caching of secret.
-
-## Keys
-Encryption keys and provider secrets live in managed runtime secret configuration, never source control or browser bundles.
-
-## Portal
-Review tokens must be scoped/revocable and not guessable.
-
-## Backups
-Encrypted-secret backups remain sensitive and require access controls.
-
-## Security test
-Raw credentials must never appear in UI responses outside authorized reveal, logs, activity, analytics, URLs, errors or source control.
+## 1. Threat Model & Security Boundaries
+- **No Plaintext Secrets**: Passwords, API tokens, and session keys are never stored unencrypted in PostgreSQL or exposed in application logs.
+- **Role-Based Scoping**: Client reviewers possess ephemeral, tokenized access restricted strictly to their organization's assets.
+- **Step-Up Authentication**: Revealing or copying raw credentials in the operator UI triggers an audit log and requires explicit administrative confirmation.
+- **HMAC Review Tokens**: Content review URLs are signed with time-bounded, tamper-proof hashes to prevent enumeration attacks.

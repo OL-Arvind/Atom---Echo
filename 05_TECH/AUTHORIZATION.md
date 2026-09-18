@@ -1,24 +1,15 @@
-# Authorization Model
+# Authorization Model & Role-Based Access Control
 
-## ADMIN
-Organization-level operations: clients, engagements, billing, tools, renewals, settings and credential administration subject to policy.
-
-## TEAM
-Execution access: assigned clients/work, content, requests/tasks, meetings and relevant context. Restrict owner billing/settings and broad credential access by default.
-
-## CLIENT
-Scoped external access: own reviewable content, approve/request changes, relevant request/status information.
-
-Cannot access other clients, internal notes/tasks/financials or broad credentials.
-
-## Credential permissions
-Model separately:
-- metadata visibility;
-- reveal;
-- copy;
-- edit;
-- revoke/delete.
-
-A user who can see a client does not automatically gain credential reveal access.
-
-Enforce client boundaries at the database authorization layer where supported, and validate business permissions in application code too.
+## Roles Hierarchy
+1. **ADMIN (Sudeesh)**:
+   - Full system access.
+   - Client financial terms, retainer amounts, tool expense approvals, and billing management.
+   - Master credential vault disclosure and audit logs.
+2. **OPERATOR (Nikhil / Execution Team)**:
+   - Content authoring, editing, and scheduling.
+   - Client context viewing and asset management.
+   - Restricted from viewing global agency margins and raw root passwords unless explicitly delegated.
+3. **CLIENT (External Founder)**:
+   - Scoped strictly to their own organization.
+   - Accessible only through signed, single-use or time-bounded tokens for review.
+   - Zero access to internal notes, tasks, costs, or other clients' workspaces.

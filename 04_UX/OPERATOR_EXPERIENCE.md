@@ -1,24 +1,11 @@
-# Operator Experience
+# Operator Experience (Internal Command Surface)
 
-## Command Center
-Answer: **What requires my attention now?**
+## Target Persona
+- **Sudeesh D S**: Agency Founder & Lead Strategist
+- **Nikhil**: Operations & Execution Lead
 
-Priority: blocked/overdue → waiting on client → due today → near-term deadlines/renewals → informational.
-
-## Client
-Opening a client should answer: what are we doing, what's active, what are we waiting for, what happens next, what changed, and what financial/tool events matter.
-
-## Content
-Move through real lifecycle states. Avoid duplicate fields and calendars.
-
-## Billing
-Review a generated invoice rather than constructing one from scratch.
-
-## Meetings
-See proposed extracted changes and confirm/reject them.
-
-## Credentials
-Masked by default; reveal/copy is explicit and audited.
-
-## UX law
-If a screen has many fields only because the database has many fields, the screen is probably wrong.
+## Design & Interaction Philosophy
+1. **Desktop-First & Dense**: Designed for fast keyboards, wide monitors, and minimal clicking.
+2. **The Command Center Cockpit**: Answers "What requires my attention right now, why, and what is the single next action?"
+3. **No Raw Table Maintenance**: Operators never open a table of 500 rows to manually update status strings. Every action happens in context drawers and triage queues.
+4. **Instant Optimistic UI**: Marking a tool expense billed, approving content, or flagging an emergency hold updates immediately with zero layout shift.

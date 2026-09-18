@@ -1,18 +1,17 @@
-# Discovery — Business Context
+# Business Context: Atom & Echo
 
-Atom & Echo is a founder-led growth agency. Its recurring operational work includes client engagements, content, strategy, approvals, requests, meetings, tasks, billing, tool subscriptions, credentials and reporting/outbound activity.
+## Core Business
+Atom & Echo is an executive personal branding and outbound growth agency run by Sudeesh D S (Founder/Lead) and Nikhil (Execution Partner).
 
-The current operation is distributed across Notion, WhatsApp, Google Sheets, Fathom and external tools. The operator repeatedly acts as the coordination layer.
+## Core Offerings
+1. **LinkedIn Personal Branding**: Content strategy, ghostwriting, approval workflow, scheduling, and profile growth for tech founders and VC-backed executives.
+2. **Cold Outreach & Inbound Lead Generation**: Multi-channel outbound campaigns (email, LinkedIn) targeting B2B SaaS and enterprise prospects.
 
-Recurring manual work observed in discovery:
-- remembering dates from meetings;
-- updating content status and calendars;
-- moving approval information from WhatsApp into internal records;
-- remembering invoice dates and follow-ups;
-- adding client tool costs to invoices;
-- tracking renewals;
-- translating meeting notes into tasks/content;
-- maintaining client context;
-- manually updating performance data.
+## Current Operating Friction
+- Reliance on fragmented tools: Notion databases, Google Sheets, WhatsApp groups, Fathom meeting notes, and Drive folders.
+- Founders refuse to log into Notion to review content, causing massive approval delays via WhatsApp.
+- Tool subscriptions purchased on behalf of clients (Clay, Instantly, Apollo) frequently leak and go unbilled.
+- Manual double-calendar data entry between internal planning and client schedules.
 
-The design objective is to remove coordination work without removing human judgment.
+## Target Operational Transformation
+Transform from a disconnected set of Notion tables into BaseEngine: a unified, event-driven operating system where routine updates happen automatically and operators only intervene by exception.

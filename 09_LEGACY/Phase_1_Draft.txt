@@ -1,0 +1,67 @@
+| Module                         | Phase 1                                             |
+| ------------------------------ | --------------------------------------------------- |
+| Command Center                 | **YES**                                             |
+| Client management              | **YES**                                             |
+| Engagement/service model       | **YES**                                             |
+| Unified content calendar       | **YES**                                             |
+| Content workflow               | **YES**                                             |
+| Client review portal           | **YES**                                             |
+| Mobile-first review            | **YES**                                             |
+| Secure review links            | **YES**                                             |
+| Client requests                | **YES**                                             |
+| Internal tasks                 | **YES**                                             |
+| Campaign operations            | **YES — lightweight**                               |
+| Billing                        | **YES**                                             |
+| Tool expense recovery          | **YES**                                             |
+| Client activity/history        | **YES**                                             |
+| Onboarding/context             | **YES**                                             |
+| Global search                  | **YES**                                             |
+| Meeting records                | **YES — manual/simple**                             |
+| AI meeting extraction          | No                                                  |
+| AI content generation          | No                                                  |
+| Full CRM                       | No                                                  |
+| Clay replacement               | No                                                  |
+| Full accounting system         | No                                                  |
+| WhatsApp automation            | No, foundation only                                 |
+| LinkedIn auto-posting          | No, unless a clean integration is already available |
+| Generic page builder           | **NO**                                              |
+| Notion-style block editor      | **NO**                                              |
+| Arbitrary databases            | **NO**                                              |
+| Gantt/project-management suite | **NO**                                              |
+
+
+
+
+Core operating layer
+
+1. Command Center
+
+2. Client + Engagement management
+
+3. Unified Content Calendar
+
+4. Content workflow
+
+5. Client Review Portal
+
+6. Client Requests
+
+7. Internal Tasks
+
+8. Fathom meeting integration
+
+9. Meeting → Context
+
+10. Billing + Invoices
+
+11. Tool subscriptions + billable expenses
+
+12. Renewal reminders
+
+13. Credential Vault
+
+14. Contract / renewal dates
+
+15. Basic OKRs
+
+16. Activity / history

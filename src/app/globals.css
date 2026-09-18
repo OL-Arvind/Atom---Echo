@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F4F5F7;
+  --color-border-subtle: #E4E4E7;
+  --color-border-strong: #D4D4D8;
+  --color-foreground: #09090B;
+  --color-foreground-muted: #71717A;
+  --color-foreground-subtle: #A1A1AA;
+  --color-brand: #D13202;
+  --color-brand-hover: #B02A02;
+  --color-brand-subtle: #FFF4EE;
+  --color-status-emerald: #10B981;
+  --color-status-emerald-bg: #ECFDF5;
+  --color-status-emerald-border: #A7F3D0;
+  --color-status-amber: #F59E0B;
+  --color-status-amber-bg: #FFFBEB;
+  --color-status-amber-border: #FDE68A;
+  --color-status-rose: #EF4444;
+  --color-status-rose-bg: #FEF2F2;
+  --color-status-rose-border: #FECACA;
+  --color-status-blue: #3B82F6;
+  --color-status-blue-bg: #EFF6FF;
+  --color-status-blue-border: #BFDBFE;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-outfit), system-ui, sans-serif;
+  --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+  --shadow-raised: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --ease-out-emil: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-emil: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-foreground);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom crisp scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E4E4E7;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A1A1AA;
+}
+
+/* Emil Kowalski & UI/UX Pro Max Motion & Tactile Utilities */
+.btn-pressable {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  will-change: transform;
+}
+.btn-pressable:active {
+  transform: scale(0.97);
+}
+
+.card-interactive {
+  transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 180ms ease, border-color 180ms ease;
+  will-change: transform;
+}
+.card-interactive:hover {
+  transform: translateY(-1px);
+}
+.card-interactive:active {
+  transform: scale(0.99);
+}
+
+/* Staggered entry animation: never from scale(0), starts from scale(0.97) */
+@keyframes emilFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-stagger-1 {
+  animation: emilFadeIn 220ms cubic-bezier(0.23, 1, 0.32, 1) 0ms forwards;
+}
+.animate-stagger-2 {
+  animation: emilFadeIn 220ms cubic-bezier(0.23, 1, 0.32, 1) 40ms forwards;
+}
+.animate-stagger-3 {
+  animation: emilFadeIn 220ms cubic-bezier(0.23, 1, 0.32, 1) 80ms forwards;
+}
+.animate-stagger-4 {
+  animation: emilFadeIn 220ms cubic-bezier(0.23, 1, 0.32, 1) 120ms forwards;
+}
+
+.tabular-numbers {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

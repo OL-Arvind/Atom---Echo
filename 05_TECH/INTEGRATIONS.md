@@ -1,25 +1,8 @@
-# Integration Engineering Rules
+# Integration Architecture & Technical Contracts
 
-## Adapter boundary
-Providers must sit behind internal adapters. Domain logic must not depend directly on provider SDK details.
+## Adapter Pattern Requirement
+All external third-party services (Fathom, WhatsApp/Twilio, Stripe, Resend) MUST sit behind an abstract internal interface. No domain code or UI component may directly invoke a third-party SDK.
 
-## Webhooks
-Verify authenticity; persist provider reference; record type/received time; use idempotency; process asynchronously where appropriate; retry safely; record failure.
-
-## Fathom
-receive → normalize → associate client/engagement → extract → persist proposed actions → confirmation → apply.
-
-## WhatsApp
-V1 notification/review-link delivery behind adapter.
-
-## Email
-Invoice dispatch and selected notifications. Internal invoice state remains canonical.
-
-## Notion / Sheets
-Migration/reference only as active workflows move into OS.
-
-## LinkedIn / X
-Manual final publishing control in V1.
-
-## Rule
-An integration failure should not undo a valid internal business state change unless the operation itself is transactional and explicitly designed that way.
+## Event Dispatchers & Idempotency
+- All inbound webhooks (e.g. Fathom meeting completed, payment received) must carry an idempotency key.
+- Handlers verify digital signatures before dispatching to Inngest durable workflows.

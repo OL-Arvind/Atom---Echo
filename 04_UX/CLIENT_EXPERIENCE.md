@@ -1,22 +1,15 @@
-# Client Experience
+# Client Experience (Zero-Login Review PWA)
 
-## Goal
-A client completes the required action without learning Atom & Echo's internal operating system.
+## Target Persona
+- High-ticket VC-backed and enterprise founders (e.g. Chetan Ahuja, Florian, Series A/B executives).
 
-## Primary V1 flow
-Review link → secure page → content → Approve OR Request changes → confirmation.
-
-## Do not require
-- Notion account;
-- internal database navigation;
-- internal notes/tasks;
-- other client data.
-
-## Mobile-first
-Readable content, obvious actions, minimal fields, fast loading, easy revision comments.
-
-## Access
-Use scoped/revocable review access. Do not use guessable IDs as authorization.
-
-## Future
-A broader client workspace may come later; V1 remains focused.
+## Core UX Rules
+1. **Zero Login / Zero Friction**:
+   - No passwords. No email magic links. No app store downloads.
+   - Access is granted via an ephemeral, tamper-proof HMAC-signed URL token sent via WhatsApp or email.
+2. **Sub-1-Second Load Time**:
+   - Lightweight, mobile-first responsive PWA.
+   - Loads in under 1,000ms even on constrained mobile connections.
+3. **1-Tap Decisions**:
+   - Large touch targets for "Approve" (green) and "Request Changes" (orange/red).
+   - Pre-selected feedback chips ("Too salesy", "Make punchier", "Fix hook", "Incorrect numbers") so founders can give actionable feedback in 3 seconds without typing long paragraphs.
