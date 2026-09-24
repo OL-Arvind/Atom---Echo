@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encryptPassword, decryptPassword } from "@/lib/security/encryption";
+import { addCredentialSchema, formatZodError } from "@/lib/validations";
 
 async function getClientContextHeaders() {
   try {
@@ -96,19 +97,31 @@ export async function copyCredentialAction(credentialId: string) {
 
 export async function addCredentialAction(formData: FormData) {
   try {
+    const rawInput = {
+      client_id: formData.get("client_id"),
+      platform: formData.get("platform"),
+      username_or_email: formData.get("username_or_email"),
+      password: formData.get("password"),
+      two_factor_method: formData.get("two_factor_method") || undefined,
+      notes: formData.get("notes") || undefined,
+    };
+
+    const parsed = addCredentialSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
+    }
+
+    const {
+      client_id: clientId,
+      platform,
+      username_or_email: username,
+      password,
+      two_factor_method: twoFactor,
+      notes,
+    } = parsed.data;
+
     const supabase = createAdminClient();
     const { ip, userAgent } = await getClientContextHeaders();
-
-    const clientId = formData.get("client_id") as string;
-    const platform = formData.get("platform") as string;
-    const username = formData.get("username_or_email") as string;
-    const password = formData.get("password") as string;
-    const twoFactor = formData.get("two_factor_method") as string;
-    const notes = formData.get("notes") as string;
-
-    if (!clientId || !platform || !username || !password) {
-      return { success: false, error: "Platform, username, and password are required." };
-    }
 
     let { data: user } = await supabase.from("users").select("id").limit(1).maybeSingle();
     if (!user) {

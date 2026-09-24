@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 
-export const BRANDFETCH_CLIENT_ID = "1idu7B93bjQkWT9NL3V";
+export const BRANDFETCH_CLIENT_ID =
+  process.env.NEXT_PUBLIC_BRANDFETCH_CLIENT_ID || "1idu7B93bjQkWT9NL3V";
 
 const KNOWN_PLATFORMS: Record<string, string> = {
   heyreach: "heyreach.io",

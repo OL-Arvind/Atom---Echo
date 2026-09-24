@@ -3,12 +3,40 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { InvoiceStatus, ToolBillingCycle } from "@/types/domain";
+import {
+  createToolSubscriptionSchema,
+  updateInvoiceStatusSchema,
+  formatZodError,
+} from "@/lib/validations";
 
 /**
  * Register a new software tool subscription to the agency catalog
  */
 export async function createToolSubscriptionAction(formData: FormData) {
   try {
+    const rawInput = {
+      tool_name: formData.get("tool_name"),
+      cost_amount: formData.get("cost_amount") || undefined,
+      currency: formData.get("currency") || undefined,
+      billing_cycle: formData.get("billing_cycle") || undefined,
+      next_renewal_date: formData.get("next_renewal_date"),
+      default_pass_through: formData.get("default_pass_through") || undefined,
+    };
+
+    const parsed = createToolSubscriptionSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
+    }
+
+    const {
+      tool_name: toolName,
+      cost_amount: costAmount,
+      currency,
+      billing_cycle: billingCycle,
+      next_renewal_date: nextRenewalDate,
+      default_pass_through: defaultPassThrough,
+    } = parsed.data;
+
     const supabase = createAdminClient();
 
     // 1. Get or create default organization
@@ -32,22 +60,11 @@ export async function createToolSubscriptionAction(formData: FormData) {
       orgId = newOrg?.id;
     }
 
-    const toolName = formData.get("tool_name") as string;
-    const costAmount = Number(formData.get("cost_amount") || 0);
-    const currency = (formData.get("currency") as string) || "USD";
-    const billingCycle = (formData.get("billing_cycle") as ToolBillingCycle) || "monthly";
-    const nextRenewalDate = formData.get("next_renewal_date") as string;
-    const defaultPassThrough = formData.get("default_pass_through") === "true";
-
-    if (!toolName || !nextRenewalDate) {
-      return { success: false, error: "Tool name and next renewal date are required." };
-    }
-
     const { data: tool, error } = await supabase
       .from("tool_subscriptions")
       .insert({
         organization_id: orgId,
-        tool_name: toolName.trim(),
+        tool_name: toolName,
         cost_amount: costAmount,
         currency,
         billing_cycle: billingCycle,
@@ -100,6 +117,11 @@ export async function deleteToolSubscriptionAction(id: string) {
  */
 export async function updateInvoiceStatusAction(invoiceId: string, status: InvoiceStatus) {
   try {
+    const parsed = updateInvoiceStatusSchema.safeParse({ invoice_id: invoiceId, status });
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
+    }
+
     const supabase = createAdminClient();
 
     const updatePayload: Record<string, any> = {

@@ -66,7 +66,7 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} noValidate className="space-y-3">
           <div>
             <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Platform / Service *

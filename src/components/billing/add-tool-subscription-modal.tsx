@@ -72,7 +72,7 @@ export function AddToolSubscriptionModal({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
           {/* Tool Name */}
           <div>
             <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">

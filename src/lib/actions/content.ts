@@ -7,6 +7,11 @@ import {
   getClientActiveReviewToken,
   calculateNextPublishSlot,
 } from "@/lib/security/token";
+import {
+  createContentSchema,
+  clientFeedbackSchema,
+  formatZodError,
+} from "@/lib/validations";
 
 /**
  * 1-Tap Client Approval (AC-2):
@@ -98,6 +103,16 @@ export async function requestContentChangesByClientAction(
   chips: string[] = []
 ) {
   try {
+    const parsed = clientFeedbackSchema.safeParse({
+      postId,
+      token,
+      feedbackText,
+      chips,
+    });
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
+    }
+
     const verification = await verifyClientReviewToken(token);
     if (!verification.valid || !verification.clientId) {
       return { success: false, error: "Invalid or expired review session." };
@@ -347,18 +362,30 @@ export async function requestContentChangesAction(
 
 export async function createContentAction(formData: FormData) {
   try {
-    const supabase = createAdminClient();
+    const rawInput = {
+      engagement_id: formData.get("engagement_id"),
+      title: formData.get("title"),
+      body_markdown: formData.get("body_markdown"),
+      target_pillar: formData.get("target_pillar") || undefined,
+      status: formData.get("status") || undefined,
+      scheduled_publish_date: formData.get("scheduled_publish_date") || undefined,
+    };
 
-    const engagementId = formData.get("engagement_id") as string;
-    const title = formData.get("title") as string;
-    const bodyMarkdown = formData.get("body_markdown") as string;
-    const targetPillar = (formData.get("target_pillar") as string) || "Thought Leadership";
-    const status = (formData.get("status") as string) || "draft";
-    const scheduledDate = formData.get("scheduled_publish_date") as string;
-
-    if (!engagementId || !title || !bodyMarkdown) {
-      return { success: false, error: "Client engagement, post title, and body are required." };
+    const parsed = createContentSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
     }
+
+    const {
+      engagement_id: engagementId,
+      title,
+      body_markdown: bodyMarkdown,
+      target_pillar: targetPillar,
+      status,
+      scheduled_publish_date: scheduledDate,
+    } = parsed.data;
+
+    const supabase = createAdminClient();
 
     const { data: newPost, error } = await supabase
       .from("content_items")

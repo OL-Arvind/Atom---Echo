@@ -3,9 +3,46 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClientReviewToken } from "@/lib/security/token";
+import {
+  createClientSchema,
+  tabooWordSchema,
+  toolExpenseSchema,
+  formatZodError,
+} from "@/lib/validations";
 
 export async function createClientAction(formData: FormData) {
   try {
+    const rawInput = {
+      name: formData.get("name"),
+      founder_name: formData.get("founder_name"),
+      founder_title: formData.get("founder_title") || undefined,
+      founder_email: formData.get("founder_email") || undefined,
+      founder_phone: formData.get("founder_phone") || undefined,
+      linkedin_url: formData.get("linkedin_url") || undefined,
+      website_url: formData.get("website_url") || undefined,
+      service_type: formData.get("service_type") || undefined,
+      monthly_retainer: formData.get("monthly_retainer") || undefined,
+      billing_anchor_day: formData.get("billing_anchor_day") || undefined,
+    };
+
+    const parsed = createClientSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
+    }
+
+    const {
+      name,
+      founder_name,
+      founder_title,
+      founder_email,
+      founder_phone,
+      linkedin_url,
+      website_url,
+      service_type,
+      monthly_retainer,
+      billing_anchor_day,
+    } = parsed.data;
+
     const supabase = createAdminClient();
 
     // 1. Get or create default organization
@@ -27,29 +64,6 @@ export async function createClientAction(formData: FormData) {
         .select("id")
         .single();
       orgId = newOrg?.id;
-    }
-
-    const name = formData.get("name") as string;
-    const founder_name = formData.get("founder_name") as string;
-    const founder_title = (formData.get("founder_title") as string) || "Founder & CEO";
-    const founder_email = formData.get("founder_email") as string;
-    const founder_phone = formData.get("founder_phone") as string;
-    let linkedin_url = ((formData.get("linkedin_url") as string) || "").trim();
-    if (linkedin_url && !/^https?:\/\//i.test(linkedin_url)) {
-      linkedin_url = `https://${linkedin_url}`;
-    }
-
-    let website_url = ((formData.get("website_url") as string) || "").trim();
-    if (website_url && !/^https?:\/\//i.test(website_url)) {
-      website_url = `https://${website_url}`;
-    }
-
-    const service_type = (formData.get("service_type") as string) || "linkedin_branding";
-    const monthly_retainer = formData.get("monthly_retainer") ? Number(formData.get("monthly_retainer")) : null;
-    const billing_anchor_day = Number(formData.get("billing_anchor_day") || 1);
-
-    if (!name || !founder_name) {
-      return { success: false, error: "Company name and Founder name are required." };
     }
 
     // 2. Insert Client
@@ -112,10 +126,13 @@ export async function createClientAction(formData: FormData) {
 
 export async function addTabooWordAction(clientId: string, word: string) {
   try {
-    const supabase = createAdminClient();
-    const cleanWord = word.trim().toLowerCase();
-    if (!cleanWord) return { success: false, error: "Word cannot be empty." };
+    const parsed = tabooWordSchema.safeParse({ clientId, word });
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
+    }
+    const cleanWord = parsed.data.word;
 
+    const supabase = createAdminClient();
     const { data: ctx } = await supabase
       .from("client_contexts")
       .select("id, taboo_words")
@@ -171,22 +188,32 @@ export async function removeTabooWordAction(clientId: string, wordToRemove: stri
 
 export async function logToolExpenseAction(formData: FormData) {
   try {
-    const supabase = createAdminClient();
+    const rawInput = {
+      engagement_id: formData.get("engagement_id"),
+      tool_name: formData.get("tool_name"),
+      description: formData.get("description") || undefined,
+      amount: formData.get("amount"),
+      client_id: formData.get("client_id") || undefined,
+      tool_subscription_id: formData.get("tool_subscription_id") || undefined,
+      incurred_date: formData.get("incurred_date") || undefined,
+    };
 
-    const engagementId = formData.get("engagement_id") as string;
-    const toolName = formData.get("tool_name") as string;
-    const description = formData.get("description") as string;
-    const amount = Number(formData.get("amount") || 0);
-    const clientId = formData.get("client_id") as string;
-    const incurredDate =
-      (formData.get("incurred_date") as string) ||
-      new Date().toISOString().split("T")[0];
-
-    if (!engagementId || !toolName || !amount) {
-      return { success: false, error: "Tool name, engagement, and amount are required." };
+    const parsed = toolExpenseSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
     }
 
-    const toolSubscriptionId = (formData.get("tool_subscription_id") as string) || null;
+    const {
+      engagement_id: engagementId,
+      tool_name: toolName,
+      description,
+      amount,
+      client_id: clientId,
+      tool_subscription_id: toolSubscriptionId,
+      incurred_date: incurredDate,
+    } = parsed.data;
+
+    const supabase = createAdminClient();
 
     // Combine tool name + description into a single description string
     // (tool_name column does not exist in the DB schema)

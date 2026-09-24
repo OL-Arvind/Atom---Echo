@@ -73,7 +73,7 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-mono uppercase tracking-wider">
