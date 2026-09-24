@@ -182,7 +182,32 @@ export async function requestContentChangesByClientAction(
     revalidatePath(`/content/${postId}`);
     revalidatePath("/command-center");
     revalidatePath("/clients");
+    revalidatePath("/operations");
 
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Resolves client content feedback item (marks is_resolved: true)
+ */
+export async function resolveContentFeedbackAction(feedbackId: string) {
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from("content_feedback")
+      .update({ is_resolved: true })
+      .eq("id", feedbackId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/command-center");
+    revalidatePath("/operations");
+    revalidatePath("/content");
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };

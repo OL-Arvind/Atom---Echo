@@ -22,7 +22,7 @@ import { OnboardClientModal } from "@/components/clients/onboard-client-modal";
 import { PageHeader } from "@/components/layout/page-header";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { generateDraftInvoiceAction } from "@/lib/actions/client";
-import { approveContentAction } from "@/lib/actions/content";
+import { approveContentAction, resolveContentFeedbackAction } from "@/lib/actions/content";
 import { updateInvoiceStatusAction } from "@/lib/actions/billing";
 import { formatDisplayDateIST } from "@/lib/date-utils";
 
@@ -37,6 +37,7 @@ interface CommandCenterClientProps {
     alerts: any[];
     clients: any[];
     reviewPosts: any[];
+    unresolvedFeedback?: any[];
     scheduledPosts?: any[];
     unbilledExpenses: any[];
   };
@@ -117,6 +118,36 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
     });
   };
 
+  const handleResolveFeedback = (alert: any) => {
+    const feedbackId = alert.feedback_id || alert.entity_id;
+    if (!feedbackId) return;
+    startTransition(async () => {
+      const res = await resolveContentFeedbackAction(feedbackId);
+      if (res.success) {
+        showToast("Client revision marked as resolved.");
+        handleDismissAlert(alert.id);
+        router.refresh();
+      } else {
+        showToast(`Error: ${res.error}`);
+      }
+    });
+  };
+
+  const openFeedbackWhatsAppPing = (alert: any) => {
+    const phone = alert.founder_phone ? alert.founder_phone.replace(/[^0-9]/g, "") : "";
+    const founderName = alert.founder_name || "there";
+    const postTitle = alert.post_title || "your post";
+    const message = encodeURIComponent(
+      `Hi ${founderName}, we received your revision request on "${postTitle}". We're updating the draft now and will share the new version shortly!`
+    );
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    } else {
+      window.open(`https://wa.me/?text=${message}`, "_blank");
+    }
+    showToast(`Opened WhatsApp chat for ${founderName}`);
+  };
+
   const handleQuickDraftInvoice = (clientId?: string) => {
     const targetId = clientId || initialData.clients[0]?.id;
     if (!targetId) return;
@@ -170,7 +201,11 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
   };
 
   const filteredAlerts = useMemo(() => {
-    if (filter === "review") return alerts.filter((a) => a.entity_type === "content_item");
+    if (filter === "review") {
+      return alerts.filter(
+        (a) => a.entity_type === "content_item" || a.entity_type === "content_feedback"
+      );
+    }
     if (filter === "billing") {
       return alerts.filter(
         (a) =>
@@ -242,7 +277,9 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   {
                     id: "review",
                     label: "Reviews",
-                    count: alerts.filter((a) => a.entity_type === "content_item").length,
+                    count: alerts.filter(
+                      (a) => a.entity_type === "content_item" || a.entity_type === "content_feedback"
+                    ).length,
                   },
                   {
                     id: "request",
@@ -282,6 +319,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                 {filteredAlerts.map((alert: any) => {
                   const isSelected = selectedAlert?.id === alert.id;
                   const isCritical = alert.urgency === "critical";
+                  const isFeedback = alert.entity_type === "content_feedback";
                   const isReview = alert.entity_type === "content_item";
                   const isBillingExpense = alert.entity_type === "billing";
                   const isInvoiceDraft = alert.entity_type === "invoice_draft";
@@ -291,7 +329,11 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   let secondaryLabel = alert.reason || alert.title;
                   let badgeLabel = "Attention";
 
-                  if (isReview) {
+                  if (isFeedback) {
+                    primaryLabel = `${alert.founder_name || "Client"} (${alert.client_name || "Account"})`;
+                    secondaryLabel = `Revision on "${alert.post_title}": ${alert.comment}`;
+                    badgeLabel = "Revision requested";
+                  } else if (isReview) {
                     primaryLabel = alert.founder_name || alert.client_name || "Client";
                     secondaryLabel = alert.post_title || alert.title;
                     badgeLabel = "Pending review";
@@ -315,6 +357,8 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
 
                   const dotColor = isCritical
                     ? "bg-rose-500"
+                    : isFeedback
+                    ? "bg-amber-600"
                     : isReview
                     ? "bg-amber-500"
                     : isInvoiceDraft
@@ -430,6 +474,128 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
         <div className="lg:col-span-7">
           {selectedAlert ? (
             <div className="rounded-xl border border-zinc-200/90 bg-white p-6 space-y-5 sticky top-6 shadow-xs">
+              {/* CASE 0: CLIENT CONTENT REVISION FEEDBACK */}
+              {selectedAlert.entity_type === "content_feedback" && (
+                <>
+                  {/* Header */}
+                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+                        <span className="text-xs text-amber-800 font-medium bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                          Client Revision Requested
+                        </span>
+                      </div>
+                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900 leading-snug">
+                        {selectedAlert.post_title}
+                      </h2>
+                      <div className="text-xs text-zinc-500 flex items-center gap-1.5 pt-0.5">
+                        <span className="text-zinc-800 font-medium">
+                          {selectedAlert.founder_name} ({selectedAlert.client_name})
+                        </span>
+                        <span>&middot;</span>
+                        <span>{selectedAlert.target_pillar || "Thought Leadership"}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleDismissAlert(selectedAlert.id)}
+                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      title="Dismiss"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Feedback Highlight Card */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-zinc-500">
+                      <span className="font-medium text-zinc-700">Client Feedback Note</span>
+                      <span className="text-[11px] text-zinc-400">1-Tap Portal Comment</span>
+                    </div>
+
+                    <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-4 space-y-1.5">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-amber-900">
+                        <MessageCircle className="h-3.5 w-3.5 text-amber-600" />
+                        <span>{selectedAlert.founder_name} commented:</span>
+                      </div>
+                      <p className="text-xs text-zinc-800 font-sans leading-relaxed select-text font-medium">
+                        {selectedAlert.comment}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Post Draft Content Preview */}
+                  {selectedAlert.body_markdown && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-zinc-500">
+                        <span className="font-medium text-zinc-700">Draft Content Preview</span>
+                        <span className="text-[11px] text-zinc-400">Status: {selectedAlert.post_status || "draft"}</span>
+                      </div>
+                      <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-4 max-h-52 overflow-y-auto">
+                        <p className="text-xs text-zinc-700 leading-relaxed whitespace-pre-line select-text font-sans">
+                          {selectedAlert.body_markdown}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Toolbar */}
+                  <div className="space-y-3 pt-2">
+                    <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                      {selectedAlert.post_id && (
+                        <Link
+                          href={`/content/${selectedAlert.post_id}`}
+                          className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                        >
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                          <span>Open in Editor &amp; Revise</span>
+                        </Link>
+                      )}
+
+                      <button
+                        onClick={() => openFeedbackWhatsAppPing(selectedAlert)}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 text-xs font-medium px-4 py-2 rounded-md transition-colors shadow-2xs"
+                      >
+                        <WhatsAppIcon size={14} className="text-[#25D366]" />
+                        <span>Ack on WhatsApp</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleResolveFeedback(selectedAlert)}
+                        disabled={isPending}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-50 text-xs font-medium px-4 py-2 rounded-md transition-colors shadow-2xs"
+                      >
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        <span>{isPending ? "Updating..." : "Mark as Resolved"}</span>
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-zinc-150 text-xs">
+                      {selectedAlert.review_token ? (
+                        <Link
+                          href={`/review/${selectedAlert.review_token}`}
+                          target="_blank"
+                          className="text-zinc-500 hover:text-zinc-900 inline-flex items-center gap-1 transition-colors"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          <span>Preview Client Review Portal</span>
+                        </Link>
+                      ) : (
+                        <span className="text-zinc-400">Portal active</span>
+                      )}
+
+                      <Link
+                        href="/operations"
+                        className="text-zinc-500 hover:text-zinc-900 inline-flex items-center gap-1 transition-colors"
+                      >
+                        <span>View in Feedback Feed &rarr;</span>
+                      </Link>
+                    </div>
+                  </div>
+                </>
+              )}
+
               {/* CASE 1: CONTENT ITEM REVIEW */}
               {selectedAlert.entity_type === "content_item" && (
                 <>
@@ -752,7 +918,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                               )}
                             </div>
                             <div className="font-mono font-semibold text-zinc-900 tabular-nums shrink-0">
-                              ₹{Number(item.total_price || item.amount || item.unit_price || 0).toLocaleString("en-IN")}
+                             ₹{Number(item.total_price || item.unit_price || 0).toLocaleString("en-IN")}
                             </div>
                           </div>
                         ))

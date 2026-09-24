@@ -280,8 +280,74 @@ export async function getCommandCenterDataFromDb() {
       }
     }
 
+    // 8. Fetch unresolved client feedback from review portal
+    const { data: unresolvedFeedback } = await supabase
+      .from("content_feedback")
+      .select(`
+        id,
+        comment,
+        author_name,
+        author_type,
+        created_at,
+        is_resolved,
+        content_items (
+          id,
+          title,
+          body_markdown,
+          target_pillar,
+          status,
+          engagements (
+            id,
+            clients (
+              id,
+              name,
+              founder_name,
+              founder_phone
+            )
+          )
+        )
+      `)
+      .eq("is_resolved", false)
+      .eq("author_type", "client")
+      .order("created_at", { ascending: false });
+
     // Derive operational alerts dynamically from actual records
     const alerts: any[] = [];
+
+    // Alert 0: Client Content Revision Feedback (Immediate Action Required)
+    for (const fb of unresolvedFeedback || []) {
+      const post = fb.content_items as any;
+      const client = (post?.engagements as any)?.clients;
+      const clientName = client?.name || "Client";
+      const founderName = fb.author_name || client?.founder_name || "Founder";
+      const founderPhone = client?.founder_phone || "+919876543210";
+      const postTitle = post?.title || "Thought Leadership Post";
+      const token = (client?.id && tokenMap.get(client.id)) || "";
+
+      alerts.push({
+        id: `alert-feedback-${fb.id}`,
+        urgency: "urgent",
+        title: `${founderName} (${clientName}): Revision Requested`,
+        reason: fb.comment || `Client requested changes on "${postTitle}".`,
+        waiting_on: "Team revision (Nikhil)",
+        entity_id: fb.id,
+        feedback_id: fb.id,
+        post_id: post?.id,
+        post_title: postTitle,
+        post_status: post?.status,
+        body_markdown: post?.body_markdown,
+        target_pillar: post?.target_pillar,
+        client_id: client?.id,
+        client_name: clientName,
+        founder_name: founderName,
+        founder_phone: founderPhone,
+        review_token: token,
+        comment: fb.comment,
+        feedback_created_at: fb.created_at,
+        entity_type: "content_feedback",
+        next_action: "Revise Post",
+      });
+    }
 
     // Alert 1: Urgent Client Requests (Emergency holds, tone pivots)
     for (const req of urgentRequests || []) {
@@ -399,7 +465,6 @@ export async function getCommandCenterDataFromDb() {
         invoice_line_items (
           id,
           description,
-          amount,
           quantity,
           unit_price,
           total_price
@@ -435,7 +500,7 @@ export async function getCommandCenterDataFromDb() {
 
     return {
       activeClientsCount: activeClients.length,
-      pendingReviewCount: (reviewPosts || []).length,
+      pendingReviewCount: (reviewPosts || []).length + (unresolvedFeedback || []).length,
       unbilledExpensesTotal: totalLeakage,
       mrrTotal,
       brandingCount,
@@ -443,6 +508,7 @@ export async function getCommandCenterDataFromDb() {
       alerts,
       clients: clients || [],
       reviewPosts: reviewPosts || [],
+      unresolvedFeedback: unresolvedFeedback || [],
       scheduledPosts: scheduledPosts || [],
       unbilledExpenses: unbilledExpenses || [],
     };
