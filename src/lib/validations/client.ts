@@ -43,5 +43,16 @@ export const toolExpenseSchema = z.object({
   incurred_date: z.string().optional().default(() => new Date().toISOString().split("T")[0]),
 });
 
+export const updateClientContextSchema = z.object({
+  clientId: z.string().min(1, "Client ID is required."),
+  positioning_statement: z.string().trim().optional().default(""),
+  target_audience_icp: z.string().trim().optional().default(""),
+  tone_archetype: z.string().trim().optional().default(""),
+  voice_guidelines: z.string().trim().optional().default(""),
+  core_pillars: z.array(z.string()).optional().default([]),
+});
+
 export type CreateClientInput = z.infer<typeof createClientSchema>;
 export type ToolExpenseInput = z.infer<typeof toolExpenseSchema>;
+export type UpdateClientContextInput = z.infer<typeof updateClientContextSchema>;
+

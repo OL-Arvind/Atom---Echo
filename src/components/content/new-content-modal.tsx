@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Plus, X, Feather, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { createContentAction } from "@/lib/actions/content";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomDatePicker } from "@/components/ui/custom-date-picker";
 
 interface NewContentModalProps {
   engagements: {
@@ -203,6 +204,7 @@ export function NewContentModal({ engagements, isOpen, onClose }: NewContentModa
                   { value: "internal_review", label: "Internal Review", statusDotColor: "bg-[var(--color-warn)]" },
                   { value: "client_review", label: "Ready for Client Review", statusDotColor: "bg-[var(--color-accent)]" },
                   { value: "scheduled", label: "Approved / Scheduled", statusDotColor: "bg-[var(--color-ok)]" },
+                  { value: "published", label: "Published Live", statusDotColor: "bg-[var(--color-ok)]" },
                 ]}
                 value={status}
                 onChange={setStatus}
@@ -213,11 +215,11 @@ export function NewContentModal({ engagements, isOpen, onClose }: NewContentModa
               <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
                 Scheduled Date (Optional)
               </label>
-              <input
-                type="date"
+              <CustomDatePicker
                 value={scheduledDate}
-                onChange={(e) => setScheduledDate(e.target.value)}
-                className="input text-xs font-mono"
+                onChange={setScheduledDate}
+                placeholder="Pick publication date"
+                allowClear
               />
             </div>
           </div>

@@ -21,6 +21,12 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  getTodayDateStringIST,
+  toDateStringIST,
+  formatDisplayDateIST,
+  formatDisplayDateTimeIST,
+} from "@/lib/date-utils";
 
 interface CalendarClientProps {
   initialContentPosts: any[];
@@ -67,7 +73,7 @@ export function CalendarClient({
       if (!post.scheduled_publish_date) return;
       const d = new Date(post.scheduled_publish_date);
       const client = post.engagements?.clients;
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = toDateStringIST(post.scheduled_publish_date);
 
       events.push({
         id: `post-${post.id}`,
@@ -92,7 +98,7 @@ export function CalendarClient({
       // Project into visible months (prev, current, next)
       for (let offset = -1; offset <= 1; offset++) {
         const projDate = new Date(year, month + offset, anchorDay);
-        const dateStr = projDate.toISOString().split("T")[0];
+        const dateStr = `${projDate.getFullYear()}-${String(projDate.getMonth() + 1).padStart(2, "0")}-${String(anchorDay).padStart(2, "0")}`;
 
         events.push({
           id: `billing-${eng.id}-${offset}`,
@@ -115,7 +121,7 @@ export function CalendarClient({
       if (!renewal) return;
       const d = new Date(renewal);
       const client = tool.clients;
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = toDateStringIST(renewal);
       const cost = Number(tool.cost_amount || tool.license_cost_monthly || 0);
 
       events.push({
@@ -168,12 +174,12 @@ export function CalendarClient({
     const daysInPrevMonth = new Date(year, month, 0).getDate();
 
     const days: { date: Date; dateString: string; isCurrentMonth: boolean; isToday: boolean }[] = [];
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = getTodayDateStringIST();
 
     // Previous month filler days
     for (let i = startOffset - 1; i >= 0; i--) {
       const d = new Date(year, month - 1, daysInPrevMonth - i);
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       days.push({
         date: d,
         dateString: dateStr,
@@ -185,7 +191,7 @@ export function CalendarClient({
     // Current month days
     for (let i = 1; i <= daysInMonth; i++) {
       const d = new Date(year, month, i);
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       days.push({
         date: d,
         dateString: dateStr,
@@ -199,7 +205,7 @@ export function CalendarClient({
     const remaining = totalSlots - days.length;
     for (let i = 1; i <= remaining; i++) {
       const d = new Date(year, month + 1, i);
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       days.push({
         date: d,
         dateString: dateStr,
@@ -566,12 +572,7 @@ export function CalendarClient({
                 <div className="flex items-center gap-2 text-xs font-mono text-[var(--color-ink-tertiary)] pt-1">
                   <Clock className="h-3.5 w-3.5" />
                   <span>
-                    Scheduled: {selectedEvent.date.toLocaleDateString("en-IN", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                    Scheduled: {formatDisplayDateTimeIST(selectedEvent.date, true)}
                   </span>
                 </div>
               </div>
@@ -645,13 +646,26 @@ export function CalendarClient({
               </button>
 
               {selectedEvent.type === "content" && (
-                <Link
-                  href={`/content/${selectedEvent.rawItem.id}`}
-                  className="btn btn-primary text-xs flex-1 inline-flex items-center justify-center gap-1.5"
-                >
-                  <span>Open in Editor</span>
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
+                <>
+                  {selectedEvent.rawItem.linkedin_post_url && (
+                    <a
+                      href={selectedEvent.rawItem.linkedin_post_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary text-xs flex-1 inline-flex items-center justify-center gap-1.5 text-[var(--color-ok-text)]"
+                    >
+                      <span>View on LinkedIn</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                  <Link
+                    href={`/content/${selectedEvent.rawItem.id}`}
+                    className="btn btn-primary text-xs flex-1 inline-flex items-center justify-center gap-1.5"
+                  >
+                    <span>Open in Editor</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
+                </>
               )}
 
               {selectedEvent.type === "billing" && (

@@ -27,6 +27,7 @@ import {
   requestContentChangesByClientAction,
 } from "@/lib/actions/content";
 import { AtomEchoLogo } from "@/components/ui/logo";
+import { formatDisplayDateTimeIST, formatDisplayDateIST } from "@/lib/date-utils";
 
 export interface ReviewPostItem {
   id: string;
@@ -156,7 +157,7 @@ export function ReviewPortalClient({
 
       if (res.success) {
         const scheduledFormatted = res.scheduledDate
-          ? new Date(res.scheduledDate).toLocaleDateString("en-US", {
+          ? formatDisplayDateTimeIST(res.scheduledDate, {
               weekday: "short",
               month: "short",
               day: "numeric",
@@ -462,7 +463,7 @@ export function ReviewPortalClient({
                         <div className="flex items-center gap-1 text-[9.5px] text-[var(--color-ink-tertiary)] mt-0.5">
                           <span>
                             {currentPost.scheduled_publish_date
-                              ? `Scheduled for ${new Date(currentPost.scheduled_publish_date).toLocaleDateString("en-US", {
+                              ? `Scheduled for ${formatDisplayDateIST(currentPost.scheduled_publish_date, {
                                   weekday: "short",
                                   month: "short",
                                   day: "numeric",
@@ -655,7 +656,7 @@ export function ReviewPortalClient({
                     {item.scheduled_publish_date && (
                       <span className="text-[10.5px] font-mono text-[var(--color-ink-secondary)] flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(item.scheduled_publish_date).toLocaleDateString("en-US", {
+                        {formatDisplayDateTimeIST(item.scheduled_publish_date, {
                           weekday: "short",
                           month: "short",
                           day: "numeric",
@@ -693,7 +694,7 @@ export function ReviewPortalClient({
                     </span>
                     {item.published_at && (
                       <span className="text-[10px] font-mono text-[var(--color-ink-tertiary)]">
-                        {new Date(item.published_at).toLocaleDateString("en-US", {
+                        {formatDisplayDateIST(item.published_at, {
                           month: "short",
                           day: "numeric",
                         })}

@@ -191,31 +191,12 @@ export async function revokeClientReviewToken(
   }
 }
 
+import { calculateNextPublishSlotIST } from "@/lib/date-utils";
+
 /**
- * Calculates the next optimal publishing slot (next weekday at 10:00 AM UTC).
+ * Calculates the next optimal publishing slot for Indian Founder LinkedIn Audience (10:00 AM IST).
  * If an existing future scheduled date is provided, it is preserved.
  */
-export function calculateNextPublishSlot(existingDate?: string | null): string {
-  if (existingDate) {
-    const existing = new Date(existingDate);
-    if (existing.getTime() > Date.now()) {
-      return existing.toISOString();
-    }
-  }
+export const calculateNextPublishSlot = calculateNextPublishSlotIST;
 
-  const target = new Date();
-  target.setDate(target.getDate() + 1);
-  target.setUTCHours(10, 0, 0, 0);
-
-  // If Saturday (6), move to Monday (+2 days)
-  if (target.getUTCDay() === 6) {
-    target.setDate(target.getDate() + 2);
-  }
-  // If Sunday (0), move to Monday (+1 day)
-  else if (target.getUTCDay() === 0) {
-    target.setDate(target.getDate() + 1);
-  }
-
-  return target.toISOString();
-}
 

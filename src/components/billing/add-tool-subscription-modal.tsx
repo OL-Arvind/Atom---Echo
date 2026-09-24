@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { X, Wrench, Calendar, DollarSign } from "lucide-react";
 import { createToolSubscriptionAction } from "@/lib/actions/billing";
+import { CustomDatePicker } from "@/components/ui/custom-date-picker";
 
 interface AddToolSubscriptionModalProps {
   isOpen: boolean;
@@ -142,12 +143,11 @@ export function AddToolSubscriptionModal({
               <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
                 Renewal Date *
               </label>
-              <input
+              <CustomDatePicker
                 name="next_renewal_date"
-                type="date"
                 defaultValue={defaultRenewalDate}
                 required
-                className="w-full rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] px-3 py-2 text-xs text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none"
+                placeholder="Select renewal date"
               />
             </div>
           </div>

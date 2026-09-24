@@ -16,12 +16,15 @@ import {
   Check,
   X,
   ArrowUpRight,
+  FileCheck,
 } from "lucide-react";
 import { OnboardClientModal } from "@/components/clients/onboard-client-modal";
 import { PageHeader } from "@/components/layout/page-header";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { generateDraftInvoiceAction } from "@/lib/actions/client";
 import { approveContentAction } from "@/lib/actions/content";
+import { updateInvoiceStatusAction } from "@/lib/actions/billing";
+import { formatDisplayDateIST } from "@/lib/date-utils";
 
 interface CommandCenterClientProps {
   initialData: {
@@ -129,9 +132,53 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
     });
   };
 
+  const handleApproveInvoice = (alert: any) => {
+    if (!alert.entity_id) return;
+    startTransition(async () => {
+      const res = await updateInvoiceStatusAction(alert.entity_id, "approved");
+      if (res.success) {
+        showToast(`Invoice ${alert.invoice_number || ""} approved for sending.`);
+        handleDismissAlert(alert.id);
+        router.refresh();
+      } else {
+        showToast(`Error: ${res.error}`);
+      }
+    });
+  };
+
+  const openInvoiceWhatsAppPing = (alert: any) => {
+    const phone = alert.founder_phone ? alert.founder_phone.replace(/[^0-9]/g, "") : "";
+    const clientName = alert.client_name || "your account";
+    const invoiceNum = alert.invoice_number || "Invoice";
+    const amount = alert.total_amount ? `₹${Number(alert.total_amount).toLocaleString("en-IN")}` : "";
+    const dueDate = alert.due_date ? formatDisplayDateIST(alert.due_date) : "";
+
+    const message = encodeURIComponent(
+      `Hi ${alert.founder_name || "there"},\n\n` +
+      `Here is the invoice summary for ${clientName}:\n` +
+      `📄 Invoice: ${invoiceNum}\n` +
+      `💰 Amount: ${amount}\n` +
+      (dueDate ? `📅 Due Date: ${dueDate}\n\n` : `\n`) +
+      `Please let us know once the transfer is initiated. Thank you!`
+    );
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    } else {
+      window.open(`https://wa.me/?text=${message}`, "_blank");
+    }
+    showToast(`Opened WhatsApp chat for ${alert.founder_name || "Founder"}`);
+  };
+
   const filteredAlerts = useMemo(() => {
     if (filter === "review") return alerts.filter((a) => a.entity_type === "content_item");
-    if (filter === "billing") return alerts.filter((a) => a.entity_type === "billing");
+    if (filter === "billing") {
+      return alerts.filter(
+        (a) =>
+          a.entity_type === "billing" ||
+          a.entity_type === "invoice_draft" ||
+          a.entity_type === "tool_renewal"
+      );
+    }
     if (filter === "request") return alerts.filter((a) => a.entity_type === "client_request");
     return alerts;
   }, [alerts, filter]);
@@ -205,7 +252,12 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   {
                     id: "billing",
                     label: "Billing",
-                    count: alerts.filter((a) => a.entity_type === "billing").length,
+                    count: alerts.filter(
+                      (a) =>
+                        a.entity_type === "billing" ||
+                        a.entity_type === "invoice_draft" ||
+                        a.entity_type === "tool_renewal"
+                    ).length,
                   },
                 ].map((tab) => (
                   <button
@@ -231,7 +283,47 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   const isSelected = selectedAlert?.id === alert.id;
                   const isCritical = alert.urgency === "critical";
                   const isReview = alert.entity_type === "content_item";
-                  const isBilling = alert.entity_type === "billing";
+                  const isBillingExpense = alert.entity_type === "billing";
+                  const isInvoiceDraft = alert.entity_type === "invoice_draft";
+                  const isToolRenewal = alert.entity_type === "tool_renewal";
+
+                  let primaryLabel = alert.client_name || alert.founder_name || alert.title;
+                  let secondaryLabel = alert.reason || alert.title;
+                  let badgeLabel = "Attention";
+
+                  if (isReview) {
+                    primaryLabel = alert.founder_name || alert.client_name || "Client";
+                    secondaryLabel = alert.post_title || alert.title;
+                    badgeLabel = "Pending review";
+                  } else if (isInvoiceDraft) {
+                    primaryLabel = `${alert.client_name || "Client"}${alert.founder_name ? ` (${alert.founder_name})` : ""}`;
+                    secondaryLabel = `Draft Invoice ${alert.invoice_number || ""} · ₹${Number(alert.total_amount || 0).toLocaleString("en-IN")}`;
+                    badgeLabel = "Needs sign-off";
+                  } else if (isToolRenewal) {
+                    primaryLabel = alert.tool_name || alert.title;
+                    secondaryLabel = `Renews ${alert.next_renewal_date} · ${alert.currency || "INR"} ${Number(alert.cost_amount || 0).toLocaleString("en-IN")}`;
+                    badgeLabel = "Renewal";
+                  } else if (isBillingExpense) {
+                    primaryLabel = "Unbilled Software";
+                    secondaryLabel = alert.title;
+                    badgeLabel = "Software cost";
+                  } else if (alert.entity_type === "client_request") {
+                    primaryLabel = alert.founder_name || alert.client_name || "Client Request";
+                    secondaryLabel = alert.title;
+                    badgeLabel = isCritical ? "Urgent hold" : "Client request";
+                  }
+
+                  const dotColor = isCritical
+                    ? "bg-rose-500"
+                    : isReview
+                    ? "bg-amber-500"
+                    : isInvoiceDraft
+                    ? "bg-emerald-500"
+                    : isToolRenewal
+                    ? "bg-violet-500"
+                    : isBillingExpense
+                    ? "bg-sky-500"
+                    : "bg-zinc-400";
 
                   return (
                     <div
@@ -244,31 +336,21 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                       }`}
                     >
                       {/* Status Dot */}
-                      <span
-                        className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${
-                          isCritical
-                            ? "bg-rose-500"
-                            : isReview
-                            ? "bg-amber-500"
-                            : isBilling
-                            ? "bg-sky-500"
-                            : "bg-zinc-400"
-                        }`}
-                      />
+                      <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${dotColor}`} />
 
                       {/* Content Details */}
                       <div className="min-w-0 flex-1 space-y-0.5">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs font-semibold text-zinc-900 truncate">
-                            {alert.founder_name || alert.title.split(":")[0]}
+                            {primaryLabel}
                           </span>
                           <span className="text-[11px] text-zinc-400 shrink-0 font-medium">
-                            {isReview ? "Pending review" : isBilling ? "Software cost" : "Urgent"}
+                            {badgeLabel}
                           </span>
                         </div>
 
                         <p className="text-[12.5px] text-zinc-600 line-clamp-1">
-                          {alert.post_title || alert.title}
+                          {secondaryLabel}
                         </p>
 
                         <div className="text-[11px] text-zinc-400 pt-0.5">
@@ -319,7 +401,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                     <div className="min-w-0 space-y-0.5">
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono text-[10.5px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-medium tabular-nums">
-                          {new Date(post.scheduled_publish_date).toLocaleDateString("en-US", {
+                          {formatDisplayDateIST(post.scheduled_publish_date, {
                             month: "short",
                             day: "numeric",
                           })}
@@ -587,6 +669,252 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                       className="inline-flex items-center gap-1.5 bg-white text-zinc-700 border border-zinc-200 text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-50 transition-colors shadow-2xs"
                     >
                       <span>Mark as Done</span>
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* CASE 4: DRAFT INVOICE AWAITING SIGN-OFF */}
+              {selectedAlert.entity_type === "invoice_draft" && (
+                <>
+                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                        <span className="text-xs text-emerald-800 font-medium bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                          Draft Invoice Awaiting Sign-off
+                        </span>
+                      </div>
+                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900">
+                        {selectedAlert.title}
+                      </h2>
+                      <div className="text-xs text-zinc-500 flex items-center gap-1.5 pt-0.5">
+                        <span className="text-zinc-800 font-medium">{selectedAlert.client_name || "Client"}</span>
+                        {selectedAlert.founder_name && (
+                          <>
+                            <span>&middot;</span>
+                            <span>Founder: {selectedAlert.founder_name}</span>
+                          </>
+                        )}
+                        {selectedAlert.due_date && (
+                          <>
+                            <span>&middot;</span>
+                            <span>Due: {formatDisplayDateIST(selectedAlert.due_date)}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleDismissAlert(selectedAlert.id)}
+                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      title="Dismiss"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Invoice Summary Banner */}
+                  <div className="flex items-baseline justify-between p-4 rounded-lg bg-zinc-50/80 border border-zinc-200">
+                    <div>
+                      <span className="text-[11px] uppercase tracking-wider font-semibold text-zinc-400 block">
+                        Total Invoice Amount
+                      </span>
+                      <div className="text-2xl font-bold font-mono text-zinc-900 tabular-nums">
+                        ₹{Number(selectedAlert.total_amount || 0).toLocaleString("en-IN")}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[11px] text-zinc-400 block">Status</span>
+                      <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                        Draft &middot; Waiting on Sudeesh
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Line Items Breakdown */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-zinc-500">
+                      <span className="font-medium text-zinc-700">Line Items &amp; Retainer</span>
+                      <span className="text-[11px] text-zinc-400">
+                        {selectedAlert.line_items?.length || 0} line item{selectedAlert.line_items?.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+
+                    <div className="rounded-lg border border-zinc-200 bg-white divide-y divide-zinc-150">
+                      {selectedAlert.line_items && selectedAlert.line_items.length > 0 ? (
+                        selectedAlert.line_items.map((item: any, idx: number) => (
+                          <div key={item.id || idx} className="p-3 flex items-center justify-between text-xs">
+                            <div className="min-w-0 pr-3">
+                              <p className="font-medium text-zinc-900 truncate">{item.description}</p>
+                              {item.quantity > 1 && (
+                                <p className="text-[11px] text-zinc-400">Qty: {item.quantity}</p>
+                              )}
+                            </div>
+                            <div className="font-mono font-semibold text-zinc-900 tabular-nums shrink-0">
+                              ₹{Number(item.total_price || item.amount || item.unit_price || 0).toLocaleString("en-IN")}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-xs text-zinc-500">
+                          {selectedAlert.reason || "Monthly Retainer draft pending dispatch."}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Toolbar */}
+                  <div className="space-y-3 pt-2">
+                    <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                      <button
+                        onClick={() => handleApproveInvoice(selectedAlert)}
+                        disabled={isPending}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2.5 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                      >
+                        <FileCheck className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>{isPending ? "Approving..." : "Approve Invoice"}</span>
+                      </button>
+
+                      <Link
+                        href={`/billing/invoices/${selectedAlert.entity_id}`}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-50 text-xs font-medium px-4 py-2.5 rounded-md transition-colors shadow-2xs"
+                      >
+                        <ArrowUpRight className="h-3.5 w-3.5 text-zinc-500" />
+                        <span>View Full Invoice</span>
+                      </Link>
+
+                      <button
+                        onClick={() => openInvoiceWhatsAppPing(selectedAlert)}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 text-xs font-medium px-4 py-2.5 rounded-md transition-colors shadow-2xs"
+                      >
+                        <WhatsAppIcon size={14} className="text-[#25D366]" />
+                        <span>WhatsApp Summary</span>
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-zinc-150 text-xs text-zinc-500">
+                      <span>Approval confirms amounts &amp; readies dispatch</span>
+                      <Link href="/billing" className="text-zinc-700 hover:text-zinc-900 font-medium transition-colors">
+                        All Invoices &rarr;
+                      </Link>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* CASE 5: TOOL SUBSCRIPTION RENEWAL */}
+              {selectedAlert.entity_type === "tool_renewal" && (
+                <>
+                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
+                        <span className="text-xs text-violet-700 font-medium bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
+                          Tool Renewal Alert
+                        </span>
+                      </div>
+                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900">
+                        {selectedAlert.tool_name || selectedAlert.title}
+                      </h2>
+                      <p className="text-xs text-zinc-500">
+                        Renews on {selectedAlert.next_renewal_date}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => handleDismissAlert(selectedAlert.id)}
+                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      title="Dismiss"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-4 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-zinc-500">Subscription Cost:</span>
+                      <span className="font-mono font-semibold text-zinc-900">
+                        {selectedAlert.currency || "INR"} {Number(selectedAlert.cost_amount || 0).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-zinc-500">Allocation:</span>
+                      <span className="font-medium text-zinc-800">
+                        {selectedAlert.default_pass_through ? "Client Pass-through" : "Agency Overhead"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-600 pt-1 border-t border-zinc-200/60">
+                      {selectedAlert.reason}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 pt-2">
+                    <Link
+                      href="/billing"
+                      className="inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                    >
+                      <span>Manage Tool Catalog</span>
+                    </Link>
+
+                    <button
+                      onClick={() => handleDismissAlert(selectedAlert.id)}
+                      className="inline-flex items-center gap-1.5 bg-white text-zinc-700 border border-zinc-200 text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-50 transition-colors shadow-2xs"
+                    >
+                      <span>Mark Reviewed</span>
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* FALLBACK FOR ANY OTHER OPERATIONAL ALERT */}
+              {![
+                "content_item",
+                "billing",
+                "client_request",
+                "invoice_draft",
+                "tool_renewal",
+              ].includes(selectedAlert.entity_type) && (
+                <>
+                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-zinc-400 shrink-0" />
+                        <span className="text-xs text-zinc-700 font-medium bg-zinc-100 border border-zinc-200 px-2 py-0.5 rounded-full">
+                          Operational Alert
+                        </span>
+                      </div>
+                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900">
+                        {selectedAlert.title}
+                      </h2>
+                      {selectedAlert.waiting_on && (
+                        <p className="text-xs text-zinc-500">
+                          Waiting on: {selectedAlert.waiting_on}
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => handleDismissAlert(selectedAlert.id)}
+                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      title="Dismiss"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-4">
+                    <p className="text-xs text-zinc-800 leading-relaxed select-text font-sans">
+                      {selectedAlert.reason || "Operational item requiring review."}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 pt-2">
+                    <button
+                      onClick={() => handleDismissAlert(selectedAlert.id)}
+                      className="inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                    >
+                      <span>Mark as Resolved</span>
                     </button>
                   </div>
                 </>

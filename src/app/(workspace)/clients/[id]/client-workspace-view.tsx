@@ -40,6 +40,7 @@ import {
 } from "@/lib/actions/client";
 import { AddCredentialModal } from "@/components/clients/add-credential-modal";
 import { LogExpenseModal } from "@/components/clients/log-expense-modal";
+import { EditVoiceModal } from "@/components/clients/edit-voice-modal";
 import { BrandLogo } from "@/components/ui/brand-logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
@@ -63,6 +64,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
   // Modals & Menu State
   const [showAddCredModal, setShowAddCredModal] = useState(false);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+  const [showEditVoiceModal, setShowEditVoiceModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
 
@@ -810,41 +812,170 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
       {activeTab === "context" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-7 space-y-4">
-            <div className="space-y-1">
-              <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                Brand Voice &amp; Target Audience
-              </h2>
-              <p className="text-xs text-[var(--color-ink-secondary)]">
-                Foundational tone and positioning parameters used when generating content for this founder.
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold text-[var(--color-ink)]">
+                  Brand Voice &amp; Target Audience
+                </h2>
+                <p className="text-xs text-[var(--color-ink-secondary)]">
+                  Foundational tone and positioning parameters used when generating content for this founder.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowEditVoiceModal(true)}
+                className="btn btn-secondary text-xs shrink-0"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Edit Voice &amp; Pillars</span>
+              </button>
             </div>
 
             <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 space-y-4">
+              {/* Positioning Statement */}
               <div className="space-y-1.5">
-                <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
-                  Positioning Statement
-                </span>
-                <p className="text-xs leading-relaxed text-[var(--color-ink-secondary)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)]">
-                  {context?.positioning_statement || "No positioning statement configured yet."}
-                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                    Positioning Statement
+                  </span>
+                  <button
+                    onClick={() => setShowEditVoiceModal(true)}
+                    className="text-[10.5px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+                {context?.positioning_statement ? (
+                  <p className="text-xs leading-relaxed text-[var(--color-ink)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)] whitespace-pre-wrap">
+                    {context.positioning_statement}
+                  </p>
+                ) : (
+                  <div
+                    onClick={() => setShowEditVoiceModal(true)}
+                    className="text-xs leading-relaxed text-[var(--color-ink-muted)] bg-[var(--color-base-subtle)]/60 p-3 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] cursor-pointer hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink-secondary)] transition-all flex items-center justify-between"
+                  >
+                    <span>No positioning statement configured yet. Click to add.</span>
+                    <Sparkles className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
               </div>
 
+              {/* Target Audience / ICP */}
               <div className="space-y-1.5">
-                <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
-                  Target Audience / ICP
-                </span>
-                <p className="text-xs leading-relaxed text-[var(--color-ink-secondary)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)]">
-                  {context?.target_audience_icp || "No target audience or ICP defined yet."}
-                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                    Target Audience / ICP
+                  </span>
+                  <button
+                    onClick={() => setShowEditVoiceModal(true)}
+                    className="text-[10.5px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+                {context?.target_audience_icp ? (
+                  <p className="text-xs leading-relaxed text-[var(--color-ink)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)] whitespace-pre-wrap">
+                    {context.target_audience_icp}
+                  </p>
+                ) : (
+                  <div
+                    onClick={() => setShowEditVoiceModal(true)}
+                    className="text-xs leading-relaxed text-[var(--color-ink-muted)] bg-[var(--color-base-subtle)]/60 p-3 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] cursor-pointer hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink-secondary)] transition-all flex items-center justify-between"
+                  >
+                    <span>No target audience or ICP defined yet. Click to add.</span>
+                    <Sparkles className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
               </div>
 
+              {/* Tone Archetype */}
               <div className="space-y-1.5">
-                <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
-                  Tone Archetype
-                </span>
-                <p className="text-xs leading-relaxed text-[var(--color-ink-secondary)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)]">
-                  {context?.tone_archetype || "No tone archetype defined yet."}
-                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                    Tone Archetype
+                  </span>
+                  <button
+                    onClick={() => setShowEditVoiceModal(true)}
+                    className="text-[10.5px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+                {context?.tone_archetype ? (
+                  <p className="text-xs leading-relaxed text-[var(--color-ink)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)] font-medium">
+                    {context.tone_archetype}
+                  </p>
+                ) : (
+                  <div
+                    onClick={() => setShowEditVoiceModal(true)}
+                    className="text-xs leading-relaxed text-[var(--color-ink-muted)] bg-[var(--color-base-subtle)]/60 p-3 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] cursor-pointer hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink-secondary)] transition-all flex items-center justify-between"
+                  >
+                    <span>No tone archetype defined yet. Click to add.</span>
+                    <Sparkles className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
+              </div>
+
+              {/* Voice Guidelines & Nuances */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                    Voice Guidelines &amp; Nuances
+                  </span>
+                  <button
+                    onClick={() => setShowEditVoiceModal(true)}
+                    className="text-[10.5px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+                {context?.voice_guidelines ? (
+                  <p className="text-xs leading-relaxed text-[var(--color-ink)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)] whitespace-pre-wrap">
+                    {context.voice_guidelines}
+                  </p>
+                ) : (
+                  <div
+                    onClick={() => setShowEditVoiceModal(true)}
+                    className="text-xs leading-relaxed text-[var(--color-ink-muted)] bg-[var(--color-base-subtle)]/60 p-3 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] cursor-pointer hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink-secondary)] transition-all flex items-center justify-between"
+                  >
+                    <span>No specific voice guidelines defined yet. Click to add.</span>
+                    <Sparkles className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
+              </div>
+
+              {/* Core Content Pillars */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                    Core Content Pillars
+                  </span>
+                  <button
+                    onClick={() => setShowEditVoiceModal(true)}
+                    className="text-[10.5px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+                {context?.core_pillars && context.core_pillars.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5 bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)]">
+                    {context.core_pillars.map((pillar: string) => (
+                      <span
+                        key={pillar}
+                        className="inline-flex items-center rounded-[var(--radius-xs)] bg-[var(--color-surface)] border border-[var(--color-line-strong)] text-[var(--color-ink)] px-2.5 py-1 text-xs font-mono font-medium"
+                      >
+                        {pillar}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => setShowEditVoiceModal(true)}
+                    className="text-xs leading-relaxed text-[var(--color-ink-muted)] bg-[var(--color-base-subtle)]/60 p-3 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] cursor-pointer hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink-secondary)] transition-all flex items-center justify-between"
+                  >
+                    <span>No core pillars configured yet. Click to add themes.</span>
+                    <Sparkles className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1193,6 +1324,15 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
         engagements={client.engagements || []}
         isOpen={showAddExpenseModal}
         onClose={() => setShowAddExpenseModal(false)}
+      />
+
+      {/* FUNCTIONAL MODAL: EDIT VOICE & POSITIONING */}
+      <EditVoiceModal
+        clientId={client.id}
+        isOpen={showEditVoiceModal}
+        onClose={() => setShowEditVoiceModal(false)}
+        initialContext={context}
+        onSuccess={() => showToast("Voice & positioning parameters updated successfully.")}
       />
     </div>
   );

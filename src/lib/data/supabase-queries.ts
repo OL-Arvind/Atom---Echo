@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getTodayDateStringIST, toDateStringIST } from "@/lib/date-utils";
 
 export async function getClientsFromDb() {
   try {
@@ -343,21 +344,28 @@ export async function getCommandCenterDataFromDb() {
     }
 
     // Alert 4: Tool subscriptions renewing within 5 days
-    const fiveDaysFromNow = new Date(Date.now() + 5 * 86400000).toISOString().split("T")[0];
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = getTodayDateStringIST();
+    const todayDate = new Date();
+    const fiveDaysFromNowStr = toDateStringIST(new Date(todayDate.getTime() + 5 * 86400000));
     const { data: renewingTools } = await supabase
       .from("tool_subscriptions")
       .select("id, tool_name, cost_amount, currency, next_renewal_date, default_pass_through")
       .gte("next_renewal_date", todayStr)
-      .lte("next_renewal_date", fiveDaysFromNow)
+      .lte("next_renewal_date", fiveDaysFromNowStr)
       .order("next_renewal_date", { ascending: true });
 
     for (const tool of renewingTools || []) {
       alerts.push({
         id: `alert-tool-renew-${tool.id}`,
         urgency: "warning",
-        title: `${tool.tool_name} Renews Soon (${tool.next_renewal_date})`,
-        reason: `Subscription cost: ${tool.currency} ${Number(tool.cost_amount).toLocaleString("en-IN")}. Verify active client allocation.`,
+        title: `${tool.tool_name} Renews Soon`,
+        client_name: tool.tool_name,
+        tool_name: tool.tool_name,
+        cost_amount: Number(tool.cost_amount),
+        currency: tool.currency,
+        next_renewal_date: tool.next_renewal_date,
+        default_pass_through: tool.default_pass_through,
+        reason: `Subscription cost: ${tool.currency} ${Number(tool.cost_amount).toLocaleString("en-IN")}. Renews on ${tool.next_renewal_date}.`,
         waiting_on: "License Review",
         entity_id: tool.id,
         entity_type: "tool_renewal",
@@ -372,12 +380,29 @@ export async function getCommandCenterDataFromDb() {
         id,
         invoice_number,
         total_amount,
+        subtotal_amount,
+        tax_amount,
         due_date,
+        created_at,
         engagements (
+          id,
+          service_type,
+          monthly_retainer,
           clients (
+            id,
             name,
-            founder_name
+            founder_name,
+            founder_phone,
+            founder_email
           )
+        ),
+        invoice_line_items (
+          id,
+          description,
+          amount,
+          quantity,
+          unit_price,
+          total_price
         )
       `)
       .eq("status", "draft")
@@ -386,15 +411,25 @@ export async function getCommandCenterDataFromDb() {
     for (const inv of draftInvoices || []) {
       const client = (inv.engagements as any)?.clients;
       const clientName = client?.name || "Client";
+      const founderName = client?.founder_name || "Founder";
       alerts.push({
         id: `alert-inv-draft-${inv.id}`,
-        urgency: "info",
-        title: `Draft Invoice ${inv.invoice_number} (${clientName})`,
+        urgency: "urgent",
+        title: `Draft Invoice ${inv.invoice_number}`,
+        client_name: clientName,
+        founder_name: founderName,
+        founder_phone: client?.founder_phone,
+        founder_email: client?.founder_email,
         reason: `₹${Number(inv.total_amount).toLocaleString("en-IN")} pending approval before sending.`,
         waiting_on: "Sudeesh Sign-off",
         entity_id: inv.id,
         entity_type: "invoice_draft",
         next_action: "Review Invoice",
+        invoice_number: inv.invoice_number,
+        total_amount: Number(inv.total_amount),
+        subtotal_amount: Number(inv.subtotal_amount || inv.total_amount),
+        due_date: inv.due_date,
+        line_items: inv.invoice_line_items || [],
       });
     }
 
@@ -670,6 +705,8 @@ export async function getContentStudioDataFromDb() {
         target_pillar,
         status,
         scheduled_publish_date,
+        published_at,
+        linkedin_post_url,
         created_at,
         engagements (
           id,
@@ -1020,6 +1057,8 @@ export async function getCalendarDataFromDb() {
         target_pillar,
         body_markdown,
         scheduled_publish_date,
+        published_at,
+        linkedin_post_url,
         created_at,
         engagements (
           id,

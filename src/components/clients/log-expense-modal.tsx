@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, X, CreditCard } from "lucide-react";
 import { logToolExpenseAction } from "@/lib/actions/client";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomDatePicker } from "@/components/ui/custom-date-picker";
 
 interface LogExpenseModalProps {
   clientId: string;
@@ -191,11 +192,9 @@ export function LogExpenseModal({
             <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Date
             </label>
-            <input
+            <CustomDatePicker
               name="incurred_date"
-              type="date"
               defaultValue={new Date().toISOString().split("T")[0]}
-              className="input text-xs font-mono"
             />
           </div>
 

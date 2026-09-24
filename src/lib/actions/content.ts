@@ -10,6 +10,7 @@ import {
 import {
   createContentSchema,
   clientFeedbackSchema,
+  publishContentSchema,
   formatZodError,
 } from "@/lib/validations";
 
@@ -430,7 +431,11 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
   try {
     const supabase = createAdminClient();
 
-    const updateData: any = { status: newStatus };
+    const updateData: any = {
+      status: newStatus,
+      updated_at: new Date().toISOString(),
+    };
+
     if (newStatus === "scheduled") {
       const { data: cur } = await supabase
         .from("content_items")
@@ -442,6 +447,17 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
       }
     }
 
+    if (newStatus === "published") {
+      const { data: cur } = await supabase
+        .from("content_items")
+        .select("published_at")
+        .eq("id", contentId)
+        .single();
+      if (!cur?.published_at) {
+        updateData.published_at = new Date().toISOString();
+      }
+    }
+
     const { data, error } = await supabase
       .from("content_items")
       .update(updateData)
@@ -449,6 +465,8 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
       .select(`
         id,
         status,
+        published_at,
+        linkedin_post_url,
         engagement_id,
         engagements (
           client_id
@@ -468,9 +486,93 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
     }
 
     revalidatePath("/content");
+    revalidatePath(`/content/${contentId}`);
+    revalidatePath("/calendar");
     revalidatePath("/command-center");
     revalidatePath("/clients");
+    revalidatePath("/review");
     return { success: true, data };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Mark a post as Published (AC-2 / STATE_MACHINES):
+ * - Transitions post to 'published'
+ * - Sets published_at timestamp (defaults to now)
+ * - Optionally stores verified linkedin_post_url
+ * - Revalidates all pipeline & client views
+ */
+export async function publishContentPostAction(
+  postIdOrData: string | { postId: string; linkedin_post_url?: string; published_at?: string },
+  linkedinUrlArg?: string
+) {
+  try {
+    let postId: string;
+    let linkedinPostUrl: string | undefined;
+    let publishedAt: string | undefined;
+
+    if (typeof postIdOrData === "string") {
+      postId = postIdOrData;
+      linkedinPostUrl = linkedinUrlArg;
+    } else {
+      postId = postIdOrData.postId;
+      linkedinPostUrl = postIdOrData.linkedin_post_url;
+      publishedAt = postIdOrData.published_at;
+    }
+
+    const parsed = publishContentSchema.safeParse({
+      postId,
+      linkedin_post_url: linkedinPostUrl || undefined,
+      published_at: publishedAt || undefined,
+    });
+
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
+    }
+
+    const supabase = createAdminClient();
+
+    const updatePayload: any = {
+      status: "published",
+      published_at: parsed.data.published_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (parsed.data.linkedin_post_url !== undefined) {
+      updatePayload.linkedin_post_url = parsed.data.linkedin_post_url;
+    }
+
+    const { data: updatedPost, error } = await supabase
+      .from("content_items")
+      .update(updatePayload)
+      .eq("id", parsed.data.postId)
+      .select(`
+        id,
+        title,
+        status,
+        published_at,
+        linkedin_post_url,
+        engagement_id,
+        engagements (
+          client_id
+        )
+      `)
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/content");
+    revalidatePath(`/content/${postId}`);
+    revalidatePath("/calendar");
+    revalidatePath("/command-center");
+    revalidatePath("/clients");
+    revalidatePath("/review");
+
+    return { success: true, post: updatedPost };
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -485,6 +587,7 @@ export async function updateContentPostAction(postId: string, formData: FormData
     const targetPillar = formData.get("target_pillar") as string;
     const status = formData.get("status") as string;
     const scheduledDate = formData.get("scheduled_publish_date") as string;
+    const linkedinPostUrl = formData.get("linkedin_post_url") as string | null;
 
     if (!postId || !title) {
       return { success: false, error: "Post ID and Title are required." };
@@ -499,10 +602,24 @@ export async function updateContentPostAction(postId: string, formData: FormData
 
     if (status) {
       updateData.status = status;
+      if (status === "published") {
+        const { data: cur } = await supabase
+          .from("content_items")
+          .select("published_at")
+          .eq("id", postId)
+          .single();
+        if (!cur?.published_at) {
+          updateData.published_at = new Date().toISOString();
+        }
+      }
     }
 
     if (scheduledDate !== undefined) {
       updateData.scheduled_publish_date = scheduledDate ? new Date(scheduledDate).toISOString() : null;
+    }
+
+    if (linkedinPostUrl !== null && linkedinPostUrl !== undefined) {
+      updateData.linkedin_post_url = linkedinPostUrl.trim() || null;
     }
 
     const { data: updatedPost, error } = await supabase
@@ -513,6 +630,8 @@ export async function updateContentPostAction(postId: string, formData: FormData
         id,
         title,
         status,
+        published_at,
+        linkedin_post_url,
         engagement_id,
         engagements (
           client_id
@@ -537,6 +656,7 @@ export async function updateContentPostAction(postId: string, formData: FormData
     revalidatePath("/calendar");
     revalidatePath("/command-center");
     revalidatePath("/clients");
+    revalidatePath("/review");
     return { success: true, post: updatedPost };
   } catch (err: any) {
     return { success: false, error: err.message };

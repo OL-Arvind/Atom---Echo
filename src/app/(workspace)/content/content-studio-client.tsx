@@ -24,10 +24,15 @@ import {
 } from "lucide-react";
 import { updateContentStatusAction, sendForClientReviewAction } from "@/lib/actions/content";
 import { NewContentModal } from "@/components/content/new-content-modal";
+import { MarkPublishedModal } from "@/components/content/mark-published-modal";
 import { PageHeader } from "@/components/layout/page-header";
 import { BrandLogo } from "@/components/ui/brand-logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  formatDisplayDateIST,
+  formatDisplayDateTimeIST,
+} from "@/lib/date-utils";
 
 interface ContentStudioClientProps {
   initialPosts: any[];
@@ -46,6 +51,7 @@ export function ContentStudioClient({
   const [filter, setFilter] = useState<string>("all");
   const [selectedClientId, setSelectedClientId] = useState<string>("all");
   const [showNewModal, setShowNewModal] = useState(false);
+  const [publishingPost, setPublishingPost] = useState<any | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -436,18 +442,18 @@ export function ContentStudioClient({
                             </div>
                           )}
 
-                          {/* Scheduled Date if set */}
-                          {post.scheduled_publish_date && (
-                            <div className="flex items-center gap-1 text-[10.5px] font-mono text-[var(--color-ink-tertiary)]">
-                              <Calendar className="h-3 w-3 text-[var(--color-accent)]" />
-                              <span>
-                                {new Date(post.scheduled_publish_date).toLocaleDateString("en-IN", {
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                              </span>
+                          {/* Published or Scheduled Date */}
+                          {post.status === "published" && post.published_at ? (
+                            <div className="flex items-center gap-1 text-[10.5px] font-mono text-[var(--color-ok-text)]">
+                              <CheckCircle2 className="h-3 w-3 shrink-0" />
+                              <span>Published {formatDisplayDateIST(post.published_at)}</span>
                             </div>
-                          )}
+                          ) : post.scheduled_publish_date ? (
+                            <div className="flex items-center gap-1 text-[10.5px] font-mono text-[var(--color-ink-tertiary)]">
+                              <Calendar className="h-3 w-3 text-[var(--color-accent)] shrink-0" />
+                              <span>{formatDisplayDateIST(post.scheduled_publish_date)}</span>
+                            </div>
+                          ) : null}
 
                           {/* Card Actions Footer */}
                           <div className="pt-2 border-t border-[var(--color-line-subtle)] flex items-center justify-between gap-1.5">
@@ -499,6 +505,40 @@ export function ContentStudioClient({
                                 >
                                   Schedule &rarr;
                                 </button>
+                              )}
+
+                              {post.status === "scheduled" && (
+                                <button
+                                  onClick={() => setPublishingPost(post)}
+                                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-ok-bg)] hover:bg-[var(--color-ok-bg)]/80 border border-[var(--color-ok-line)] text-[var(--color-ok-text)] cursor-pointer inline-flex items-center gap-1 font-medium"
+                                  title="Mark as Published on LinkedIn"
+                                >
+                                  <CheckCircle2 className="h-2.5 w-2.5" />
+                                  <span>Publish &rarr;</span>
+                                </button>
+                              )}
+
+                              {post.status === "published" && (
+                                post.linkedin_post_url ? (
+                                  <a
+                                    href={post.linkedin_post_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-ok-bg)] hover:bg-[var(--color-ok-bg)]/80 border border-[var(--color-ok-line)] text-[var(--color-ok-text)] inline-flex items-center gap-1"
+                                    title="View live LinkedIn post"
+                                  >
+                                    <span>Live</span>
+                                    <ExternalLink className="h-2.5 w-2.5" />
+                                  </a>
+                                ) : (
+                                  <button
+                                    onClick={() => setPublishingPost(post)}
+                                    className="text-[10px] font-mono px-1 py-0.5 rounded bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-line)] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] cursor-pointer"
+                                    title="Add live LinkedIn link"
+                                  >
+                                    + URL
+                                  </button>
+                                )
                               )}
                             </div>
                           </div>
@@ -599,8 +639,7 @@ export function ContentStudioClient({
                           <>
                             <span className="text-[var(--color-ink-tertiary)]">·</span>
                             <span className="font-mono text-[11px] text-[var(--color-accent-text)]">
-                              Scheduled:{" "}
-                              {new Date(post.scheduled_publish_date).toLocaleDateString("en-IN")}
+                              Scheduled: {formatDisplayDateTimeIST(post.scheduled_publish_date, true)}
                             </span>
                           </>
                         )}
@@ -637,6 +676,37 @@ export function ContentStudioClient({
                           </button>
                         </>
                       )}
+
+                      {isScheduled && (
+                        <button
+                          onClick={() => setPublishingPost(post)}
+                          className="btn btn-secondary text-xs inline-flex items-center gap-1 text-[var(--color-ok-text)] border-[var(--color-ok-line)] bg-[var(--color-ok-bg)] hover:bg-[var(--color-ok-bg)]/80 cursor-pointer"
+                        >
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span>Publish</span>
+                        </button>
+                      )}
+
+                      {post.status === "published" && (
+                        post.linkedin_post_url ? (
+                          <a
+                            href={post.linkedin_post_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-secondary text-xs inline-flex items-center gap-1 text-[var(--color-ok-text)]"
+                          >
+                            <span>Live on LinkedIn</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => setPublishingPost(post)}
+                            className="btn btn-secondary text-xs inline-flex items-center gap-1"
+                          >
+                            <span>+ Add URL</span>
+                          </button>
+                        )
+                      )}
                     </div>
                   </div>
 
@@ -656,6 +726,17 @@ export function ContentStudioClient({
         isOpen={showNewModal}
         onClose={() => setShowNewModal(false)}
         engagements={engagements}
+      />
+
+      {/* MARK PUBLISHED MODAL */}
+      <MarkPublishedModal
+        post={publishingPost}
+        isOpen={!!publishingPost}
+        onClose={() => setPublishingPost(null)}
+        onSuccess={() => {
+          showToast("Post marked as published on LinkedIn!");
+          router.refresh();
+        }}
       />
     </div>
   );

@@ -26,6 +26,7 @@ import {
   updateClientRequestStatusAction,
   toggleEmergencyHoldAction,
 } from "@/lib/actions/client";
+import { formatDisplayDateTimeIST } from "@/lib/date-utils";
 
 interface OperationsClientProps {
   initialCredentialLogs: any[];
@@ -419,7 +420,7 @@ export function OperationsClient({
                     <div className="flex items-center justify-between text-[11px] text-[var(--color-ink-tertiary)] font-mono border-t border-[var(--color-line-subtle)] pt-2">
                       <span>Status: {req.status.replace("_", " ")}</span>
                       <span>
-                        {new Date(req.created_at).toLocaleString("en-US", {
+                        {formatDisplayDateTimeIST(req.created_at, {
                           month: "short",
                           day: "numeric",
                           hour: "numeric",
@@ -479,7 +480,7 @@ export function OperationsClient({
                   </div>
 
                   <span className="font-mono text-[11px] text-[var(--color-ink-tertiary)] shrink-0">
-                    {new Date(log.created_at).toLocaleString("en-US", {
+                    {formatDisplayDateTimeIST(log.created_at, {
                       month: "short",
                       day: "numeric",
                       hour: "numeric",
@@ -529,7 +530,7 @@ export function OperationsClient({
                       </span>
                     </div>
                     <span className="font-mono text-[11px] text-[var(--color-ink-tertiary)]">
-                      {new Date(fb.created_at).toLocaleString("en-US", {
+                      {formatDisplayDateTimeIST(fb.created_at, {
                         month: "short",
                         day: "numeric",
                         hour: "numeric",

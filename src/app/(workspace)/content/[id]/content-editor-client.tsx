@@ -21,6 +21,7 @@ import {
   Plus,
   ArrowRight,
   ShieldAlert,
+  Globe,
 } from "lucide-react";
 import {
   updateContentPostAction,
@@ -29,6 +30,11 @@ import {
 } from "@/lib/actions/content";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  toDatetimeLocalIST,
+  parseDatetimeLocalIST,
+  formatDisplayDateTimeIST,
+} from "@/lib/date-utils";
 
 interface ContentEditorClientProps {
   post: any;
@@ -63,9 +69,10 @@ export function ContentEditorClient({
   const [status, setStatus] = useState(post.status || "draft");
   const [scheduledDate, setScheduledDate] = useState(
     post.scheduled_publish_date
-      ? new Date(post.scheduled_publish_date).toISOString().slice(0, 16)
+      ? toDatetimeLocalIST(post.scheduled_publish_date)
       : ""
   );
+  const [linkedinPostUrl, setLinkedinPostUrl] = useState(post.linkedin_post_url || "");
 
   const [activeRightTab, setActiveRightTab] = useState<"preview" | "context">("preview");
   const [seeMoreExpanded, setSeeMoreExpanded] = useState(false);
@@ -123,7 +130,10 @@ export function ContentEditorClient({
       formData.set("target_pillar", targetPillar);
       formData.set("status", statusToSave);
       if (scheduledDate) {
-        formData.set("scheduled_publish_date", scheduledDate);
+        formData.set("scheduled_publish_date", parseDatetimeLocalIST(scheduledDate));
+      }
+      if (linkedinPostUrl) {
+        formData.set("linkedin_post_url", linkedinPostUrl);
       }
 
       const res = await updateContentPostAction(post.id, formData);
@@ -284,6 +294,37 @@ export function ContentEditorClient({
             </button>
           )}
 
+          {status === "scheduled" && (
+            <button
+              onClick={() => handleStatusTransition("published")}
+              disabled={isPending}
+              className="btn text-xs bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)] hover:bg-[var(--color-ok-bg)]/80 cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>Mark as Published</span>
+            </button>
+          )}
+
+          {status === "published" && (
+            linkedinPostUrl ? (
+              <a
+                href={linkedinPostUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary text-xs inline-flex items-center gap-1.5 text-[var(--color-ok-text)]"
+              >
+                <Globe className="h-3.5 w-3.5" />
+                <span>Live on LinkedIn</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-[var(--color-ok-text)] font-mono px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--color-ok-bg)] border border-[var(--color-ok-line)]">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Published Live</span>
+              </div>
+            )
+          )}
+
           {/* Save Button */}
           <button
             onClick={() => handleSave()}
@@ -389,6 +430,33 @@ export function ContentEditorClient({
                   />
                 </div>
               </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)]">
+                    Live LinkedIn Post URL
+                  </label>
+                  {linkedinPostUrl && (
+                    <a
+                      href={linkedinPostUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-mono text-[var(--color-accent-text)] hover:underline inline-flex items-center gap-1"
+                    >
+                      <span>Open Live Post</span>
+                      <ExternalLink className="h-2.5 w-2.5" />
+                    </a>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  inputMode="url"
+                  value={linkedinPostUrl}
+                  onChange={(e) => setLinkedinPostUrl(e.target.value)}
+                  placeholder="https://www.linkedin.com/posts/..."
+                  className="input w-full font-mono text-xs text-[var(--color-ink)]"
+                />
+              </div>
             </div>
 
             {/* Markdown Post Body */}
@@ -452,7 +520,7 @@ export function ContentEditorClient({
                   <div key={fb.id} className="py-2.5 text-xs space-y-1">
                     <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-ink-tertiary)]">
                       <span>{fb.author_name} ({fb.author_type})</span>
-                      <span>{new Date(fb.created_at).toLocaleString("en-IN")}</span>
+                      <span>{formatDisplayDateTimeIST(fb.created_at, true)}</span>
                     </div>
                     <p className="text-[var(--color-ink)] bg-[var(--color-base-subtle)] p-2 rounded">
                       {fb.comment}

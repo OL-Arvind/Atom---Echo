@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { flexibleUrlSchema } from "./common";
 
 export const createContentSchema = z.object({
   engagement_id: z.string().min(1, "Client engagement is required."),
@@ -24,6 +25,12 @@ export const createContentSchema = z.object({
     .transform((d) => (d ? d : null)),
 });
 
+export const publishContentSchema = z.object({
+  postId: z.string().min(1, "Post ID is required."),
+  linkedin_post_url: flexibleUrlSchema.optional().nullable(),
+  published_at: z.string().optional().nullable(),
+});
+
 export const clientFeedbackSchema = z.object({
   postId: z.string().min(1, "Post ID is required."),
   token: z.string().min(1, "Review token is required."),
@@ -32,4 +39,6 @@ export const clientFeedbackSchema = z.object({
 });
 
 export type CreateContentInput = z.infer<typeof createContentSchema>;
+export type PublishContentInput = z.infer<typeof publishContentSchema>;
 export type ClientFeedbackInput = z.infer<typeof clientFeedbackSchema>;
+

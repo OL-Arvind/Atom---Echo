@@ -7,6 +7,7 @@ import {
   createClientSchema,
   tabooWordSchema,
   toolExpenseSchema,
+  updateClientContextSchema,
   formatZodError,
 } from "@/lib/validations";
 
@@ -180,6 +181,84 @@ export async function removeTabooWordAction(clientId: string, wordToRemove: stri
     }
 
     revalidatePath(`/clients/${clientId}`);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateClientContextAction(
+  clientId: string,
+  contextData: {
+    positioning_statement?: string;
+    target_audience_icp?: string;
+    tone_archetype?: string;
+    voice_guidelines?: string;
+    core_pillars?: string[];
+  }
+) {
+  try {
+    const parsed = updateClientContextSchema.safeParse({
+      clientId,
+      ...contextData,
+    });
+
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
+    }
+
+    const {
+      positioning_statement,
+      target_audience_icp,
+      tone_archetype,
+      voice_guidelines,
+      core_pillars,
+    } = parsed.data;
+
+    const supabase = createAdminClient();
+
+    // Check if context row already exists
+    const { data: existing } = await supabase
+      .from("client_contexts")
+      .select("id")
+      .eq("client_id", clientId)
+      .maybeSingle();
+
+    if (existing) {
+      const { error: updateErr } = await supabase
+        .from("client_contexts")
+        .update({
+          positioning_statement,
+          target_audience_icp,
+          tone_archetype,
+          voice_guidelines,
+          core_pillars,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+
+      if (updateErr) {
+        return { success: false, error: updateErr.message };
+      }
+    } else {
+      const { error: insertErr } = await supabase.from("client_contexts").insert({
+        client_id: clientId,
+        positioning_statement,
+        target_audience_icp,
+        tone_archetype,
+        voice_guidelines,
+        core_pillars,
+        taboo_words: [],
+      });
+
+      if (insertErr) {
+        return { success: false, error: insertErr.message };
+      }
+    }
+
+    revalidatePath(`/clients/${clientId}`);
+    revalidatePath("/content");
+    revalidatePath("/command-center");
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };
