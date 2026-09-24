@@ -13,10 +13,10 @@ async function cleanDatabase() {
     "audit_logs",
     "content_feedback",
     "review_tokens",
-    "content_items",
-    "tool_expenses",
-    "invoice_lines",
+    "invoice_line_items",
     "invoices",
+    "tool_expenses",
+    "content_items",
     "tool_subscriptions",
     "client_requests",
     "knowledge_items",
@@ -25,9 +25,7 @@ async function cleanDatabase() {
     "credentials",
     "client_contexts",
     "engagements",
-    "clients",
-    "users",
-    "organizations"
+    "clients"
   ];
 
   for (const table of tablesToDelete) {

@@ -108,14 +108,46 @@ export interface ToolSubscription {
 
 export interface ToolExpense {
   id: string;
-  client_id: string;
-  client_name: string;
-  tool_name: string;
+  engagement_id?: string;
+  tool_subscription_id?: string;
+  client_id?: string;
+  client_name?: string;
+  tool_name?: string;
   description: string;
   amount: number;
   currency: string;
   incurred_date: string;
   status: ExpenseStatus;
+}
+
+export interface InvoiceLineItem {
+  id: string;
+  invoice_id: string;
+  tool_expense_id?: string | null;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
+export interface Invoice {
+  id: string;
+  engagement_id: string;
+  invoice_number: string;
+  issue_date: string;
+  due_date: string;
+  subtotal_amount: number;
+  tax_amount: number;
+  total_amount: number;
+  currency: string;
+  status: InvoiceStatus;
+  paid_at?: string | null;
+  created_at: string;
+  client_name?: string;
+  founder_name?: string;
+  founder_email?: string;
+  founder_phone?: string;
+  line_items?: InvoiceLineItem[];
 }
 
 export interface ClientRequest {
@@ -143,3 +175,25 @@ export interface OperationalAlert {
   action_type: "whatsapp_ping" | "review_post" | "bill_expense" | "resolve_hold";
   created_at: string;
 }
+
+export interface ReviewToken {
+  id: string;
+  client_id: string;
+  token_hash: string;
+  expires_at: string;
+  last_accessed_at?: string;
+  revoked: boolean;
+  created_at: string;
+}
+
+export interface ContentFeedback {
+  id: string;
+  content_item_id: string;
+  author_type: "client" | "operator" | "system";
+  author_name: string;
+  highlighted_text?: string;
+  comment: string;
+  is_resolved: boolean;
+  created_at: string;
+}
+

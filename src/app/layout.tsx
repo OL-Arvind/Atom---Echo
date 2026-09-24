@@ -1,43 +1,48 @@
-import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-sans",
   display: "swap",
 });
 
-const outfit = Outfit({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--font-outfit",
+  weight: ["400", "500"],
+  variable: "--font-mono",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  themeColor: "#090a0c",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
-  title: "Atom & Echo OS — BaseWorks Command Engine",
-  description: "Operational Operating System for Atom & Echo Agency",
-  icons: {
-    icon: [
-      { url: "/icon.png", type: "image/png" },
-      { url: "/favicon.ico" },
-    ],
-    apple: [
-      { url: "/apple-icon.png", type: "image/png" },
-    ],
+  title: "Atom & Echo",
+  description: "Atom & Echo Agency Operating System",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "A&E Review",
   },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${outfit.variable}`}>
-      <body className="min-h-screen bg-black font-sans text-foreground antialiased selection:bg-white selection:text-black">
-        {children}
-      </body>
+    <html lang="en" className={`${plusJakarta.variable} ${jetbrainsMono.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }

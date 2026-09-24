@@ -1,160 +1,606 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
+  Crosshair,
   Users,
-  CalendarDays,
-  SendHorizontal,
-  Wrench,
-  LifeBuoy,
-  ShieldCheck,
+  Feather,
+  Calendar,
+  Send,
+  Receipt,
+  Activity,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
-import { AtomEchoLogo } from "@/components/ui/logo";
+import { useSidebar } from "./sidebar-context";
+import { LogoutModal } from "@/components/auth/logout-modal";
+import { getStoredUser, DEFAULT_USER, AuthUser } from "@/lib/auth/dummy-auth";
+import { SidebarTooltip } from "@/components/ui/sidebar-tooltip";
 
-interface NavItem {
-  name: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  badge?: number | string;
-  badgeType?: "critical" | "warning" | "neutral";
-}
-
-const NAV_ITEMS: NavItem[] = [
-  {
-    name: "Command Center",
-    href: "/command-center",
-    icon: LayoutDashboard,
-  },
-  {
-    name: "Clients",
-    href: "/clients",
-    icon: Users,
-  },
-  {
-    name: "Content Engine",
-    href: "/content",
-    icon: CalendarDays,
-  },
-  {
-    name: "Outbound Campaigns",
-    href: "/campaigns",
-    icon: SendHorizontal,
-  },
-  {
-    name: "Tool Billing & Leakage",
-    href: "/billing",
-    icon: Wrench,
-  },
-  {
-    name: "Operations & Requests",
-    href: "/operations",
-    icon: LifeBuoy,
-  },
+const NAV_ITEMS = [
+  { name: "Command Center", href: "/command-center", icon: Crosshair, section: "ops" },
+  { name: "Clients", href: "/clients", icon: Users, section: "ops" },
+  { name: "Content", href: "/content", icon: Feather, section: "ops" },
+  { name: "Calendar", href: "/calendar", icon: Calendar, section: "ops" },
+  { name: "Outbound", href: "/campaigns", icon: Send, section: "revenue" },
+  { name: "Invoices & Billing", href: "/billing", icon: Receipt, section: "revenue" },
+  { name: "Activity Log", href: "/operations", icon: Activity, section: "system" },
 ];
+
+const SECTIONS: Record<string, string> = {
+  ops: "Workspace",
+  revenue: "Finance",
+  system: "System",
+};
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { isCollapsed, toggleSidebar } = useSidebar();
+  const [user, setUser] = useState<AuthUser>(DEFAULT_USER);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const grouped = ["ops", "revenue", "system"];
+
+  useEffect(() => {
+    setUser(getStoredUser() || DEFAULT_USER);
+    const handleAuth = () => {
+      setUser(getStoredUser() || DEFAULT_USER);
+    };
+    window.addEventListener("ae_auth_change", handleAuth);
+    return () => window.removeEventListener("ae_auth_change", handleAuth);
+  }, []);
 
   return (
-    <aside className="fixed left-0 top-0 z-30 flex h-screen w-64 flex-col border-r border-zinc-800/80 bg-[#09090B] text-white">
-      {/* Brand Header with Real Logo */}
-      <div className="flex h-16 items-center justify-between border-b border-zinc-800/80 px-5">
-        <Link href="/command-center" className="btn-pressable group">
-          <AtomEchoLogo size={34} showText={true} />
-        </Link>
-      </div>
-
-      {/* Main Navigation */}
-      <div className="flex-1 overflow-y-auto px-3 py-4">
-        <div className="mb-2 px-3 text-[10px] font-mono font-semibold uppercase tracking-widest text-zinc-500">
-          Attention Surface
-        </div>
-        <nav className="space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/command-center" && pathname.startsWith(item.href));
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`btn-pressable group flex items-center justify-between rounded-lg px-3 py-2.5 text-xs font-medium transition-all ${
-                  isActive
-                    ? "bg-white text-black font-semibold shadow-[0_2px_8px_rgba(255,255,255,0.12)]"
-                    : "text-zinc-400 hover:bg-zinc-900/80 hover:text-white"
-                }`}
+    <aside
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        height: "100vh",
+        width: isCollapsed ? "64px" : "220px",
+        display: "flex",
+        flexDirection: "column",
+        background: "var(--color-base-raised)",
+        borderRight: "1px solid var(--color-line)",
+        zIndex: 30,
+        transition: "width 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+        overflow: "hidden",
+        cursor: "default",
+      }}
+      aria-label="Sidebar Navigation"
+    >
+      {/* Brand Header */}
+      <div
+        style={{
+          padding: isCollapsed ? "18px 12px 14px" : "18px 14px 14px",
+          borderBottom: "1px solid var(--color-line-subtle)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: isCollapsed ? "center" : "space-between",
+          height: "58px",
+          boxSizing: "border-box",
+        }}
+      >
+        {isCollapsed ? (
+          <SidebarTooltip content="Expand sidebar" hint="[" enabled={isCollapsed}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleSidebar();
+              }}
+              aria-label="Expand sidebar"
+              className="group"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "36px",
+                height: "36px",
+                borderRadius: "7px",
+                border: "1px solid transparent",
+                background: "transparent",
+                cursor: "pointer",
+                padding: 0,
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--color-base-subtle)";
+                e.currentTarget.style.borderColor = "var(--color-line)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "transparent";
+              }}
+            >
+              <div
+                style={{
+                  width: "26px",
+                  height: "26px",
+                  borderRadius: "6px",
+                  overflow: "hidden",
+                  border: "1px solid var(--color-line)",
+                  background: "#000",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  transition: "transform 0.15s ease",
+                }}
+                className="group-hover:scale-95"
               >
-                <div className="flex items-center gap-3">
-                  <Icon
-                    className={`h-4 w-4 transition-colors duration-150 ${
-                      isActive ? "text-black" : "text-zinc-500 group-hover:text-white"
-                    }`}
-                  />
-                  <span>{item.name}</span>
+                <Image
+                  src="/logo.png"
+                  alt="Atom & Echo"
+                  width={26}
+                  height={26}
+                  priority
+                  className="object-cover w-full h-full"
+                />
+              </div>
+            </button>
+          </SidebarTooltip>
+        ) : (
+          <>
+            <Link
+              href="/command-center"
+              style={{
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                minWidth: 0,
+              }}
+            >
+              <div
+                style={{
+                  width: "26px",
+                  height: "26px",
+                  borderRadius: "6px",
+                  overflow: "hidden",
+                  border: "1px solid var(--color-line)",
+                  background: "#000",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Image
+                  src="/logo.png"
+                  alt="Atom & Echo"
+                  width={26}
+                  height={26}
+                  priority
+                  className="object-cover w-full h-full"
+                />
+              </div>
+
+              <div style={{ minWidth: 0, whiteSpace: "nowrap" }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-sans)",
+                    fontWeight: 600,
+                    fontSize: "13.5px",
+                    color: "var(--color-ink)",
+                    lineHeight: 1.1,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  Atom & Echo
                 </div>
+              </div>
+            </Link>
 
-                {item.badge !== undefined && (
-                  <span
-                    className={`tabular-numbers font-mono rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                      isActive
-                        ? "bg-black text-white"
-                        : "bg-zinc-800 text-zinc-300 border border-zinc-700"
-                    }`}
+            {/* Toggle Button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleSidebar();
+              }}
+              title="Collapse sidebar (Ctrl+B or [)"
+              aria-label="Collapse sidebar"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                borderRadius: "5px",
+                border: "1px solid transparent",
+                background: "transparent",
+                color: "var(--color-ink-tertiary)",
+                cursor: "pointer",
+                transition: "all 0.12s ease",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--color-ink)";
+                e.currentTarget.style.background = "var(--color-base-subtle)";
+                e.currentTarget.style.borderColor = "var(--color-line)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "var(--color-ink-tertiary)";
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "transparent";
+              }}
+            >
+              <PanelLeftClose size={14} strokeWidth={1.8} />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Navigation Links */}
+      <nav
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          padding: isCollapsed ? "12px 8px" : "12px 8px",
+          display: "flex",
+          flexDirection: "column",
+          gap: isCollapsed ? "4px" : "0",
+        }}
+      >
+        {grouped.map((section, idx) => {
+          const items = NAV_ITEMS.filter((i) => i.section === section);
+          return (
+            <div key={section} style={{ marginBottom: isCollapsed ? "8px" : "18px" }}>
+              {isCollapsed ? (
+                idx > 0 ? (
+                  <div
+                    style={{
+                      height: "1px",
+                      background: "var(--color-line-subtle)",
+                      margin: "6px 8px 10px",
+                    }}
+                  />
+                ) : null
+              ) : (
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "9.5px",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "var(--color-ink-muted)",
+                    padding: "0 8px",
+                    marginBottom: "4px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {SECTIONS[section]}
+                </div>
+              )}
+
+              {items.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/command-center" && pathname.startsWith(item.href));
+                const Icon = item.icon;
+                return (
+                  <SidebarTooltip
+                    key={item.href}
+                    content={item.name}
+                    enabled={isCollapsed}
                   >
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+                    <Link
+                      href={item.href}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: isCollapsed ? "center" : "flex-start",
+                        gap: "9px",
+                        padding: isCollapsed ? "8px 0" : "7px 8px",
+                        width: isCollapsed ? "44px" : "auto",
+                        margin: isCollapsed ? "0 auto 2px auto" : "0 0 1px 0",
+                        borderRadius: "6px",
+                        textDecoration: "none",
+                        fontSize: "13px",
+                        fontWeight: isActive ? 500 : 400,
+                        color: isActive ? "var(--color-ink)" : "var(--color-ink-tertiary)",
+                        background: isActive ? "var(--color-base-subtle)" : "transparent",
+                        transition: "all 0.12s ease",
+                        position: "relative",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.color = "var(--color-ink-secondary)";
+                          e.currentTarget.style.background = "var(--color-line-subtle)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.color = "var(--color-ink-tertiary)";
+                          e.currentTarget.style.background = "transparent";
+                        }
+                      }}
+                    >
+                      <Icon
+                        size={isCollapsed ? 16 : 14}
+                        color={isActive ? "var(--color-ink)" : "currentColor"}
+                        strokeWidth={isActive ? 2 : 1.75}
+                        style={{ flexShrink: 0 }}
+                      />
 
-        {/* Client Management Shortcut */}
-        <div className="mt-8 border-t border-zinc-800/80 pt-4">
-          <div className="mb-2 flex items-center justify-between px-3 text-[10px] font-mono font-semibold uppercase tracking-widest text-zinc-500">
-            <span>Client Workspaces</span>
-            <Link
-              href="/clients"
-              className="text-[10px] text-zinc-300 hover:text-white font-bold transition-colors"
-            >
-              Directory
-            </Link>
+                      {!isCollapsed && (
+                        <>
+                          <span
+                            style={{
+                              lineHeight: 1,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {item.name}
+                          </span>
+                          {isActive && (
+                            <div
+                              style={{
+                                marginLeft: "auto",
+                                width: "4px",
+                                height: "4px",
+                                borderRadius: "50%",
+                                background: "var(--color-ink)",
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                        </>
+                      )}
+
+                      {isCollapsed && isActive && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            left: 0,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            width: "3px",
+                            height: "16px",
+                            borderRadius: "0 2px 2px 0",
+                            background: "var(--color-ink)",
+                          }}
+                        />
+                      )}
+                    </Link>
+                  </SidebarTooltip>
+                );
+              })}
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* Footer — Operator or Expand Bar */}
+      <div
+        style={{
+          padding: isCollapsed ? "10px 8px" : "12px",
+          borderTop: "1px solid var(--color-line-subtle)",
+          boxSizing: "border-box",
+        }}
+      >
+        {isCollapsed ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+            {/* Dedicated Expand Sidebar Button */}
+            <SidebarTooltip content="Expand sidebar" hint="[" enabled={isCollapsed}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleSidebar();
+                }}
+                aria-label="Expand sidebar"
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "6px",
+                  background: "transparent",
+                  border: "1px solid transparent",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--color-ink-muted)",
+                  cursor: "pointer",
+                  transition: "all 0.12s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-line)";
+                  e.currentTarget.style.background = "var(--color-base-subtle)";
+                  e.currentTarget.style.color = "var(--color-ink)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "transparent";
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "var(--color-ink-muted)";
+                }}
+              >
+                <PanelLeftOpen size={16} strokeWidth={1.8} />
+              </button>
+            </SidebarTooltip>
+
+            {/* User Avatar Button */}
+            <SidebarTooltip content={user.name} enabled={isCollapsed}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowLogoutModal(true);
+                }}
+                aria-label={`${user.name} account settings`}
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "6px",
+                  background: "var(--color-base-overlay)",
+                  border: "1px solid var(--color-line-strong)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "10.5px",
+                  fontWeight: 600,
+                  color: "var(--color-ink-secondary)",
+                  letterSpacing: "0.02em",
+                  cursor: "pointer",
+                  transition: "all 0.12s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-accent)";
+                  e.currentTarget.style.color = "var(--color-ink)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-line-strong)";
+                  e.currentTarget.style.color = "var(--color-ink-secondary)";
+                }}
+              >
+                {user.initials}
+              </button>
+            </SidebarTooltip>
           </div>
-          <div className="px-3 py-2.5 rounded-lg bg-zinc-900/50 border border-zinc-800 text-xs text-zinc-400">
-            <p className="text-[11px] leading-relaxed text-zinc-400">
-              Manage founder retainers, content pipelines, and pass-through software seats.
-            </p>
-            <Link
-              href="/clients"
-              className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold text-white hover:text-zinc-300 transition-colors"
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {/* Collapse Sidebar Button */}
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                width: "100%",
+                padding: "6px 8px",
+                borderRadius: "6px",
+                border: "1px solid transparent",
+                background: "transparent",
+                color: "var(--color-ink-muted)",
+                fontSize: "12px",
+                fontFamily: "var(--font-sans)",
+                cursor: "pointer",
+                transition: "all 0.12s ease",
+                marginBottom: "4px",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--color-ink)";
+                e.currentTarget.style.background = "var(--color-base-subtle)";
+                e.currentTarget.style.borderColor = "var(--color-line-subtle)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "var(--color-ink-muted)";
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "transparent";
+              }}
             >
-              <span>Go to Client Workspaces &rarr;</span>
-            </Link>
+              <PanelLeftClose size={14} strokeWidth={1.8} />
+              <span style={{ flex: 1, textAlign: "left" }}>Collapse sidebar</span>
+              <kbd
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "10px",
+                  padding: "1px 4px",
+                  borderRadius: "3px",
+                  border: "1px solid var(--color-line)",
+                  background: "var(--color-base-overlay)",
+                  color: "var(--color-ink-muted)",
+                  lineHeight: 1.2,
+                }}
+              >
+                [
+              </kbd>
+            </button>
+
+            {/* User Info Button */}
+            <button
+              type="button"
+              onClick={() => setShowLogoutModal(true)}
+              title="Click to manage account or log out"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "8px 10px",
+                borderRadius: "8px",
+                background: "var(--color-base-subtle)",
+                border: "1px solid var(--color-line)",
+                width: "100%",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.12s ease",
+                overflow: "hidden",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--color-base-overlay)";
+                e.currentTarget.style.borderColor = "var(--color-line-strong)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "var(--color-base-subtle)";
+                e.currentTarget.style.borderColor = "var(--color-line)";
+              }}
+            >
+              <div
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "6px",
+                  background: "var(--color-base-overlay)",
+                  border: "1px solid var(--color-line-strong)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "10px",
+                  fontWeight: 500,
+                  color: "var(--color-ink-secondary)",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {user.initials}
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    color: "var(--color-ink)",
+                    lineHeight: 1.2,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {user.name}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "9px",
+                    color: "var(--color-ink-muted)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    marginTop: "1.5px",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  <span>Auth: Coming Soon</span>
+                </div>
+              </div>
+            </button>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Operator Session Footer */}
-      <div className="border-t border-zinc-800/80 p-3">
-        <div className="flex items-center justify-between rounded-lg bg-zinc-900/60 p-2.5 border border-zinc-800">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-bold text-black shadow-sm">
-              SD
-            </div>
-            <div className="text-left">
-              <p className="text-xs font-semibold text-white">Sudeesh D S</p>
-              <p className="text-[10px] text-zinc-400 flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> Founder (Admin)
-              </p>
-            </div>
-          </div>
-          <ShieldCheck className="h-4 w-4 text-zinc-400" />
-        </div>
-      </div>
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        user={user}
+      />
     </aside>
   );
 }

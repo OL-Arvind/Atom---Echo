@@ -1,12 +1,12 @@
 # Graph Report - Atom & Echo  (2026-09-18)
 
 ## Corpus Check
-- 5 files · ~38,730 words
+- 35 files · ~68,839 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 257 nodes · 263 edges · 33 communities (17 shown, 16 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 6 edges (avg confidence: 0.92)
+- 592 nodes · 612 edges · 61 communities (42 shown, 17 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
@@ -17,12 +17,12 @@
 ## Community Hubs (Navigation)
 - Define-Agency-OS-Phases.md
 - 22. What makes this genuinely an OS rather than a Notion clone
-- AI-Native Operating System for Agencies
+- DATABASE_SCHEMA.sql
+- 2. Core Entities Specification
 - 4. What's being built (v1 scope)
 - 4. Phase 1 Deployment Architecture (What Gets Deployed)
-- BaseWorks & Atom & Echo: Project & Strategic Partnership Context
 - 3. Phase 1 scope
-- Proposal & Scope of Work
+- Atom & Echo OS — Phase 1 Blueprint & Agreement
 - create_atom_echo_charter_pdf
 - 19. The design framework I was actually using
 - Decisions required before development
@@ -48,40 +48,52 @@
 - 7. Layer 3 — define the workflows
 - 7. The client review portal is not “another page”
 - chatgpt response
+- 3. Detailed Architecture Modules (Phase 1)
+- Implementation Checklist & Execution Roadmap: Atom & Echo OS
+- Workflow Map: Current Process vs. Target Operating System
+- Screen Specifications & Wireframe Definitions: Atom & Echo OS
+- 2. Event Catalog & Payload Specifications
+- State Machines & Operational Lifecycles: Atom & Echo OS
+- Security Model: Credential Vault, Tokenized Review, & RLS Architecture
+- 3. Detailed Specification of the 7 Layers
+- BaseWorks & Atom & Echo: Project & Strategic Partnership Context
+- 2. Explicit Exclusions & Anti-Goals
+- Information Architecture & Navigation Hierarchy: Atom & Echo OS
+- 2. Deep Dive: Friction Analysis
+- 2. Detailed Database & Schema Audit
+- 2. Detailed Persona Profiles
+- 3. Deep Specification of Context Dimensions
+- Phase 2 Roadmap: Automations, AI Operating Layer, & Sales Engine
+- Technical Architecture Specification: Atom & Echo OS
+- 2. Detailed Verification Scenarios
+- Atom & Echo OS — Agent Instructions & Operating Rules
+- Project Overview: Atom & Echo Operating System
+- Architecture Decision Records (ADRs)
+- Source of Truth & Evidence Hierarchy
+- Automation Rules Engine: Trigger → Condition → Action Matrix
+- Current Build State: Atom & Echo OS
+- BaseEngine & Atom & Echo OS — Domain Glossary
+- create_atom_echo_blueprint_pdf
 
 ## God Nodes (most connected - your core abstractions)
 1. `4. What's being built (v1 scope)` - 16 edges
-2. `22. What makes this genuinely an OS rather than a Notion clone` - 13 edges
-3. `3. Phase 1 scope` - 13 edges
-4. `4. Phase 1 Deployment Architecture (What Gets Deployed)` - 11 edges
-5. `Proposal & Scope of Work` - 11 edges
-6. `BaseEngine Deployment Charter` - 10 edges
-7. `AI-Native Operating System for Agencies` - 10 edges
-8. `19. The design framework I was actually using` - 8 edges
-9. `20. So, specifically, what should you do tomorrow?` - 8 edges
-10. `Aravind (BaseWorks)` - 8 edges
+2. `update_updated_at_column()` - 13 edges
+3. `22. What makes this genuinely an OS rather than a Notion clone` - 13 edges
+4. `3. Phase 1 scope` - 13 edges
+5. `users` - 11 edges
+6. `4. Phase 1 Deployment Architecture (What Gets Deployed)` - 11 edges
+7. `Proposal & Scope of Work` - 11 edges
+8. `clients` - 10 edges
+9. `BaseEngine Deployment Charter` - 10 edges
+10. `Atom & Echo OS — Phase 1 Blueprint & Agreement` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Aravind (BaseWorks)` --semantically_similar_to--> `Aravind (BaseWorks)`  [INFERRED] [semantically similar]
-  meeting transcript 1.md.txt → meeting transcript 2.md.txt
-- `Sudeesh D S` --semantically_similar_to--> `Sudeesh D S`  [INFERRED] [semantically similar]
-  meeting transcript 1.md.txt → meeting transcript 2.md.txt
-- `Nishant (Referral Lead)` --conceptually_related_to--> `Nishant Follow-up & High-Value Referral Opportunity`  [INFERRED]
-  meeting transcript 1.md.txt → meeting transcript 2.md.txt
-- `AI-Native Operating System for Agencies` --conceptually_related_to--> `Development Timeline (V1 by Sept 23, 18-Day Delivery)`  [EXTRACTED]
-  meeting transcript 1.md.txt → meeting transcript 2.md.txt
-- `AI-Native Operating System for Agencies` --shares_data_with--> `Base Engine Flat Subscription Terms`  [EXTRACTED]
-  meeting transcript 1.md.txt → meeting transcript 2.md.txt
+- None detected - all connections are within the same source files.
 
 ## Import Cycles
 - None detected.
 
-## Hyperedges (group relationships)
-- **Atom & Echo Agency Operating System Architecture** — meeting_transcript_1_md_ai_native_operating_system, meeting_transcript_1_md_pwa_client_app, meeting_transcript_1_md_frictionless_client_review_portal, meeting_transcript_1_md_automated_billing_invoicing [EXTRACTED 1.00]
-- **Distribution-Centric AI Future Vision** — meeting_transcript_2_md_distribution_moat_thesis, meeting_transcript_2_md_humanless_personal_branding_ai, meeting_transcript_2_md_passive_thought_mapping_agent, meeting_transcript_2_md_cinematic_product_podcast [EXTRACTED 1.00]
-- **Aravind and Sudeesh Dual Growth Partnership** — meeting_transcript_1_md_aravind_baseworks, meeting_transcript_1_md_sudeesh_ds, meeting_transcript_1_md_partner_title_x, meeting_transcript_1_md_baseworks_base_engine [EXTRACTED 1.00]
-
-## Communities (33 total, 16 thin omitted)
+## Communities (61 total, 17 thin omitted)
 
 ### Community 0 - "Define-Agency-OS-Phases.md"
 Cohesion: 0.04
@@ -91,29 +103,29 @@ Nodes (50): 10. Billing should work the same way, 10. `DOMAIN_MODEL.md`, 10. Out
 Cohesion: 0.15
 Nodes (13): 22. What makes this genuinely an OS rather than a Notion clone, Notion, Notion, Notion, Notion, Notion, Notion approach, OS (+5 more)
 
-### Community 2 - "AI-Native Operating System for Agencies"
+### Community 2 - "DATABASE_SCHEMA.sql"
 Cohesion: 0.08
-Nodes (33): Agency Team Restructuring & Downsizing, AI-Native Operating System for Agencies, Aravind (BaseWorks), Atom & Echo, Automated Billing and Tool Cost Recovery, BaseWorks / Base Engine, Chetan (Redworks Client), Co-founder Exit to Clay Bootcamp (+25 more)
+Nodes (49): audit_logs, client_contexts, client_requests, clients, content_feedback, content_items, credential_audit_logs, credentials (+41 more)
 
-### Community 3 - "4. What's being built (v1 scope)"
-Cohesion: 0.12
-Nodes (16): 4.10 Employee Onboarding & Attendance, 4.11 Invoicing, 4.12 User Roles & Access Control, 4.13 Automated MIS Generator, 4.14 Lead Recycle, 4.15 Configurable Notification System, 4.1 Lead & Deal Import, 4.2 Company Profiles & Deal Tracking (+8 more)
+### Community 3 - "2. Core Entities Specification"
+Cohesion: 0.07
+Nodes (26): 1. Entity-Relationship Architecture, 2.1 Tenancy & Identity, 2.2 Client & Commercial Architecture, 2.3 Context & Client Intelligence, 2.4 Content Operations & Review Pipeline, 2.5 Security & Credential Vault, 2.6 Financials & Tool Billing, 2.7 Operations & Client Service Requests (+18 more)
 
-### Community 4 - "4. Phase 1 Deployment Architecture (What Gets Deployed)"
+### Community 4 - "4. What's being built (v1 scope)"
+Cohesion: 0.07
+Nodes (26): 1. What this document is, 2. The problem this solves, 3. Commercial terms, 4.10 Employee Onboarding & Attendance, 4.11 Invoicing, 4.12 User Roles & Access Control, 4.13 Automated MIS Generator, 4.14 Lead Recycle (+18 more)
+
+### Community 5 - "4. Phase 1 Deployment Architecture (What Gets Deployed)"
 Cohesion: 0.08
 Nodes (23): 1. System Mission & Philosophy, 2. Commercial Model: The BaseEngine Subscription, 3. The 3 Core BaseEngine Risk Guarantees, 4.10 Atom & Echo Kinetic Brand Identity & SVG Loader, 4.1 Master Multi-Client Content Engine, 4.2 Zero-Friction Client Review Portal (Mobile PWA + WhatsApp Gateway), 4.3 Client Relationship & Retainer Intelligence, 4.4 Automated Invoicing & Pass-Through Tool Billing (+15 more)
-
-### Community 5 - "BaseWorks & Atom & Echo: Project & Strategic Partnership Context"
-Cohesion: 0.15
-Nodes (12): 1. Executive Roles & Co-Branding:, 1. Origin & How They Met: The Debtworks Connection, 2. Domestic Deal Commission:, 2. What BaseWorks & BaseEngine Are, 3. International Expansion (Belgium Market):, 3. The Two Pillars of the Engagement, 4. Key Strategic Tenets, BaseWorks & Atom & Echo: Project & Strategic Partnership Context (+4 more)
 
 ### Community 6 - "3. Phase 1 scope"
 Cohesion: 0.15
 Nodes (13): 3. Phase 1 scope, A. Command Center, B. Client & Engagement Management, C. Unified Content Operations, D. Content Workflow, E. Client Review Portal, F. Client Requests, G. Meetings → Operating Context (+5 more)
 
-### Community 7 - "Proposal & Scope of Work"
-Cohesion: 0.18
-Nodes (10): 1. What this document is, 2. The problem this solves, 3. Commercial terms, 5. Data ownership & hosting (Assurance Protocol), 6. How monthly features work, 7. What we need from you, and by when, 8. Timeline & billing, 9. Next steps (+2 more)
+### Community 7 - "Atom & Echo OS — Phase 1 Blueprint & Agreement"
+Cohesion: 0.09
+Nodes (21): 1. Commercial Model & Flat Subscription Terms, 2. What V1 Means for You: The 5 Core Outcomes, 3.1 Master Command Center ('What Needs My Attention Today?'), 3.2 Client Workspace & Work Management, 3.3 Unified Agency Calendar, 3.4 Zero-Friction Client Review Portal (Mobile PWA + WhatsApp), 3.5 Automated Invoicing & Pass-Through Tool Billing, 3.6 Subscription Renewal Sentinel (+13 more)
 
 ### Community 9 - "19. The design framework I was actually using"
 Cohesion: 0.25
@@ -151,25 +163,125 @@ Nodes (3): 25. My proposed Phase 1 definition, At the end of Phase 1, Sudeesh sh
 Cohesion: 0.67
 Nodes (3): 4. Phase 1 — what I would actually build, A. Command Center, PHASE 1 — Atom & Echo Operating Core
 
+### Community 33 - "3. Detailed Architecture Modules (Phase 1)"
+Cohesion: 0.10
+Nodes (19): 1. Executive Summary & Core Objective, 2. The 5 Core Operational Outcomes, 3. Detailed Architecture Modules (Phase 1), 4. Vertical Slice Delivery Roadmap (5 Slices), 5. Commercial Agreement Alignment, Module 1: Unified Command Center & Triage Feed, Module 2: Client 360 Hub & Engagement Management, Module 3: Unified Content Studio & Production Pipeline (+11 more)
+
+### Community 34 - "Implementation Checklist & Execution Roadmap: Atom & Echo OS"
+Cohesion: 0.10
+Nodes (19): 1.1 Project Scaffolding & Database Setup, 1.2 Tenancy, Users, & Client Management, 1.3 Command Center Morning Cockpit (`/command-center`), 2.1 Content State Machine & Pipeline, 2.2 Rich Authoring Environment & Context Drawer, 2.3 Master Temporal Operational Calendar (`/calendar`), 3.1 Token Generation & Verification Engine, 3.2 Mobile-First PWA Review Interface (`/review`) (+11 more)
+
+### Community 35 - "Workflow Map: Current Process vs. Target Operating System"
+Cohesion: 0.11
+Nodes (17): 1. Executive Summary of Workflow Transformation, 2. Content Production & Distribution Loop, 3. Client Review & Approval Loop, 4. Client Onboarding & Intelligence Loop, 5. Tool Subscription & Financial Billing Loop, 6. Client Requests & Support Lifecycle, Current Reality: The "WhatsApp Chasing" Cycle, Current Workflow (+9 more)
+
+### Community 36 - "Screen Specifications & Wireframe Definitions: Atom & Echo OS"
+Cohesion: 0.12
+Nodes (15): 1.1 Wireframe Layout, 1.2 Data Requirements & Interaction Rules, 2.1 Wireframe Layout, 2.2 Tab 3 Layout: Encrypted Credential Vault, 3.1 Wireframe Layout, 3.2 Editor Interactions, 4.1 Wireframe Layout, 5.1 Mobile Wireframe Layout (Zero-Login Experience) (+7 more)
+
+### Community 37 - "2. Event Catalog & Payload Specifications"
+Cohesion: 0.14
+Nodes (13): 1. Event-Driven Architecture Overview, 2.1 Content Operations Events, 2.2 Client Requests & Operations Events, 2.3 Financial & Invoicing Events, 2.4 Security & Compliance Events, 2. Event Catalog & Payload Specifications, `billing.cycle_approaching`, `client.emergency_hold_triggered` (+5 more)
+
+### Community 38 - "State Machines & Operational Lifecycles: Atom & Echo OS"
+Cohesion: 0.14
+Nodes (13): 1.1 State Diagram, 1.2 Transition Matrix & Guardrails, 1. Content State Machine, 2.1 State Diagram, 2.2 Transition Guardrails & Emergency Hold Cascade, 2. Client Service Request State Machine, 3.1 State Diagram, 3.2 Transition Guardrails (+5 more)
+
+### Community 39 - "Security Model: Credential Vault, Tokenized Review, & RLS Architecture"
+Cohesion: 0.15
+Nodes (12): 1. Threat Model & Security Boundaries, 2.1 Encryption at Rest, 2.2 UI Masking & Safe Interaction Flow, 2.3 Immutable Credential Audit Logging, 2. The Credential Vault Architecture, 3.1 Token Generation & Cryptography, 3.2 Scoped Authorization & Zero Data Leaks, 3. Client Review Portal Security (Zero-Login Architecture) (+4 more)
+
+### Community 40 - "3. Detailed Specification of the 7 Layers"
+Cohesion: 0.15
+Nodes (12): 1. The Core Architectural Philosophy: "Manual by Exception", 2. The 7-Layer Operational Framework, 3. Detailed Specification of the 7 Layers, 4. System Boundaries & Tool Integrations, Layer 1: Context & Intelligence Layer (The Soul of the Agency), Layer 2: Domain Entity Model (The Relational Core), Layer 3: Workflows & State Machines (Enforced Business Rules), Layer 4: Event & Side-Effect Engine (Durable Background Orchestration) (+4 more)
+
+### Community 41 - "BaseWorks & Atom & Echo: Project & Strategic Partnership Context"
+Cohesion: 0.15
+Nodes (12): 1. Executive Roles & Co-Branding:, 1. Origin & How They Met: The Debtworks Connection, 2. Domestic Deal Commission:, 2. What BaseWorks & BaseEngine Are, 3. International Expansion (Belgium Market):, 3. The Two Pillars of the Engagement, 4. Key Strategic Tenets, BaseWorks & Atom & Echo: Project & Strategic Partnership Context (+4 more)
+
+### Community 42 - "2. Explicit Exclusions & Anti-Goals"
+Cohesion: 0.18
+Nodes (10): 1. The Core Guardrail, 1. We are NOT building a "Notion Clone", 2. Explicit Exclusions & Anti-Goals, 2. We are NOT building a "Clay / Waterfall Scraping Clone", 3. The 3 Questions Before Adding Any Feature, 3. We are NOT building a "HeyReach / Smartlead Sending Engine", 4. We are NOT building a "Full Accounting & Tax Suite", 5. We are NOT building a "General-Purpose Sales CRM" (+2 more)
+
+### Community 43 - "Information Architecture & Navigation Hierarchy: Atom & Echo OS"
+Cohesion: 0.18
+Nodes (10): 1. High-Level System Partitioning, 2.1 Primary Routes & Layout Shell, 2. Internal Operator Workspace Navigation Map, 3.1 PWA Architectural Principles, 3. External Client Review PWA Navigation Map, 4.1 Slide-Out Drawers (Sheet Components), 4.2 Ephemeral Security Modals, 4.3 Quick Action Command Palette (`Cmd + K`) (+2 more)
+
+### Community 44 - "2. Deep Dive: Friction Analysis"
+Cohesion: 0.20
+Nodes (9): 1. Summary Matrix of Operational Friction, 2. Deep Dive: Friction Analysis, F-01: The WhatsApp Approval Black Hole, F-02: The "Double Calendar" Notion Tax, F-03: Pass-Through Tool Cost Leakage, F-04: Plaintext Password Exposure, F-05: Founder Context Amnesia & Tone Drift, F-06: Fragmented Cross-Tool Visibility (The "Cognitive Overload") (+1 more)
+
+### Community 45 - "2. Detailed Database & Schema Audit"
+Cohesion: 0.20
+Nodes (9): 1. Top-Level Workspace Organization, 2.1 Content Calendars (Scattered), 2.2 Client Workspaces & Onboarding, 2.3 Tools Billing & Expense Tracking, 2.4 Client Updates Tracker (Requests & Ad-hoc Work), 2.5 Daily Tasks, 2.6 External Dependencies, 2. Detailed Database & Schema Audit (+1 more)
+
+### Community 46 - "2. Detailed Persona Profiles"
+Cohesion: 0.20
+Nodes (9): 1. Agency Founder / Executive Admin, 1. System Personas Overview, 2. Detailed Persona Profiles, 2. Senior Operator / Lead Ghostwriter, 3. Comprehensive Permissions Matrix, 3. Junior Ghostwriter / Design Contractor, 4. Client Executive / Founder Reviewer, 4. Security & Access Boundaries (+1 more)
+
+### Community 47 - "3. Deep Specification of Context Dimensions"
+Cohesion: 0.20
+Nodes (9): 1. The Core Problem: The Generic Agency Fluff Trap, 2. The 4 Context Dimensions, 3.1 Dimension 1: Voice & Tone Matrix, 3.2 Dimension 2: Strategic Positioning & ICP, 3.3 Dimension 3: Verified Proof Bank, 3.4 Dimension 4: Narrative & Story Vault, 3. Deep Specification of Context Dimensions, 4. Operational Ingestion Pipeline (+1 more)
+
+### Community 48 - "Phase 2 Roadmap: Automations, AI Operating Layer, & Sales Engine"
+Cohesion: 0.20
+Nodes (9): 1. Why Defer to Phase 2?, 2. Phase 2A: Deep Workflow Automations, 3. Phase 2B: The AI Operating Layer & Meeting Intelligence, 4. Phase 2C: Full Outbound Sales & Campaign Engine, 5. Phase 2 Prerequisites & Transition Triggers, Key Deliverables in 2A:, Key Deliverables in 2B:, Key Deliverables in 2C: (+1 more)
+
+### Community 49 - "Technical Architecture Specification: Atom & Echo OS"
+Cohesion: 0.20
+Nodes (9): 1. Core Architectural Paradigm: The Cohesive Modular Monolith, 2. Technology Stack Selection & Rationale, 3.1 Synchronous Reads (React Server Components), 3.2 Synchronous Mutations (Server Actions), 3.3 Asynchronous Execution (Inngest Durable Workflows), 3. Data Flow & Security Architecture, 4. Planned Application Source Directory Layout, 5. Deployment & Environment Strategy (+1 more)
+
+### Community 50 - "2. Detailed Verification Scenarios"
+Cohesion: 0.20
+Nodes (9): 1. Traceability Matrix, 2. Detailed Verification Scenarios, AC-1: Command Center Triage Verification, AC-2: Zero-Login Client Review PWA Verification, AC-3: Unified Content Pipeline & Calendar Verification, AC-4: Credential Vault Security Verification, AC-5: Tool Expense & Retainer Invoicing Verification, AC-6: Emergency Hold Automation Verification (+1 more)
+
+### Community 51 - "Atom & Echo OS — Agent Instructions & Operating Rules"
+Cohesion: 0.20
+Nodes (9): 1. Prime Directives for All AI Coding Agents, 2. Core Architectural Laws: What We Refuse to Do, 3. Seven Questions Mandatory Before Writing Code, 4. Design & Performance Standards, 5. Conflict Resolution Protocol, Atom & Echo OS — Agent Instructions & Operating Rules, LAW 1: "Manual by Exception", LAW 2: Never Recreate a Notion Clone (+1 more)
+
+### Community 52 - "Project Overview: Atom & Echo Operating System"
+Cohesion: 0.25
+Nodes (7): 1. Executive Context, 2. The Two Pillars of Collaboration, 3. Commercial Framework & Guarantees, Origin: The Debtworks Connection, Pillar 1: Atom & Echo Custom Operating System (Delivery Scope), Pillar 2: Strategic Growth & Distribution Partnership, Project Overview: Atom & Echo Operating System
+
+### Community 53 - "Architecture Decision Records (ADRs)"
+Cohesion: 0.29
+Nodes (6): ADR-001: The Calendar is an Operational Projection, Not a Manual Database, ADR-002: Client Credentials Live in an Encrypted Security Vault, ADR-003: Client Review Portal is a Standalone, Zero-Login Mobile PWA, ADR-004: Outreach & Cold Email Stay in External Tools for V1, ADR-005: Core Technology Stack Selection, Architecture Decision Records (ADRs)
+
+### Community 54 - "Source of Truth & Evidence Hierarchy"
+Cohesion: 0.40
+Nodes (4): 1. The Strict Evidence Hierarchy, 2. Specific Authority Assessments of Existing Repository Artifacts, 3. Conflict Resolution Rules, Source of Truth & Evidence Hierarchy
+
+### Community 55 - "Automation Rules Engine: Trigger → Condition → Action Matrix"
+Cohesion: 0.40
+Nodes (4): 1. Governing Rules Philosophy, 2. Complete Automation Matrix, 3. Automation Implementation Rules & Error Recovery, Automation Rules Engine: Trigger → Condition → Action Matrix
+
+### Community 56 - "Current Build State: Atom & Echo OS"
+Cohesion: 0.40
+Nodes (4): 1. Architectural Readiness Status, 2. Locked Architecture Decisions, 3. Immediate Next Execution Step, Current Build State: Atom & Echo OS
+
+### Community 57 - "BaseEngine & Atom & Echo OS — Domain Glossary"
+Cohesion: 0.50
+Nodes (3): BaseEngine & Atom & Echo OS — Domain Glossary, Business Entities & Domain Vocabulary, Core Architectural Concepts
+
 ## Knowledge Gaps
-- **186 isolated node(s):** `Custom Operating System for Atom & Echo`, `The BaseEngine Approach`, `2. Commercial Model: The BaseEngine Subscription`, `3. The 3 Core BaseEngine Risk Guarantees`, `4.1 Master Multi-Client Content Engine` (+181 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 194 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **382 isolated node(s):** `ADR-001: The Calendar is an Operational Projection, Not a Manual Database`, `ADR-002: Client Credentials Live in an Encrypted Security Vault`, `ADR-003: Client Review Portal is a Standalone, Zero-Login Mobile PWA`, `ADR-004: Outreach & Cold Email Stay in External Tools for V1`, `ADR-005: Core Technology Stack Selection` (+377 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 418 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `22. What makes this genuinely an OS rather than a Notion clone` connect `22. What makes this genuinely an OS rather than a Notion clone` to `Define-Agency-OS-Phases.md`?**
-  _High betweenness centrality (0.055) - this node is a cross-community bridge._
+  _High betweenness centrality (0.010) - this node is a cross-community bridge._
 - **Why does `3. Phase 1 scope` connect `3. Phase 1 scope` to `Define-Agency-OS-Phases.md`?**
-  _High betweenness centrality (0.055) - this node is a cross-community bridge._
+  _High betweenness centrality (0.010) - this node is a cross-community bridge._
 - **Why does `19. The design framework I was actually using` connect `19. The design framework I was actually using` to `Define-Agency-OS-Phases.md`?**
-  _High betweenness centrality (0.033) - this node is a cross-community bridge._
-- **What connects `Custom Operating System for Atom & Echo`, `The BaseEngine Approach`, `2. Commercial Model: The BaseEngine Subscription` to the rest of the system?**
-  _186 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+- **What connects `ADR-001: The Calendar is an Operational Projection, Not a Manual Database`, `ADR-002: Client Credentials Live in an Encrypted Security Vault`, `ADR-003: Client Review Portal is a Standalone, Zero-Login Mobile PWA` to the rest of the system?**
+  _382 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Define-Agency-OS-Phases.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0392156862745098 - nodes in this community are weakly interconnected._
-- **Should `AI-Native Operating System for Agencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.08333333333333333 - nodes in this community are weakly interconnected._
-- **Should `4. What's being built (v1 scope)` be split into smaller, more focused modules?**
-  _Cohesion score 0.125 - nodes in this community are weakly interconnected._
+- **Should `DATABASE_SCHEMA.sql` be split into smaller, more focused modules?**
+  _Cohesion score 0.08489795918367347 - nodes in this community are weakly interconnected._
+- **Should `2. Core Entities Specification` be split into smaller, more focused modules?**
+  _Cohesion score 0.07407407407407407 - nodes in this community are weakly interconnected._

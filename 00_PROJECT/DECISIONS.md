@@ -57,3 +57,27 @@ This document records the foundational architectural and design decisions for At
   * **Backend & Database**: Supabase (PostgreSQL with Row Level Security, Auth, and Storage).
   * **Background Workflows**: Event-driven durable background jobs (Inngest).
 * **Consequence**: Avoids microservices sprawl while providing enterprise scalability.
+
+---
+
+## ADR-006: Adoption of ClickUp Design System (Light Canvas + Gradient-as-Brand)
+* **Status**: ACCEPTED (Human Approved)
+* **Context**: User explicitly directed the redesign of the OS to align with ClickUp's productivity design system specification (`clickup.design.md`).
+* **Decision**: Replace the dark OLED theme with ClickUp's light-canvas design language:
+  * **Canvas & Surface**: `#ffffff` canvas with `#f8f9fa` surface tiers, `#e9ebf0` soft chips, and `#e8e8e8` hairlines.
+  * **Graphite Typography**: `#292d34` ink for text and borders, avoiding stark pure black.
+  * **Brand Voltage**: Neon Purple (`#7612fa`) contained strictly inside the 263° brand gradient (`#fa12e3` -35% → `#7612fa` 41% → `#12d0fa` 135%) or subtle wordmark/accent highlights.
+  * **Primary CTA Inversion**: Inverted to a near-black `#292d34` pill at 20px radius with white text and weight 650.
+  * **Typography Scale**: Plus Jakarta Sans for display headlines with negative tracking, Inter for body/chrome, and Sometype Mono for uppercase eyebrows.
+---
+
+## ADR-007: Anti-AI-Slop & ADHD-First High-Clarity Design Standards (The "Calm Attention Surface" Doctrine)
+* **Status**: ACCEPTED (Human Approved)
+* **Context**: Previous iterations suffered from severe "AI slop" hallmarks: regurgitating prompt instructions directly as UI titles/subtitles, wrapping every data point in colored pill/badge confetti, washed-out flat gray contrast, and cognitive overload. For founders and operators with ADHD, this creates sensory fatigue, distraction, and paralysis.
+* **Decision**: All operational surfaces must strictly adhere to the "Calm Attention Surface" doctrine:
+  1. **Single Dominant Focal Point**: Every screen has exactly one primary focus area (e.g., "Needs Attention"). The operator's eyes should have an effortless, immediate anchor.
+  2. **Total Ban on "Pill & Badge Confetti"**: Do NOT wrap passive metadata into rounded colored pills (no `ZERO-LOGIN PWA`, `ZERO LEAKAGE`, `Anchor Day 1`, `ID: a7fcb353...` tags everywhere). Metadata belongs in quiet, secondary tabular text. Colored badges are reserved *exclusively* for genuine operational emergencies/exceptions (e.g. `Emergency Hold`, `Overdue`).
+  3. **Zero AI-Prompt-Speak Copywriting**: UI text must be written in crisp, confident human language by a designer, not an LLM explaining a database schema. Ban phrases like *"Exceptions and client bottlenecks requiring human intervention"*, *"Ad-hoc founder requests, emergency revisions, and execution queue tracking"*, *"All automated pipelines operating normally"*. Use concise, human terms: *"Needs Attention"*, *"All caught up"*, *"Hold post for announcement"*.
+  4. **No Explanatory Slop or Sidebar Promo Cards**: Internal executive tools do not need marketing promo boxes explaining what a client directory is. Delete explanatory filler.
+  5. **Quiet Defaults, Loud Exceptions (Linear / Amie reference)**: Quiet monochrome canvas, crisp typography (Inter / Plus Jakarta Sans), subtle hairlines, and generous breathing room. Color is a high-value currency never wasted on decorative fluff.
+* **Consequence**: Delivers a serene, high-velocity operating environment that respects human executive function and provides instant clarity for neurodivergent and neurotypical operators alike.

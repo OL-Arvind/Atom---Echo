@@ -7,14 +7,14 @@ interface AtomEchoLogoProps {
 }
 
 export function AtomEchoLogo({
-  size = 32,
+  size = 30,
   className = "",
   showText = true,
 }: AtomEchoLogoProps) {
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <div
-        className="relative overflow-hidden rounded-lg bg-black border border-white/20 shadow-[0_0_12px_rgba(255,255,255,0.06)] flex items-center justify-center shrink-0"
+        className="relative overflow-hidden rounded-[6px] bg-black border border-[var(--color-line)] shadow-xs flex items-center justify-center shrink-0"
         style={{ width: size, height: size }}
       >
         <Image
@@ -27,15 +27,15 @@ export function AtomEchoLogo({
         />
       </div>
       {showText && (
-        <div className="flex flex-col">
-          <div className="flex items-center gap-1.5 font-display text-sm font-bold tracking-tight text-white">
-            <span>ATOM &amp; ECHO</span>
-            <span className="rounded border border-white/20 bg-white/10 px-1.5 py-0.5 text-[9px] font-mono font-medium tracking-widest text-white uppercase">
+        <div className="flex flex-col leading-none">
+          <div className="flex items-center gap-1.5 text-xs font-semibold tracking-tight text-[var(--color-ink)]">
+            <span className="tracking-wide">ATOM &amp; ECHO</span>
+            <span className="rounded bg-[var(--color-base-subtle)] border border-[var(--color-line)] px-1 py-0.5 text-[9px] font-mono font-medium text-[var(--color-ink-secondary)] uppercase">
               OS
             </span>
           </div>
-          <span className="text-[10px] font-medium tracking-wider text-zinc-400 uppercase">
-            BaseWorks Cockpit
+          <span className="mt-1 text-[10.5px] font-medium text-[var(--color-ink-tertiary)] tracking-tight">
+            Agency Operating System
           </span>
         </div>
       )}

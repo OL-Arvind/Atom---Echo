@@ -50,13 +50,18 @@ Before generating any component, API route, or database migration, explicitly ve
 
 ---
 
-## 4. Design & Performance Standards
+## 4. Design & Performance Standards (The "Calm Attention Surface" Doctrine)
 
-All web application code built for Atom & Echo must follow BaseWorks premium design principles:
-* **Rich Aesthetics**: Dark mode first (`#0F0F11`, `#18181B`), BaseWorks deep orange accent (`#d13202`), neo-brutalist border accents, high contrast, clean typography (Inter / Outfit).
-* **Speed & Performance**: Zero layout shifts (CLS < 0.05), instant optimistic UI updates on actions (approving, completing, marking paid), lightweight bundle sizes.
+All web application code built for Atom & Echo must follow BaseWorks premium design principles, calibrated for **ADHD-friendly, low-cognitive-load execution** (inspired by Linear, Amie, and Things 3):
+
+* **Single Dominant Anchor**: Every view must present exactly one clear focal point. Eliminate competing banners, multi-tiered eyebrows, and noisy visual sirens.
+* **Strict Ban on Pill / Badge Confetti**: Never wrap passive metadata into rounded colored pills (e.g. `ZERO-LOGIN PWA`, `ZERO LEAKAGE`, `Anchor Day 1`, `ID: xxx`). Use quiet, crisp secondary text. Reserve colored badges strictly for real operational emergencies/exceptions.
+* **Zero AI-Prompt-Speak Copywriting**: UI copy must be written in crisp, confident human language. Never print internal prompts, Jira-speak, or multi-sentence robotic apologies into titles, subtitles, or empty states.
+* **No Marketing Slop in Operational Shells**: No promo boxes or redundant explanatory paragraphs inside the sidebar or dashboard.
+* **Quiet Defaults, Loud Exceptions**: Serene monochrome base, crisp typography (Inter / Plus Jakarta Sans), subtle hairlines, generous breathing room. Color is reserved for true state signals.
+* **Speed & Performance**: Zero layout shifts (CLS < 0.05), instant optimistic UI updates on actions, lightweight bundle sizes.
 * **Separation of Concerns**:
-  * **Internal Operator UI**: Rich, dense, keyboard-accessible, desktop-first command surface.
+  * **Internal Operator UI**: Rich, clean, keyboard-accessible, desktop-first command surface.
   * **External Client UI**: Ultra-lightweight, zero-login, tokenized Mobile PWA (loads in <1s on mobile 4G, 1-click Approve or Comment).
 
 ---

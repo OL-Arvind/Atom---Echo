@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
-import { getReviewPostByToken } from "@/lib/data/supabase-queries";
+import { getReviewPortalDataByToken } from "@/lib/data/supabase-queries";
 import { ReviewPortalClient } from "./review-client";
+import { AtomEchoLogo } from "@/components/ui/logo";
+import { Clock, ShieldAlert } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -10,24 +11,64 @@ export default async function ReviewPortalPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const reviewData = await getReviewPostByToken(token);
 
-  if (!reviewData || !reviewData.post) {
-    // Return friendly expired or completed screen
+  if (!token) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#09090B] px-4 text-center text-white">
-        <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-2xl backdrop-blur-xl">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            ✓
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[var(--color-base)] px-4 text-center text-[var(--color-ink)] select-none">
+        <div className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] p-7 shadow-dialog space-y-4">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-base-subtle)] border border-[var(--color-line)] text-[var(--color-ink-tertiary)]">
+            <AtomEchoLogo size={28} showText={false} />
           </div>
-          <h1 className="font-display text-xl font-bold tracking-tight text-zinc-100">
-            All Caught Up!
-          </h1>
-          <p className="mt-2 text-sm text-zinc-400">
-            There are no pending posts requiring your review right now, or this review link has expired.
-          </p>
-          <div className="mt-6 border-t border-zinc-800 pt-4 text-xs text-zinc-500">
-            Atom & Echo OS &middot; Secure Review Portal
+          <div className="space-y-1.5">
+            <h1 className="font-display text-xl font-normal text-[var(--color-ink)]">
+              Client Review Portal
+            </h1>
+            <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed">
+              No review token was provided. Please use the personalized magic link sent to your WhatsApp by Sudeesh or your account team.
+            </p>
+          </div>
+          <div className="border-t border-[var(--color-line-subtle)] pt-3 text-[11px] text-[var(--color-ink-tertiary)] font-mono">
+            Atom &amp; Echo &middot; Secure Access
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const data = await getReviewPortalDataByToken(token);
+
+  if (!data.valid || !data.client) {
+    const isExpired = data.reason === "expired";
+    const isRevoked = data.reason === "revoked";
+
+    return (
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[var(--color-base)] px-4 text-center text-[var(--color-ink)] select-none">
+        <div className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] p-7 shadow-dialog space-y-4">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-danger-bg)] text-[var(--color-danger-text)] border border-[var(--color-danger-line)]">
+            {isExpired ? (
+              <Clock className="h-6 w-6" />
+            ) : (
+              <ShieldAlert className="h-6 w-6" />
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <h1 className="font-display text-xl font-normal text-[var(--color-ink)]">
+              {isExpired
+                ? "Review Link Expired"
+                : isRevoked
+                ? "Review Link Revoked"
+                : "Invalid Review Link"}
+            </h1>
+            <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed">
+              {isExpired
+                ? "This review session has expired (review links remain valid for 7 days for security). Sudeesh or your account lead can send you a fresh link on WhatsApp."
+                : isRevoked
+                ? "This review session was revoked or updated. Please request a new link from your account lead."
+                : "We could not locate an active client review session matching this link. Please check your URL."}
+            </p>
+          </div>
+          <div className="border-t border-[var(--color-line-subtle)] pt-3 text-[11px] text-[var(--color-ink-tertiary)] font-mono">
+            Atom &amp; Echo &middot; Zero-Login Security
           </div>
         </div>
       </div>
@@ -36,9 +77,13 @@ export default async function ReviewPortalPage({
 
   return (
     <ReviewPortalClient
-      clientName={reviewData.client.name}
-      founderName={reviewData.client.founder_name}
-      post={reviewData.post}
+      clientName={data.client.name}
+      founderName={data.client.founder_name}
+      founderTitle={data.client.founder_title || "Founder & CEO"}
+      linkedinUrl={data.client.linkedin_url}
+      initialPendingPosts={data.pendingPosts}
+      initialApprovedPosts={data.approvedPosts}
+      publishedPosts={data.publishedPosts}
       token={token}
     />
   );
