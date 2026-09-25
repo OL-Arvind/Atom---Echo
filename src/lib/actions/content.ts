@@ -87,8 +87,9 @@ export async function approvePostByClientAction(postId: string, token: string) {
       scheduledDate,
       postId: updatedPost.id,
     };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to approve post.";
+    return { success: false, error: message };
   }
 }
 
@@ -186,8 +187,9 @@ export async function requestContentChangesByClientAction(
     revalidatePath("/operations");
 
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to submit revision request.";
+    return { success: false, error: message };
   }
 }
 
@@ -196,6 +198,7 @@ export async function requestContentChangesByClientAction(
  */
 export async function resolveContentFeedbackAction(feedbackId: string) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
     const { error } = await supabase
       .from("content_feedback")
@@ -210,8 +213,9 @@ export async function resolveContentFeedbackAction(feedbackId: string) {
     revalidatePath("/operations");
     revalidatePath("/content");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to resolve content feedback.";
+    return { success: false, error: message };
   }
 }
 
@@ -220,6 +224,7 @@ export async function resolveContentFeedbackAction(feedbackId: string) {
  */
 export async function sendForClientReviewAction(postIdOrClientId: string) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
     let clientId: string | null = null;
     let postTitle: string = "your latest LinkedIn draft";
@@ -298,13 +303,15 @@ export async function sendForClientReviewAction(postIdOrClientId: string) {
       founderName: client.founder_name,
       expiresAt: tokenData.expiresAt,
     };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to send post for client review.";
+    return { success: false, error: message };
   }
 }
 
 export async function approveContentAction(contentId: string) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
 
     // 1. Fetch current post to check scheduled date
@@ -335,8 +342,9 @@ export async function approveContentAction(contentId: string) {
     revalidatePath("/calendar");
     revalidatePath("/clients");
     return { success: true, data };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to approve content.";
+    return { success: false, error: message };
   }
 }
 
@@ -346,6 +354,7 @@ export async function requestContentChangesAction(
   chips: string[] = []
 ) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
 
     // Update post status to draft (per AC-2)
@@ -381,14 +390,16 @@ export async function requestContentChangesAction(
     revalidatePath("/content");
     revalidatePath("/clients");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to request content changes.";
+    return { success: false, error: message };
   }
 }
 
 
 export async function createContentAction(formData: FormData) {
   try {
+    await requireOperatorSession();
     const rawInput = {
       engagement_id: formData.get("engagement_id"),
       title: formData.get("title"),
@@ -448,16 +459,18 @@ export async function createContentAction(formData: FormData) {
     revalidatePath("/command-center");
     revalidatePath("/clients");
     return { success: true, post: newPost };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to create content.";
+    return { success: false, error: message };
   }
 }
 
 export async function updateContentStatusAction(contentId: string, newStatus: string) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
 
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       status: newStatus,
       updated_at: new Date().toISOString(),
     };
@@ -518,8 +531,9 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
     revalidatePath("/clients");
     revalidatePath("/review");
     return { success: true, data };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to update content status.";
+    return { success: false, error: message };
   }
 }
 
@@ -535,6 +549,7 @@ export async function publishContentPostAction(
   linkedinUrlArg?: string
 ) {
   try {
+    await requireOperatorSession();
     let postId: string;
     let linkedinPostUrl: string | undefined;
     let publishedAt: string | undefined;
@@ -560,7 +575,7 @@ export async function publishContentPostAction(
 
     const supabase = createAdminClient();
 
-    const updatePayload: any = {
+    const updatePayload: Record<string, unknown> = {
       status: "published",
       published_at: parsed.data.published_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -599,13 +614,15 @@ export async function publishContentPostAction(
     revalidatePath("/review");
 
     return { success: true, post: updatedPost };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to publish post.";
+    return { success: false, error: message };
   }
 }
 
 export async function updateContentPostAction(postId: string, formData: FormData) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
 
     const title = formData.get("title") as string;
@@ -619,7 +636,7 @@ export async function updateContentPostAction(postId: string, formData: FormData
       return { success: false, error: "Post ID and Title are required." };
     }
 
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       title,
       body_markdown: bodyMarkdown ?? "",
       target_pillar: targetPillar || null,
@@ -684,13 +701,15 @@ export async function updateContentPostAction(postId: string, formData: FormData
     revalidatePath("/clients");
     revalidatePath("/review");
     return { success: true, post: updatedPost };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to update post.";
+    return { success: false, error: message };
   }
 }
 
 export async function markExpenseBilledAction(expenseId: string) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
     const { error } = await supabase
       .from("tool_expenses")
@@ -705,7 +724,8 @@ export async function markExpenseBilledAction(expenseId: string) {
     revalidatePath("/command-center");
     revalidatePath("/clients");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to mark expense as billed.";
+    return { success: false, error: message };
   }
 }

@@ -205,18 +205,6 @@
   border-color: var(--color-line-strong);
 }
 
-.btn-danger {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-  border-color: var(--color-danger-line);
-  font-weight: 500;
-}
-.btn-danger:hover:not(:disabled) {
-  background: rgba(248, 113, 113, 0.2);
-  border-color: var(--color-danger);
-  color: #fecaca;
-}
-
 .btn-ghost {
   background: transparent;
   color: var(--color-ink-secondary);

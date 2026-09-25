@@ -382,15 +382,14 @@ export function OperationsClient({
                           <button
                             onClick={() => handleReleaseHold(req.client_id)}
                             disabled={isPending}
-                            className="btn btn-secondary text-xs text-[var(--color-danger-text)] hover:bg-[var(--color-danger-bg)]"
+                            className="btn btn-secondary text-xs"
                           >
-                            <Play className="h-3 w-3" />
                             <span>Resume Publishing</span>
                           </button>
                         )}
 
                         {!isResolved ? (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1.5">
                             {req.status === "submitted" && (
                               <button
                                 onClick={() => handleStatusChange(req.id, "in_progress")}
@@ -405,14 +404,13 @@ export function OperationsClient({
                               disabled={isPending}
                               className="btn btn-primary text-xs"
                             >
-                              <Check className="h-3.5 w-3.5" />
                               <span>Resolve</span>
                             </button>
                           </div>
                         ) : (
-                          <span className="inline-flex items-center gap-1 font-sans tabular-nums text-xs text-[var(--color-ok-text)]">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            Resolved
+                          <span className="inline-flex items-center gap-1.5 font-sans tabular-nums text-xs text-[var(--color-ink-secondary)]">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ok)]" />
+                            <span>Resolved</span>
                           </span>
                         )}
                       </div>

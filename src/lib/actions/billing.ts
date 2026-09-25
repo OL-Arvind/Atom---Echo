@@ -84,8 +84,9 @@ export async function createToolSubscriptionAction(formData: FormData) {
     revalidatePath("/command-center");
     revalidatePath("/calendar");
     return { success: true, tool };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to create tool subscription.";
+    return { success: false, error: message };
   }
 }
 
@@ -94,6 +95,7 @@ export async function createToolSubscriptionAction(formData: FormData) {
  */
 export async function deleteToolSubscriptionAction(id: string) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
 
     const { error } = await supabase
@@ -109,8 +111,9 @@ export async function deleteToolSubscriptionAction(id: string) {
     revalidatePath("/command-center");
     revalidatePath("/calendar");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to delete tool subscription.";
+    return { success: false, error: message };
   }
 }
 
@@ -119,6 +122,7 @@ export async function deleteToolSubscriptionAction(id: string) {
  */
 export async function updateInvoiceStatusAction(invoiceId: string, status: InvoiceStatus) {
   try {
+    await requireOperatorSession();
     const parsed = updateInvoiceStatusSchema.safeParse({ invoice_id: invoiceId, status });
     if (!parsed.success) {
       return { success: false, error: formatZodError(parsed.error) };
@@ -126,7 +130,7 @@ export async function updateInvoiceStatusAction(invoiceId: string, status: Invoi
 
     const supabase = createAdminClient();
 
-    const updatePayload: Record<string, any> = {
+    const updatePayload: Record<string, unknown> = {
       status,
       updated_at: new Date().toISOString(),
     };
@@ -184,8 +188,9 @@ export async function updateInvoiceStatusAction(invoiceId: string, status: Invoi
     revalidatePath(`/billing/invoices/${invoiceId}`);
     revalidatePath("/command-center");
     return { success: true, invoice: inv };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to update invoice status.";
+    return { success: false, error: message };
   }
 }
 
@@ -195,8 +200,11 @@ export async function updateInvoiceStatusAction(invoiceId: string, status: Invoi
  * (or on today's cycle) and who has not yet been invoiced this month, automatically
  * drafts an invoice combining base monthly retainer + unbilled pass-through tool expenses.
  */
-export async function runBillingAnchorCycleAction() {
+export async function runBillingAnchorCycleAction(options?: { bypassSessionCheck?: boolean }) {
   try {
+    if (!options?.bypassSessionCheck) {
+      await requireOperatorSession();
+    }
     const supabase = createAdminClient();
     const today = new Date();
     const currentDay = today.getDate();

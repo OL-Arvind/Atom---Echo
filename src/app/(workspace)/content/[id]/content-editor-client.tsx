@@ -260,7 +260,7 @@ export function ContentEditorClient({
             <button
               onClick={() => handleStatusTransition("client_review")}
               disabled={isPending}
-              className="btn text-xs bg-[var(--color-warn-bg)] text-[var(--color-warn-text)] border border-[var(--color-warn-line)] hover:bg-[var(--color-warn-bg)]/80 cursor-pointer"
+              className="btn btn-secondary text-xs cursor-pointer"
             >
               Send to Founder Desk
             </button>
@@ -299,9 +299,8 @@ export function ContentEditorClient({
             <button
               onClick={() => handleStatusTransition("published")}
               disabled={isPending}
-              className="btn text-xs bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)] hover:bg-[var(--color-ok-bg)]/80 cursor-pointer inline-flex items-center gap-1.5"
+              className="btn btn-primary text-xs cursor-pointer"
             >
-              <CheckCircle2 className="h-3.5 w-3.5" />
               <span>Mark as Published</span>
             </button>
           )}

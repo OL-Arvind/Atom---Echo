@@ -62,10 +62,13 @@ All web application code built for Atom & Echo must follow BaseWorks premium des
 * **Strict Ban on Tinted Callout Boxes / Alert Banners**:
   - **NEVER** create Notion-style pastel-tinted callout boxes with icons (e.g., `bg-amber-50/60 border-amber-200` with `<MessageCircle />` or cartoonish alert clipart).
   - For user/client feedback, quotes, or notes, use an **editorial hairline inset**: a subtle left border (`border-l-2 border-[var(--color-line-strong)] pl-3.5 py-1.5`) on the quiet surface.
+* **Strict Ban on Tinted / Colored-Fill Buttons**:
+  - **NEVER** style buttons with translucent colored backgrounds and matching colored borders (e.g. `bg-[var(--color-danger-bg)] border-[var(--color-danger-line)] text-[var(--color-danger-text)]`, `bg-[var(--color-warn-bg)]`, `bg-[var(--color-ok-bg)]`, or `.btn-danger`).
+  - Only **4 button surfaces** are permitted across the entire OS: **Solid Paper White** (`.btn-primary`), **Quiet Obsidian Neutral** (`.btn-secondary`), **Transparent Ghost** (`.btn-ghost`), and **Solid Acid Lime** (`.btn-accent`). Even for sign-out, status transitions, or confirmations, use crisp `.btn-primary` or `.btn-secondary` without decorative icon clutter.
 * **No Multi-Tiered Eyebrow / Label Stacking**:
   - Never stack redundant micro-headers (e.g., `"Client Feedback Note"` directly above `"1-Tap Portal Comment"` directly above `"Aravind commented:"`). State the context once, cleanly.
 * **No Decorative Icon Clutter**:
-  - Icons are currency, not wallpaper. Never stick chat bubbles, sparkles, or generic emojis next to everyday text. Use vector icons strictly for interactive actions or core navigation.
+  - Icons are currency, not wallpaper. Never stick chat bubbles, sparkles, checkmarks, or generic emojis next to everyday text or standard modal buttons (`Cancel`, `Log Out`, `Confirm`). Use vector icons strictly for standalone icon buttons or core navigation.
 * **Zero AI-Prompt-Speak Copywriting**: UI copy must be written in crisp, confident human language. Never print internal prompts, Jira-speak, or multi-sentence robotic apologies into titles, subtitles, or empty states.
 * **No Marketing Slop in Operational Shells**: No promo boxes or redundant explanatory paragraphs inside the sidebar or dashboard.
 * **Quiet Defaults, Loud Exceptions & No Technical Monospace**: Serene obsidian base (`#10110f`), crisp human typography matching `atomnecho.com` (**DM Sans** for UI/body/metadata with `tabular-nums` for numbers/dates, **Manrope** for display headings, **Georgia** for italic accents — **never** use technical/code monospace fonts like `JetBrains Mono`), subtle hairlines, generous breathing room. Color is reserved for true state signals.

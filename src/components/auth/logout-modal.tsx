@@ -84,7 +84,7 @@ export function LogoutModal({ isOpen, onClose, user }: LogoutModalProps) {
             type="button"
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="btn btn-danger flex-1 text-xs py-2"
+            className="btn btn-primary flex-1 text-xs py-2"
           >
             {isLoggingOut ? (
               <>
@@ -92,10 +92,7 @@ export function LogoutModal({ isOpen, onClose, user }: LogoutModalProps) {
                 <span>Signing out...</span>
               </>
             ) : (
-              <>
-                <LogOut className="h-3.5 w-3.5" />
-                <span>Log Out</span>
-              </>
+              <span>Log Out</span>
             )}
           </button>
         </div>

@@ -113,16 +113,15 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
             <button
               onClick={() => handleStatusTransition("paid")}
               disabled={isPending}
-              className="btn btn-primary text-xs bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border-[var(--color-ok-line)] hover:opacity-90"
+              className="btn btn-primary text-xs"
             >
-              <CheckCircle2 className="h-3.5 w-3.5" />
               <span>Mark as Paid</span>
             </button>
           )}
 
           {status === "paid" && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-sm)] bg-[var(--color-ok-bg)] border border-[var(--color-ok-line)] text-xs font-medium text-[var(--color-ok-text)]">
-              <CheckCircle2 className="h-3.5 w-3.5" />
+            <span className="flex items-center gap-2 text-xs font-sans tabular-nums text-[var(--color-ink-secondary)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ok)]" />
               <span>Paid on {invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : "Record"}</span>
             </span>
           )}

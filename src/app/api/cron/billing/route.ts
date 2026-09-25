@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const result = await runBillingAnchorCycleAction();
+    const result = await runBillingAnchorCycleAction({ bypassSessionCheck: true });
 
     return NextResponse.json({
       timestamp: new Date().toISOString(),

@@ -161,9 +161,8 @@ export function MarkPublishedModal({
             <button
               type="submit"
               disabled={isPending}
-              className="btn text-xs bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)] hover:bg-[var(--color-ok-bg)]/80 cursor-pointer inline-flex items-center gap-1.5"
+              className="btn btn-primary text-xs cursor-pointer"
             >
-              <CheckCircle2 className="h-3.5 w-3.5" />
               <span>{isPending ? "Publishing..." : "Confirm Published"}</span>
             </button>
           </div>

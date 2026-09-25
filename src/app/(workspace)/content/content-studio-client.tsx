@@ -681,9 +681,8 @@ export function ContentStudioClient({
                       {isScheduled && (
                         <button
                           onClick={() => setPublishingPost(post)}
-                          className="btn btn-secondary text-xs inline-flex items-center gap-1 text-[var(--color-ok-text)] border-[var(--color-ok-line)] bg-[var(--color-ok-bg)] hover:bg-[var(--color-ok-bg)]/80 cursor-pointer"
+                          className="btn btn-primary text-xs cursor-pointer"
                         >
-                          <CheckCircle2 className="h-3 w-3" />
                           <span>Publish</span>
                         </button>
                       )}

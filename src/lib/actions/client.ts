@@ -122,13 +122,15 @@ export async function createClientAction(formData: FormData) {
     revalidatePath("/clients");
     revalidatePath("/command-center");
     return { success: true, clientId: client.id };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to create client.";
+    return { success: false, error: message };
   }
 }
 
 export async function addTabooWordAction(clientId: string, word: string) {
   try {
+    await requireOperatorSession();
     const parsed = tabooWordSchema.safeParse({ clientId, word });
     if (!parsed.success) {
       return { success: false, error: formatZodError(parsed.error) };
@@ -159,13 +161,15 @@ export async function addTabooWordAction(clientId: string, word: string) {
 
     revalidatePath(`/clients/${clientId}`);
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to add taboo word.";
+    return { success: false, error: message };
   }
 }
 
 export async function removeTabooWordAction(clientId: string, wordToRemove: string) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
 
     const { data: ctx } = await supabase
@@ -184,8 +188,9 @@ export async function removeTabooWordAction(clientId: string, wordToRemove: stri
 
     revalidatePath(`/clients/${clientId}`);
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to remove taboo word.";
+    return { success: false, error: message };
   }
 }
 
@@ -200,6 +205,7 @@ export async function updateClientContextAction(
   }
 ) {
   try {
+    await requireOperatorSession();
     const parsed = updateClientContextSchema.safeParse({
       clientId,
       ...contextData,
@@ -262,13 +268,15 @@ export async function updateClientContextAction(
     revalidatePath("/content");
     revalidatePath("/command-center");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to update client context.";
+    return { success: false, error: message };
   }
 }
 
 export async function logToolExpenseAction(formData: FormData) {
   try {
+    await requireOperatorSession();
     const rawInput = {
       engagement_id: formData.get("engagement_id"),
       tool_name: formData.get("tool_name"),
@@ -322,8 +330,9 @@ export async function logToolExpenseAction(formData: FormData) {
     revalidatePath("/billing");
     revalidatePath("/command-center");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to log tool expense.";
+    return { success: false, error: message };
   }
 }
 
@@ -333,6 +342,7 @@ export async function toggleEmergencyHoldAction(
   reason: string = "Founder requested emergency freeze"
 ) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
 
     // 1. Get client with organization
@@ -437,13 +447,15 @@ export async function toggleEmergencyHoldAction(
     revalidatePath("/content");
     revalidatePath("/calendar");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to toggle emergency hold.";
+    return { success: false, error: message };
   }
 }
 
 export async function createClientRequestAction(formData: FormData) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
     const clientId = formData.get("client_id") as string;
     const title = formData.get("title") as string;
@@ -480,8 +492,9 @@ export async function createClientRequestAction(formData: FormData) {
     revalidatePath("/command-center");
     revalidatePath(`/clients/${clientId}`);
     return { success: true, request: data };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to create client request.";
+    return { success: false, error: message };
   }
 }
 
@@ -490,9 +503,10 @@ export async function updateClientRequestStatusAction(
   newStatus: "submitted" | "in_progress" | "resolved" | "closed"
 ) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
 
-    const updatePayload: any = { status: newStatus };
+    const updatePayload: Record<string, unknown> = { status: newStatus };
     if (newStatus === "resolved" || newStatus === "closed") {
       updatePayload.resolved_at = new Date().toISOString();
     }
@@ -527,13 +541,15 @@ export async function updateClientRequestStatusAction(
       revalidatePath(`/clients/${req.client_id}`);
     }
     return { success: true, request: req };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to update request status.";
+    return { success: false, error: message };
   }
 }
 
 export async function generateDraftInvoiceAction(clientId: string) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
 
     // 1. Fetch client with engagements
@@ -635,14 +651,16 @@ export async function generateDraftInvoiceAction(clientId: string) {
       subtotal,
       toolExpensesCount: toolExpensesList.length,
     };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to generate draft invoice.";
+    return { success: false, error: message };
   }
 }
 
 
 export async function deleteClientAction(clientId: string) {
   try {
+    await requireOperatorSession();
     const supabase = createAdminClient();
 
     const { error } = await supabase
@@ -659,7 +677,8 @@ export async function deleteClientAction(clientId: string) {
     revalidatePath("/billing");
     revalidatePath("/content");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to delete client.";
+    return { success: false, error: message };
   }
 }
