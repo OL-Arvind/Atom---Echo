@@ -16,12 +16,14 @@ import {
   ShieldCheck,
   Building2,
   LogOut,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { clearStoredUser } from "@/lib/auth/dummy-auth";
 
 interface CommandItem {
   id: string;
-  category: "Navigation" | "Actions" | "System";
+  category: "Navigation" | "Actions" | "System" | "Appearance";
   title: string;
   subtitle?: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -51,8 +53,8 @@ export function CommandPalette({
     {
       id: "nav-cmd",
       category: "Navigation",
-      title: "Command Center",
-      subtitle: "See what needs attention today, approvals, and upcoming posts",
+      title: "Editorial Desk",
+      subtitle: "Daily founder reviews, voice revisions, and publishing sign-offs",
       icon: Compass,
       action: () => handleNavigate("/command-center"),
     },
@@ -125,6 +127,32 @@ export function CommandPalette({
         }
         clearStoredUser();
         router.push("/login");
+      },
+    },
+    {
+      id: "theme-dark",
+      category: "Appearance",
+      title: "Switch to Obsidian Dark Mode",
+      subtitle: "Enable low-light dark aesthetic with neon chartreuse accents",
+      icon: Moon,
+      action: () => {
+        onClose();
+        document.documentElement.setAttribute("data-theme", "dark");
+        localStorage.setItem("ae_theme", "dark");
+        window.dispatchEvent(new Event("ae_theme_change"));
+      },
+    },
+    {
+      id: "theme-light",
+      category: "Appearance",
+      title: "Switch to Warm Paper Light Mode",
+      subtitle: "Enable warm paper editorial aesthetic from atomnecho.com",
+      icon: Sun,
+      action: () => {
+        onClose();
+        document.documentElement.setAttribute("data-theme", "light");
+        localStorage.setItem("ae_theme", "light");
+        window.dispatchEvent(new Event("ae_theme_change"));
       },
     },
   ];

@@ -2,50 +2,87 @@ import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getTodayDateStringIST, toDateStringIST } from "@/lib/date-utils";
 
-export async function getClientsFromDb() {
-  try {
-    const supabase = createAdminClient();
-    const { data: clients, error } = await supabase
-      .from("clients")
-      .select(`
-        id,
-        name,
-        founder_name,
-        founder_title,
-        founder_email,
-        founder_phone,
-        linkedin_url,
-        website_url,
-        status,
-        created_at,
-        engagements (
-          id,
-          client_id,
-          service_type,
-          status,
-          monthly_retainer,
-          billing_frequency,
-          billing_anchor_day,
-          start_date,
-          renewal_date,
-          content_items (
-            id,
-            status,
-            scheduled_publish_date
-          )
-        )
-      `)
-      .order("created_at", { ascending: false });
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
 
-    if (error || !clients || clients.length === 0) {
+const queryCache = new Map<string, CacheEntry<unknown>>();
+const DEFAULT_TTL_MS = 25_000; // 25s TTL for instant tab switching
+
+export function invalidateDbCache(pattern?: string) {
+  if (!pattern) {
+    queryCache.clear();
+    return;
+  }
+  for (const key of queryCache.keys()) {
+    if (key.includes(pattern)) {
+      queryCache.delete(key);
+    }
+  }
+}
+
+export async function withDbCache<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  ttlMs = DEFAULT_TTL_MS
+): Promise<T> {
+  const cached = queryCache.get(key);
+  const now = Date.now();
+  if (cached && now - cached.timestamp < ttlMs) {
+    return cached.data as T;
+  }
+  const fresh = await fetcher();
+  queryCache.set(key, { data: fresh, timestamp: now });
+  return fresh;
+}
+
+export async function getClientsFromDb() {
+  return withDbCache("clients_all", async () => {
+    try {
+      const supabase = createAdminClient();
+      const { data: clients, error } = await supabase
+        .from("clients")
+        .select(`
+          id,
+          name,
+          founder_name,
+          founder_title,
+          founder_email,
+          founder_phone,
+          linkedin_url,
+          website_url,
+          status,
+          created_at,
+          engagements (
+            id,
+            client_id,
+            service_type,
+            status,
+            monthly_retainer,
+            billing_frequency,
+            billing_anchor_day,
+            start_date,
+            renewal_date,
+            content_items (
+              id,
+              status,
+              scheduled_publish_date
+            )
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error || !clients || clients.length === 0) {
+        return [];
+      }
+
+      return clients;
+    } catch (err) {
+      console.error("Error fetching clients from Supabase:", err);
       return [];
     }
-
-    return clients;
-  } catch (err) {
-    console.error("Error fetching clients from Supabase:", err);
-    return [];
-  }
+  });
 }
 
 export async function getClientByIdFromDb(id: string) {
@@ -151,7 +188,8 @@ export async function getClientByIdFromDb(id: string) {
 }
 
 export async function getCommandCenterDataFromDb() {
-  try {
+  return withDbCache("command_center_data", async () => {
+    try {
     const supabase = createAdminClient();
     const nowIso = new Date().toISOString();
     const todayStr = getTodayDateStringIST();
@@ -530,6 +568,7 @@ export async function getCommandCenterDataFromDb() {
       unbilledExpenses: [],
     };
   }
+  });
 }
 
 export interface ReviewPortalData {
@@ -760,7 +799,8 @@ export async function getReviewPostByToken(token: string) {
 }
 
 export async function getContentStudioDataFromDb() {
-  try {
+  return withDbCache("content_studio_data", async () => {
+    try {
     const supabase = createAdminClient();
     const nowIso = new Date().toISOString();
 
@@ -855,10 +895,12 @@ export async function getContentStudioDataFromDb() {
       tokenMap: {},
     };
   }
+  });
 }
 
 export async function getBillingDataFromDb() {
-  try {
+  return withDbCache("billing_data", async () => {
+    try {
     const supabase = createAdminClient();
 
     const [expensesRes, invoicesRes, clientsRes, toolSubscriptionsRes] = await Promise.all([
@@ -916,6 +958,8 @@ export async function getBillingDataFromDb() {
           id,
           name,
           founder_name,
+          founder_email,
+          website_url,
           engagements (
             id,
             service_type,
@@ -944,22 +988,25 @@ export async function getBillingDataFromDb() {
       toolSubscriptions: [],
     };
   }
+  });
 }
 
 export async function getToolSubscriptionsFromDb() {
-  try {
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-      .from("tool_subscriptions")
-      .select("*")
-      .order("next_renewal_date", { ascending: true });
+  return withDbCache("tool_subscriptions", async () => {
+    try {
+      const supabase = createAdminClient();
+      const { data, error } = await supabase
+        .from("tool_subscriptions")
+        .select("*")
+        .order("next_renewal_date", { ascending: true });
 
-    if (error || !data) return [];
-    return data;
-  } catch (err) {
-    console.error("Error fetching tool subscriptions:", err);
-    return [];
-  }
+      if (error || !data) return [];
+      return data;
+    } catch (err) {
+      console.error("Error fetching tool subscriptions:", err);
+      return [];
+    }
+  });
 }
 
 export async function getInvoiceByIdFromDb(id: string) {
@@ -1021,89 +1068,92 @@ export async function getInvoiceByIdFromDb(id: string) {
 }
 
 export async function getOperationsDataFromDb() {
-  try {
-    const supabase = createAdminClient();
+  return withDbCache("operations_data", async () => {
+    try {
+      const supabase = createAdminClient();
 
-    const [credLogsRes, requestsRes, feedbackRes] = await Promise.all([
-      supabase
-        .from("credential_audit_logs")
-        .select(`
-          id,
-          action,
-          ip_address,
-          user_agent,
-          created_at,
-          credentials (
-            platform,
+      const [credLogsRes, requestsRes, feedbackRes] = await Promise.all([
+        supabase
+          .from("credential_audit_logs")
+          .select(`
+            id,
+            action,
+            ip_address,
+            user_agent,
+            created_at,
+            credentials (
+              platform,
+              clients (
+                name,
+                founder_name
+              )
+            ),
+            users (
+              full_name,
+              email
+            )
+          `)
+          .order("created_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("client_requests")
+          .select(`
+            id,
+            title,
+            description,
+            category,
+            priority,
+            status,
+            created_at,
             clients (
+              id,
               name,
               founder_name
             )
-          ),
-          users (
-            full_name,
-            email
-          )
-        `)
-        .order("created_at", { ascending: false })
-        .limit(10),
-      supabase
-        .from("client_requests")
-        .select(`
-          id,
-          title,
-          description,
-          category,
-          priority,
-          status,
-          created_at,
-          clients (
+          `)
+          .order("created_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("content_feedback")
+          .select(`
             id,
-            name,
-            founder_name
-          )
-        `)
-        .order("created_at", { ascending: false })
-        .limit(10),
-      supabase
-        .from("content_feedback")
-        .select(`
-          id,
-          comment,
-          author_name,
-          author_type,
-          created_at,
-          content_items (
-            title,
-            engagements (
-              clients (
-                name
+            comment,
+            author_name,
+            author_type,
+            created_at,
+            content_items (
+              title,
+              engagements (
+                clients (
+                  name
+                )
               )
             )
-          )
-        `)
-        .order("created_at", { ascending: false })
-        .limit(10),
-    ]);
+          `)
+          .order("created_at", { ascending: false })
+          .limit(10),
+      ]);
 
-    return {
-      credentialLogs: credLogsRes.data || [],
-      clientRequests: requestsRes.data || [],
-      feedback: feedbackRes.data || [],
-    };
-  } catch (err) {
-    console.error("Error in getOperationsDataFromDb:", err);
-    return {
-      credentialLogs: [],
-      clientRequests: [],
-      feedback: [],
-    };
-  }
+      return {
+        credentialLogs: credLogsRes.data || [],
+        clientRequests: requestsRes.data || [],
+        feedback: feedbackRes.data || [],
+      };
+    } catch (err) {
+      console.error("Error in getOperationsDataFromDb:", err);
+      return {
+        credentialLogs: [],
+        clientRequests: [],
+        feedback: [],
+      };
+    }
+  });
 }
 
 export async function getCalendarDataFromDb() {
-  try {
-    const supabase = createAdminClient();
+  return withDbCache("calendar_data", async () => {
+    try {
+      const supabase = createAdminClient();
 
     const [contentPostsRes, engagementsRes, toolSubsRes, allClientsRes] = await Promise.all([
       supabase
@@ -1163,7 +1213,7 @@ export async function getCalendarDataFromDb() {
         .not("next_renewal_date", "is", null),
       supabase
         .from("clients")
-        .select("id, name, founder_name")
+        .select("id, name, founder_name, founder_email, website_url")
         .order("name", { ascending: true }),
     ]);
 
@@ -1182,6 +1232,7 @@ export async function getCalendarDataFromDb() {
       clients: [],
     };
   }
+  });
 }
 
 export async function getContentPostByIdFromDb(id: string) {

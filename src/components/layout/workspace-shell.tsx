@@ -34,7 +34,7 @@ function WorkspaceContent({ children }: { children: React.ReactNode }) {
       }`}
     >
       <TopNav />
-      <main className="flex-1 p-6 md:p-8 bg-[var(--color-base)]">{children}</main>
+      <main className="flex-1 p-4 md:p-5 lg:p-6 bg-[var(--color-base)]">{children}</main>
     </div>
   );
 }

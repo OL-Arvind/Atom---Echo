@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Search,
-  Crosshair,
+  Newspaper,
   Users,
   Feather,
   Calendar,
@@ -16,6 +16,7 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { CommandPalette } from "@/components/layout/command-palette";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { useHeader } from "./header-context";
 
 interface RouteMeta {
@@ -27,9 +28,9 @@ interface RouteMeta {
 function getRouteMetadata(pathname: string): RouteMeta {
   if (pathname.startsWith("/command-center")) {
     return {
-      title: "Command Center",
-      icon: Crosshair,
-      breadcrumbs: [{ label: "Command Center" }],
+      title: "Editorial Desk",
+      icon: Newspaper,
+      breadcrumbs: [{ label: "Editorial Desk" }],
     };
   }
   if (pathname.startsWith("/clients/")) {
@@ -95,9 +96,9 @@ function getRouteMetadata(pathname: string): RouteMeta {
     };
   }
   return {
-    title: "Command Center",
-    icon: Crosshair,
-    breadcrumbs: [{ label: "Command Center" }],
+    title: "Editorial Desk",
+    icon: Newspaper,
+    breadcrumbs: [{ label: "Editorial Desk" }],
   };
 }
 
@@ -132,25 +133,11 @@ export function TopNav() {
   return (
     <>
       <header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 20,
-          display: "flex",
-          height: "52px",
-          alignItems: "center",
-          justifyContent: "space-between",
-          borderBottom: "1px solid var(--color-line)",
-          background: "rgba(19, 28, 19, 0.85)",
-          backdropFilter: "blur(12px)",
-          padding: "0 24px",
-        }}
+        className="sticky top-0 z-20 flex h-[52px] items-center justify-between border-b border-[var(--color-line)] bg-[var(--color-base-raised)]/90 backdrop-blur-md px-6 transition-colors"
       >
         {/* Left Side: Contextual Section Title & Breadcrumb */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex items-center justify-center h-6 w-6 rounded-md bg-[var(--color-base-subtle)] text-[var(--color-ink-secondary)] border border-[var(--color-line-subtle)] shrink-0">
-            <Icon size={13} strokeWidth={2} />
-          </div>
+          <Icon size={14} strokeWidth={1.8} className="text-[var(--color-ink-tertiary)] shrink-0" />
 
           <nav aria-label="Breadcrumbs" className="flex items-center gap-1.5 text-[13px] min-w-0 truncate">
             {breadcrumbs.map((crumb, idx) => {
@@ -175,7 +162,7 @@ export function TopNav() {
                     <span
                       className={`truncate ${
                         isLast
-                          ? "font-semibold text-[var(--color-ink)] tracking-tight"
+                          ? "font-medium text-[var(--color-ink)] tracking-tight"
                           : "text-[var(--color-ink-tertiary)] font-normal"
                       }`}
                     >
@@ -188,53 +175,23 @@ export function TopNav() {
           </nav>
         </div>
 
-        {/* Right Side: Global Search & Contextual Action Slot */}
+        {/* Right Side: Global Search, Theme Switcher & Contextual Action Slot */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             type="button"
             onClick={() => setIsCommandOpen(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "5px 10px",
-              borderRadius: "6px",
-              border: "1px solid var(--color-line)",
-              background: "var(--color-base-subtle)",
-              color: "var(--color-ink-muted)",
-              fontSize: "12px",
-              fontFamily: "var(--font-sans)",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-              width: "210px",
-              textAlign: "left",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--color-accent-dim)";
-              e.currentTarget.style.color = "var(--color-ink-tertiary)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--color-line)";
-              e.currentTarget.style.color = "var(--color-ink-muted)";
-            }}
+            className="group flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] hover:border-[var(--color-line-strong)] text-[12px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] transition-all duration-150 w-72 text-left shadow-2xs active:scale-[0.98] cursor-pointer"
           >
-            <Search size={12} strokeWidth={1.75} />
-            <span style={{ flex: 1 }}>Search founders, stories, retainers...</span>
-            <kbd
-              style={{
-                fontFamily: "var(--font-sans tabular-nums)",
-                fontSize: "10px",
-                padding: "1.5px 4.5px",
-                borderRadius: "3px",
-                border: "1px solid var(--color-line-strong)",
-                background: "var(--color-base-overlay)",
-                color: "var(--color-ink-muted)",
-                lineHeight: 1.4,
-              }}
-            >
+            <Search size={13} strokeWidth={1.8} className="text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-secondary)] transition-colors shrink-0" />
+            <span className="flex-1 truncate text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-secondary)] transition-colors">
+              Search founders, stories, retainers...
+            </span>
+            <kbd className="font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-secondary)] transition-colors shrink-0">
               ⌘K
             </kbd>
           </button>
+
+          <ThemeToggle />
 
           {/* Action Portal Target */}
           <div id="top-nav-actions" className="flex items-center gap-2 empty:hidden" />

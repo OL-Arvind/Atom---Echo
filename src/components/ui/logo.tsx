@@ -5,7 +5,7 @@ interface AtomEchoLogoProps {
   className?: string;
   showText?: boolean;
   variant?: "icon" | "wordmark";
-  theme?: "dark" | "light";
+  theme?: "dark" | "light" | "auto";
 }
 
 export function AtomEchoLogo({
@@ -13,36 +13,115 @@ export function AtomEchoLogo({
   className = "",
   showText = true,
   variant = "icon",
-  theme = "dark",
+  theme = "auto",
 }: AtomEchoLogoProps) {
   if (variant === "wordmark" || showText) {
-    const src = theme === "light" ? "/brand-wordmark-dark.svg" : "/brand-wordmark-white.svg";
+    if (theme === "light") {
+      return (
+        <div className={`inline-flex items-center shrink-0 ${className}`}>
+          <Image
+            src="/brand-wordmark-dark.svg"
+            alt="Atom & Echo"
+            width={Math.round(size * 2.73)}
+            height={size}
+            priority
+            unoptimized
+            className="h-auto object-contain select-none"
+            style={{ maxHeight: size }}
+          />
+        </div>
+      );
+    }
+    if (theme === "dark") {
+      return (
+        <div className={`inline-flex items-center shrink-0 ${className}`}>
+          <Image
+            src="/brand-wordmark-white.svg"
+            alt="Atom & Echo"
+            width={Math.round(size * 2.73)}
+            height={size}
+            priority
+            unoptimized
+            className="h-auto object-contain select-none"
+            style={{ maxHeight: size }}
+          />
+        </div>
+      );
+    }
     return (
       <div className={`inline-flex items-center shrink-0 ${className}`}>
         <Image
-          src={src}
+          src="/brand-wordmark-dark.svg"
           alt="Atom & Echo"
           width={Math.round(size * 2.73)}
           height={size}
           priority
           unoptimized
-          className="h-auto object-contain select-none"
+          className="theme-logo-light h-auto object-contain select-none"
+          style={{ maxHeight: size }}
+        />
+        <Image
+          src="/brand-wordmark-white.svg"
+          alt="Atom & Echo"
+          width={Math.round(size * 2.73)}
+          height={size}
+          priority
+          unoptimized
+          className="theme-logo-dark h-auto object-contain select-none"
           style={{ maxHeight: size }}
         />
       </div>
     );
   }
 
-  const symbolSrc = theme === "light" ? "/icon-symbol-dark.png" : "/icon-symbol-white.png";
+  if (theme === "light") {
+    return (
+      <div className={`inline-flex items-center justify-center shrink-0 ${className}`}>
+        <Image
+          src="/icon-symbol-dark.png"
+          alt="Atom & Echo"
+          width={size}
+          height={size}
+          priority
+          className="object-contain select-none"
+          style={{ width: size, height: size }}
+        />
+      </div>
+    );
+  }
+  if (theme === "dark") {
+    return (
+      <div className={`inline-flex items-center justify-center shrink-0 ${className}`}>
+        <Image
+          src="/icon-symbol-white.png"
+          alt="Atom & Echo"
+          width={size}
+          height={size}
+          priority
+          className="object-contain select-none"
+          style={{ width: size, height: size }}
+        />
+      </div>
+    );
+  }
   return (
     <div className={`inline-flex items-center justify-center shrink-0 ${className}`}>
       <Image
-        src={symbolSrc}
+        src="/icon-symbol-dark.png"
         alt="Atom & Echo"
         width={size}
         height={size}
         priority
-        className="object-contain select-none"
+        className="theme-logo-light object-contain select-none"
+        style={{ width: size, height: size }}
+      />
+      <Image
+        src="/icon-symbol-white.png"
+        alt="Atom & Echo"
+        width={size}
+        height={size}
+        priority
+        className="theme-logo-dark object-contain select-none"
         style={{ width: size, height: size }}
       />
     </div>

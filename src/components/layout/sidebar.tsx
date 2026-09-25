@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  Crosshair,
+  Newspaper,
   Users,
   Feather,
   Calendar,
@@ -20,9 +20,10 @@ import { LogoutModal } from "@/components/auth/logout-modal";
 import { getStoredUser, syncSupabaseSessionUser, AuthUser } from "@/lib/auth/dummy-auth";
 import { SidebarTooltip } from "@/components/ui/sidebar-tooltip";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { ThemeToggle } from "./theme-toggle";
 
 const NAV_ITEMS = [
-  { name: "Command Center", href: "/command-center", icon: Crosshair, section: "ops" },
+  { name: "Editorial Desk", href: "/command-center", icon: Newspaper, section: "ops" },
   { name: "Client Roster", href: "/clients", icon: Users, section: "ops" },
   { name: "Content Studio", href: "/content", icon: Feather, section: "ops" },
   { name: "Publishing Schedule", href: "/calendar", icon: Calendar, section: "ops" },
@@ -89,12 +90,12 @@ export function Sidebar() {
       {/* Brand Header */}
       <div
         style={{
-          padding: isCollapsed ? "18px 12px 14px" : "18px 14px 14px",
-          borderBottom: "1px solid var(--color-line-subtle)",
+          padding: isCollapsed ? "0 12px" : "0 14px",
+          borderBottom: "1px solid var(--color-line)",
           display: "flex",
           alignItems: "center",
           justifyContent: isCollapsed ? "center" : "space-between",
-          height: "58px",
+          height: "52px",
           boxSizing: "border-box",
         }}
       >
@@ -115,7 +116,7 @@ export function Sidebar() {
                 width: "36px",
                 height: "36px",
                 borderRadius: "7px",
-                border: "1px solid transparent",
+                border: "none",
                 background: "transparent",
                 cursor: "pointer",
                 padding: 0,
@@ -123,20 +124,26 @@ export function Sidebar() {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "var(--color-base-subtle)";
-                e.currentTarget.style.borderColor = "var(--color-line)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "transparent";
               }}
             >
+              <Image
+                src="/icon-symbol-dark.png"
+                alt="Atom & Echo"
+                width={22}
+                height={22}
+                priority
+                className="theme-logo-light object-contain w-[22px] h-[22px] select-none transition-transform duration-150 group-hover:scale-95"
+              />
               <Image
                 src="/icon-symbol-white.png"
                 alt="Atom & Echo"
                 width={22}
                 height={22}
                 priority
-                className="object-contain w-[22px] h-[22px] select-none transition-transform duration-150 group-hover:scale-95"
+                className="theme-logo-dark object-contain w-[22px] h-[22px] select-none transition-transform duration-150 group-hover:scale-95"
               />
             </button>
           </SidebarTooltip>
@@ -152,13 +159,22 @@ export function Sidebar() {
               }}
             >
               <Image
+                src="/brand-wordmark-dark.svg"
+                alt="Atom & Echo"
+                width={76}
+                height={28}
+                priority
+                unoptimized
+                className="theme-logo-light object-contain h-[28px] w-auto select-none"
+              />
+              <Image
                 src="/brand-wordmark-white.svg"
                 alt="Atom & Echo"
                 width={76}
                 height={28}
                 priority
                 unoptimized
-                className="object-contain h-[28px] w-auto select-none"
+                className="theme-logo-dark object-contain h-[28px] w-auto select-none"
               />
             </Link>
 
@@ -178,7 +194,7 @@ export function Sidebar() {
                 width: "24px",
                 height: "24px",
                 borderRadius: "5px",
-                border: "1px solid transparent",
+                border: "none",
                 background: "transparent",
                 color: "var(--color-ink-tertiary)",
                 cursor: "pointer",
@@ -188,12 +204,10 @@ export function Sidebar() {
               onMouseEnter={(e) => {
                 e.currentTarget.style.color = "var(--color-ink)";
                 e.currentTarget.style.background = "var(--color-base-subtle)";
-                e.currentTarget.style.borderColor = "var(--color-line)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.color = "var(--color-ink-tertiary)";
                 e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "transparent";
               }}
             >
               <PanelLeftClose size={14} strokeWidth={1.8} />
@@ -258,6 +272,8 @@ export function Sidebar() {
                   >
                     <Link
                       href={item.href}
+                      prefetch={true}
+                      className="active:scale-[0.98] select-none"
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -272,7 +288,7 @@ export function Sidebar() {
                         fontWeight: isActive ? 500 : 400,
                         color: isActive ? "var(--color-ink)" : "var(--color-ink-tertiary)",
                         background: isActive ? "var(--color-base-subtle)" : "transparent",
-                        transition: "all 0.12s ease",
+                        transition: "transform 150ms ease-out, background 120ms ease, color 120ms ease",
                         position: "relative",
                       }}
                       onMouseEnter={(e) => {
@@ -370,7 +386,7 @@ export function Sidebar() {
                   height: "32px",
                   borderRadius: "6px",
                   background: "transparent",
-                  border: "1px solid transparent",
+                  border: "none",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -379,18 +395,23 @@ export function Sidebar() {
                   transition: "all 0.12s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--color-line)";
                   e.currentTarget.style.background = "var(--color-base-subtle)";
                   e.currentTarget.style.color = "var(--color-ink)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "transparent";
                   e.currentTarget.style.background = "transparent";
                   e.currentTarget.style.color = "var(--color-ink-muted)";
                 }}
               >
                 <PanelLeftOpen size={16} strokeWidth={1.8} />
               </button>
+            </SidebarTooltip>
+
+            {/* Theme Switcher Button */}
+            <SidebarTooltip content="Toggle Theme" enabled={isCollapsed}>
+              <div>
+                <ThemeToggle className="w-8 h-8 rounded-[6px]" />
+              </div>
             </SidebarTooltip>
 
             {/* User Avatar Button */}
@@ -420,6 +441,9 @@ export function Sidebar() {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {/* Theme Switcher Labeled */}
+            <ThemeToggle showLabel={true} className="mb-0.5" />
+
             {/* Collapse Sidebar Button */}
             <button
               type="button"
@@ -431,7 +455,7 @@ export function Sidebar() {
                 width: "100%",
                 padding: "6px 8px",
                 borderRadius: "6px",
-                border: "1px solid transparent",
+                border: "none",
                 background: "transparent",
                 color: "var(--color-ink-muted)",
                 fontSize: "12px",
@@ -443,12 +467,10 @@ export function Sidebar() {
               onMouseEnter={(e) => {
                 e.currentTarget.style.color = "var(--color-ink)";
                 e.currentTarget.style.background = "var(--color-base-subtle)";
-                e.currentTarget.style.borderColor = "var(--color-line-subtle)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.color = "var(--color-ink-muted)";
                 e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "transparent";
               }}
             >
               <PanelLeftClose size={14} strokeWidth={1.8} />

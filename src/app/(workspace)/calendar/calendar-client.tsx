@@ -355,7 +355,7 @@ export function CalendarClient({
                     value: c.id,
                     label: c.name,
                     description: c.founder_name,
-                    brandName: c.name,
+                    brandName: c.website_url || c.founder_email || c.name,
                   })),
                 ]}
                 value={selectedClientId}

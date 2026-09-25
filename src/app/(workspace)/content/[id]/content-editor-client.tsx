@@ -572,27 +572,27 @@ export function ContentEditorClient({
                 </span>
               </div>
 
-              {/* Native LinkedIn Mobile Card Simulation */}
-              <div className="rounded-xl border border-[var(--color-line-strong)] bg-[#1b1f23] p-4 text-[#f3f4f6] shadow-xl space-y-3 font-sans">
+              {/* Native LinkedIn Mobile Card Simulation (Deep Forest Brand Card) */}
+              <div className="card-forest rounded-xl p-4.5 shadow-card space-y-3 font-sans">
                 {/* Author Info */}
                 <div className="flex items-center gap-2.5">
                   <UserAvatar
                     seed={client?.founder_name || client?.name || "Founder"}
                     size={40}
-                    className="rounded-full"
+                    className="rounded-full ring-1 ring-[#435731]"
                     alt={client?.founder_name || "Founder"}
                   />
                   <div className="min-w-0 flex-1 leading-snug">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-xs text-white truncate">
+                      <span className="font-semibold text-xs text-[#f0f6e7] truncate">
                         {client?.founder_name || "Founder Name"}
                       </span>
-                      <span className="text-[10px] text-gray-400 font-sans tabular-nums">· 1st</span>
+                      <span className="text-[10px] text-[#a2b584] font-sans tabular-nums">· 1st</span>
                     </div>
-                    <p className="text-[11px] text-gray-400 truncate">
+                    <p className="text-[11px] text-[#c9d1bd] truncate">
                       {client?.founder_title || "Founder & CEO"} at {client?.name || "Company"}
                     </p>
-                    <p className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                    <p className="text-[10px] text-[#8fa372] flex items-center gap-1 mt-0.5">
                       <span>Just now</span>
                       <span>·</span>
                       <span>🌐</span>
@@ -601,7 +601,7 @@ export function ContentEditorClient({
                 </div>
 
                 {/* Hook & Body with Fold Indicator */}
-                <div className="text-[13px] text-gray-200 whitespace-pre-wrap leading-relaxed">
+                <div className="text-[13px] text-[#f0f6e7] whitespace-pre-wrap leading-relaxed">
                   {bodyMarkdown ? (
                     <>
                       {hookText}
@@ -609,25 +609,25 @@ export function ContentEditorClient({
                         <button
                           type="button"
                           onClick={() => setSeeMoreExpanded(!seeMoreExpanded)}
-                          className="text-gray-400 hover:text-white font-medium ml-1 cursor-pointer underline text-xs"
+                          className="text-[#a2b584] hover:text-[#d3ff5a] font-medium ml-1 cursor-pointer underline text-xs transition-colors"
                         >
                           {seeMoreExpanded ? "less" : "...see more"}
                         </button>
                       )}
                     </>
                   ) : (
-                    <span className="text-gray-500 italic">
+                    <span className="text-[#8fa372] italic">
                       Start typing in the editor to preview how your hook appears on LinkedIn mobile before the &ldquo;...see more&rdquo; cut...
                     </span>
                   )}
                 </div>
 
                 {/* LinkedIn Action Bar */}
-                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-gray-400 text-[11px]">
-                  <span className="hover:text-white cursor-pointer">👍 Like</span>
-                  <span className="hover:text-white cursor-pointer">💬 Comment</span>
-                  <span className="hover:text-white cursor-pointer">🔁 Repost</span>
-                  <span className="hover:text-white cursor-pointer">📤 Send</span>
+                <div className="pt-2 border-t border-[#435731] flex items-center justify-between text-[#a2b584] text-[11px]">
+                  <span className="hover:text-[#f0f6e7] cursor-pointer transition-colors">👍 Like</span>
+                  <span className="hover:text-[#f0f6e7] cursor-pointer transition-colors">💬 Comment</span>
+                  <span className="hover:text-[#f0f6e7] cursor-pointer transition-colors">🔁 Repost</span>
+                  <span className="hover:text-[#f0f6e7] cursor-pointer transition-colors">📤 Send</span>
                 </div>
               </div>
 

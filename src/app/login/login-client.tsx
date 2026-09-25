@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Eye, EyeOff, Loader2, ArrowRight, CheckCircle2, KeyRound, X } from "lucide-react";
 import { setStoredUser, getInitials } from "@/lib/auth/dummy-auth";
 import { createClient } from "@/lib/supabase/client";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export function LoginClient() {
   const router = useRouter();
@@ -109,17 +110,29 @@ export function LoginClient() {
     <div className="h-[100dvh] w-full flex flex-col lg:flex-row bg-[var(--color-base)] text-[var(--color-ink)] select-none overflow-hidden">
       {/* LEFT HALF: Primary Authentication Interface */}
       <div className="w-full lg:w-1/2 h-full flex flex-col justify-between p-6 sm:p-8 lg:px-12 lg:py-6 xl:px-16 xl:py-7 z-10 overflow-y-auto lg:overflow-hidden">
-        {/* Top: Brand Header */}
-        <div className="flex items-center shrink-0">
-          <Image
-            src="/brand-wordmark-white.svg"
-            alt="Atom & Echo"
-            width={88}
-            height={32}
-            priority
-            unoptimized
-            className="object-contain h-[30px] w-auto select-none"
-          />
+        {/* Top: Brand Header with Theme Switcher */}
+        <div className="flex items-center justify-between shrink-0">
+          <div className="flex items-center">
+            <Image
+              src="/brand-wordmark-dark.svg"
+              alt="Atom & Echo"
+              width={88}
+              height={32}
+              priority
+              unoptimized
+              className="theme-logo-light object-contain h-[30px] w-auto select-none"
+            />
+            <Image
+              src="/brand-wordmark-white.svg"
+              alt="Atom & Echo"
+              width={88}
+              height={32}
+              priority
+              unoptimized
+              className="theme-logo-dark object-contain h-[30px] w-auto select-none"
+            />
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* Center: Main Sign-In Form */}

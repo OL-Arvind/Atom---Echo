@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { invalidateDbCache } from "@/lib/data/supabase-queries";
 import { createClientReviewToken } from "@/lib/security/token";
+
+function revalidate(path: string) {
+  invalidateDbCache();
+  revalidatePath(path);
+}
 import {
   createClientSchema,
   tabooWordSchema,
@@ -119,8 +125,8 @@ export async function createClientAction(formData: FormData) {
     // 5. Initialize 7-day Cryptographic Review Token for 1-tap review portal
     await createClientReviewToken(client.id, 7);
 
-    revalidatePath("/clients");
-    revalidatePath("/command-center");
+    revalidate("/clients");
+    revalidate("/command-center");
     return { success: true, clientId: client.id };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to create client.";
@@ -159,7 +165,7 @@ export async function addTabooWordAction(clientId: string, word: string) {
       });
     }
 
-    revalidatePath(`/clients/${clientId}`);
+    revalidate(`/clients/${clientId}`);
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to add taboo word.";
@@ -186,7 +192,7 @@ export async function removeTabooWordAction(clientId: string, wordToRemove: stri
         .eq("id", ctx.id);
     }
 
-    revalidatePath(`/clients/${clientId}`);
+    revalidate(`/clients/${clientId}`);
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to remove taboo word.";
@@ -264,9 +270,9 @@ export async function updateClientContextAction(
       }
     }
 
-    revalidatePath(`/clients/${clientId}`);
-    revalidatePath("/content");
-    revalidatePath("/command-center");
+    revalidate(`/clients/${clientId}`);
+    revalidate("/content");
+    revalidate("/command-center");
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to update client context.";
@@ -325,10 +331,10 @@ export async function logToolExpenseAction(formData: FormData) {
     }
 
     if (clientId) {
-      revalidatePath(`/clients/${clientId}`);
+      revalidate(`/clients/${clientId}`);
     }
-    revalidatePath("/billing");
-    revalidatePath("/command-center");
+    revalidate("/billing");
+    revalidate("/command-center");
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to log tool expense.";
@@ -440,12 +446,12 @@ export async function toggleEmergencyHoldAction(
       }
     }
 
-    revalidatePath("/command-center");
-    revalidatePath("/operations");
-    revalidatePath("/clients");
-    revalidatePath(`/clients/${clientId}`);
-    revalidatePath("/content");
-    revalidatePath("/calendar");
+    revalidate("/command-center");
+    revalidate("/operations");
+    revalidate("/clients");
+    revalidate(`/clients/${clientId}`);
+    revalidate("/content");
+    revalidate("/calendar");
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to toggle emergency hold.";
@@ -488,9 +494,9 @@ export async function createClientRequestAction(formData: FormData) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/operations");
-    revalidatePath("/command-center");
-    revalidatePath(`/clients/${clientId}`);
+    revalidate("/operations");
+    revalidate("/command-center");
+    revalidate(`/clients/${clientId}`);
     return { success: true, request: data };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to create client request.";
@@ -535,10 +541,10 @@ export async function updateClientRequestStatusAction(
       }
     }
 
-    revalidatePath("/operations");
-    revalidatePath("/command-center");
+    revalidate("/operations");
+    revalidate("/command-center");
     if (req?.client_id) {
-      revalidatePath(`/clients/${req.client_id}`);
+      revalidate(`/clients/${req.client_id}`);
     }
     return { success: true, request: req };
   } catch (err: unknown) {
@@ -641,9 +647,9 @@ export async function generateDraftInvoiceAction(clientId: string) {
         .in("id", expIds);
     }
 
-    revalidatePath("/billing");
-    revalidatePath("/command-center");
-    revalidatePath(`/clients/${clientId}`);
+    revalidate("/billing");
+    revalidate("/command-center");
+    revalidate(`/clients/${clientId}`);
 
     return {
       success: true,
@@ -672,10 +678,10 @@ export async function deleteClientAction(clientId: string) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/clients");
-    revalidatePath("/command-center");
-    revalidatePath("/billing");
-    revalidatePath("/content");
+    revalidate("/clients");
+    revalidate("/command-center");
+    revalidate("/billing");
+    revalidate("/content");
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to delete client.";

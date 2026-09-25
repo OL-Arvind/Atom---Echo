@@ -1,45 +1,144 @@
 @import "tailwindcss";
 
-:root {
-  /* ─── ATOM & ECHO OS — Executive Dark Obsidian Canvas (atomnecho.com) ─── */
-  /* Base: deep obsidian charcoal and warm olive darks */
-  --color-base:          #10110f; /* Deep warm obsidian body background */
-  --color-base-raised:   #131c13; /* Elevated sidebar / topbar surface */
-  --color-base-overlay:  #1b1e17; /* Card / panel / modal background */
-  --color-base-subtle:   #181c15; /* Table row / input background */
-  --color-base-muted:    #242a1e; /* Active hover background */
+:root,
+[data-theme="light"] {
+  /* ─── ATOM & ECHO OS — Authentic Light Paper Canvas (atomnecho.com) ─── */
+  /* Base: tactile warm eggshell & organic paper canvas from .plan-section */
+  --color-base:          #f5f5ef; /* Soft Eggshell / Warm Paper Canvas */
+  --color-base-raised:   #eeefe8; /* Elevated sidebar & topbar surface */
+  --color-base-overlay:  #ffffff; /* Modal / dropdown clean paper background */
+  --color-base-subtle:   #f6f8f1; /* Choice tile subtle inset surface */
+  --color-base-muted:    #e4e8dc; /* Interactive hover background */
 
   /* Surface: cards, panels */
-  --color-surface:       #151913;
-  --color-surface-hover: #1e241a;
-  --color-surface-active:#262e21;
-  --color-surface-border:#34392c;
+  --color-surface:       #fbfcf7; /* Volume card crisp paper surface */
+  --color-surface-hover: #f0f3e9; /* Card / row hover */
+  --color-surface-active:#e0edcc; /* Soft pistachio active / selected state */
+  --color-surface-border:#d8ded0; /* Hairline card boundary */
+
+  /* Hairlines & borders — crisp, whisper-thin olive slate */
+  --color-line:          rgba(16, 17, 15, 0.08);
+  --color-line-subtle:   rgba(16, 17, 15, 0.04);
+  --color-line-strong:   rgba(16, 17, 15, 0.18);
+
+  /* Ink hierarchy — deep warm obsidian text & olive-slate neutrals */
+  --color-ink:           #10110f; /* Primary obsidian typography */
+  --color-ink-secondary: #42473b; /* Deep olive charcoal secondary */
+  --color-ink-tertiary:  #6a7161; /* Warm olive slate */
+  --color-ink-muted:     #939a8c; /* Quiet captions & placeholders */
+  --color-ink-ghost:     #c8cebf; /* Faint hairline ink */
+
+  /* Accent — signature electric acid lime / chartreuse pop & forest greens */
+  --color-accent:        #364d20; /* Deep moss green for crisp UI contrast */
+  --color-accent-lime:   #d3ff5a; /* Signature electric acid lime */
+  --color-accent-hover:  #243515;
+  --color-accent-dim:    #e0edcc;
+  --color-accent-bg:     rgba(54, 77, 32, 0.09);
+  --color-accent-line:   #687d45;
+  --color-accent-text:   #364d20;
+
+  /* Editorial Forest Green Focal Anchor (from .plan-total) */
+  --color-forest-bg:       #152011;
+  --color-forest-gradient: radial-gradient(ellipse at 100% 0, #375224, #152011 70%);
+  --color-forest-border:   #435731;
+  --color-forest-ink:      #f0f6e7;
+  --color-forest-muted:    #a8b598;
+
+  /* Editorial Soft Pistachio / Sage Green (from .bold-option & checked items) */
+  --color-sage-bg:         #e0edcc;
+  --color-sage-border:     #687d45;
+  --color-sage-ink:        #364d20;
+
+  /* Operational state signals calibrated for light paper */
+  --color-ok:            #2e5b10;
+  --color-ok-bg:         #e0edcc;
+  --color-ok-line:       #a2b584;
+  --color-ok-text:       #24470d;
+
+  --color-warn:          #b45309;
+  --color-warn-bg:       #fef3c7;
+  --color-warn-line:     #fde68a;
+  --color-warn-text:     #92400e;
+
+  --color-danger:        #dc2626;
+  --color-danger-bg:     #fee2e2;
+  --color-danger-line:   #fecaca;
+  --color-danger-text:   #b91c1c;
+
+  --color-info:          #1d4ed8;
+  --color-info-bg:       #dbeafe;
+  --color-info-line:     #bfdbfe;
+  --color-info-text:     #1e40af;
+
+  /* Radii */
+  --radius-xs:           3px;
+  --radius-sm:           5px;
+  --radius-md:           8px;
+  --radius-lg:           12px;
+  --radius-xl:           16px;
+  --radius-full:         100px;
+
+  /* Shadows (tactile ambient paper depth) */
+  --shadow-card:         0 1px 3px rgba(16, 17, 15, 0.04), 0 1px 2px rgba(16, 17, 15, 0.02);
+  --shadow-lifted:       0 4px 16px rgba(16, 17, 15, 0.08), 0 1px 4px rgba(16, 17, 15, 0.04);
+  --shadow-accent:       0 0 15px rgba(211, 255, 90, 0.25);
+  --shadow-dialog:       0 20px 50px rgba(16, 17, 15, 0.16), 0 4px 12px rgba(16, 17, 15, 0.08);
+
+  --ease-out-expo:       cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"],
+.dark {
+  /* ─── ATOM & ECHO OS — Executive Dark Obsidian Canvas (atomnecho.com) ─── */
+  --color-base:          #0c0d0c; /* Deep rich obsidian canvas */
+  --color-base-raised:   #121312; /* Elevated sidebar / topbar surface */
+  --color-base-overlay:  #151715; /* Card / panel / modal background */
+  --color-base-subtle:   #1a1d1a; /* Subtle secondary surface */
+  --color-base-muted:    #222622; /* Hover background */
+
+  /* Surface: cards, panels */
+  --color-surface:       #151715;
+  --color-surface-hover: #1c1f1c;
+  --color-surface-active:#232723;
+  --color-surface-border: rgba(255, 255, 255, 0.08);
 
   /* Hairlines & borders */
-  --color-line:          #2e3328;
-  --color-line-subtle:   #23271e;
-  --color-line-strong:   #424737;
+  --color-line:          rgba(255, 255, 255, 0.08);
+  --color-line-subtle:   rgba(255, 255, 255, 0.04);
+  --color-line-strong:   rgba(255, 255, 255, 0.15);
 
-  /* Ink hierarchy — warm paper whites and olive-sage neutrals */
-  --color-ink:           #f4f5f0; /* Primary warm paper */
-  --color-ink-secondary: #c1c8b5; /* Light sage secondary */
-  --color-ink-tertiary:  #a8aaa3; /* Muted olive slate */
-  --color-ink-muted:     #74796a; /* Quiet captions & placeholders */
-  --color-ink-ghost:     #383a33; /* Faint hairline ink */
+  /* Ink hierarchy */
+  --color-ink:           #f7f8f4; /* Crisp glowing warm paper */
+  --color-ink-secondary: #c4c9bf; /* Clean light alabaster secondary */
+  --color-ink-tertiary:  #8b9185; /* Refined slate */
+  --color-ink-muted:     #5a5f54; /* Quiet captions & placeholders */
+  --color-ink-ghost:     #2b2f28; /* Faint hairline ink */
 
-  /* Accent — signature electric acid lime / chartreuse */
-  --color-accent:        #d3ff5a;
-  --color-accent-hover:  #bfff70;
-  --color-accent-dim:    #50603c;
-  --color-accent-bg:     rgba(211, 255, 90, 0.12);
-  --color-accent-line:   #d3ff5a;
-  --color-accent-text:   #d3ff5a;
+  /* Accent */
+  --color-accent:        #d4ff00;
+  --color-accent-lime:   #d4ff00;
+  --color-accent-hover:  #e2ff4d;
+  --color-accent-dim:    #435200;
+  --color-accent-bg:     rgba(212, 255, 0, 0.12);
+  --color-accent-line:   #d4ff00;
+  --color-accent-text:   #d4ff00;
+
+  /* Forest & Sage Tokens */
+  --color-forest-bg:       #152011;
+  --color-forest-gradient: radial-gradient(ellipse at 100% 0, #375224, #152011 70%);
+  --color-forest-border:   #435731;
+  --color-forest-ink:      #f0f6e7;
+  --color-forest-muted:    #a8b598;
+
+  --color-sage-bg:         rgba(212, 255, 0, 0.08);
+  --color-sage-border:     rgba(212, 255, 0, 0.3);
+  --color-sage-ink:        #d4ff00;
 
   /* Operational state signals calibrated for obsidian dark mode */
-  --color-ok:            #d3ff5a;
-  --color-ok-bg:         rgba(211, 255, 90, 0.12);
-  --color-ok-line:       rgba(211, 255, 90, 0.35);
-  --color-ok-text:       #d3ff5a;
+  --color-ok:            #d4ff00;
+  --color-ok-bg:         rgba(212, 255, 0, 0.12);
+  --color-ok-line:       rgba(212, 255, 0, 0.35);
+  --color-ok-text:       #d4ff00;
 
   --color-warn:          #fbbf24;
   --color-warn-bg:       rgba(251, 191, 36, 0.12);
@@ -56,21 +155,11 @@
   --color-info-line:     rgba(96, 165, 250, 0.35);
   --color-info-text:     #93c5fd;
 
-  /* Radii */
-  --radius-xs:           3px;
-  --radius-sm:           5px;
-  --radius-md:           8px;
-  --radius-lg:           12px;
-  --radius-xl:           16px;
-  --radius-full:         100px;
-
-  /* Shadows (subtle dark obsidian glows rather than muddy black drop shadows) */
+  /* Shadows */
   --shadow-card:         0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
   --shadow-lifted:       0 4px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.25);
   --shadow-accent:       0 0 15px rgba(211, 255, 90, 0.15);
   --shadow-dialog:       0 20px 50px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
-
-  --ease-out-expo:       cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @theme inline {
@@ -85,6 +174,10 @@
   *, *::before, *::after { box-sizing: border-box; }
 
   html {
+    color-scheme: light;
+  }
+  html[data-theme="dark"],
+  html.dark {
     color-scheme: dark;
   }
 
@@ -132,6 +225,14 @@
 ::-webkit-scrollbar-thumb  { background: var(--color-line-strong); border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-ink-muted); }
 
+/* ─── THEME RESPONSIVE LOGO HELPERS ─── */
+.theme-logo-light { display: block; }
+.theme-logo-dark { display: none; }
+[data-theme="dark"] .theme-logo-light,
+.dark .theme-logo-light { display: none; }
+[data-theme="dark"] .theme-logo-dark,
+.dark .theme-logo-dark { display: block; }
+
 /* ─── CARD ─── */
 .card {
   background: var(--color-surface);
@@ -144,6 +245,21 @@
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
+}
+
+/* ─── ATOM & ECHO EDITORIAL PALETTE CARDS (atomnecho.com) ─── */
+.card-forest {
+  background: var(--color-forest-gradient);
+  border: 1px solid var(--color-forest-border);
+  color: var(--color-forest-ink);
+  border-radius: var(--radius-md);
+}
+
+.card-sage {
+  background: var(--color-sage-bg);
+  border: 1px solid var(--color-sage-border);
+  color: var(--color-sage-ink);
+  border-radius: var(--radius-md);
 }
 
 /* ─── BUTTONS ─── */
@@ -175,21 +291,19 @@
   border-color: var(--color-ink);
 }
 .btn-primary:hover:not(:disabled) {
-  background: #ffffff;
-  border-color: #ffffff;
-  color: #10110f;
+  opacity: 0.90;
   transform: translateY(-1px);
 }
 
 .btn-accent {
-  background: var(--color-accent);
+  background: var(--color-accent-lime);
   color: #10110f;
   font-weight: 600;
-  border-color: var(--color-accent);
+  border-color: var(--color-accent-lime);
 }
 .btn-accent:hover:not(:disabled) {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
+  background: #bfff70;
+  border-color: #bfff70;
   transform: translateY(-1px);
   box-shadow: 0 0 14px rgba(211, 255, 90, 0.25);
 }
@@ -338,7 +452,7 @@ select:focus-visible,
 .input:focus,
 .input:focus-visible {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 1.5px rgba(211, 255, 90, 0.3);
+  box-shadow: 0 0 0 1.5px var(--color-accent-bg);
   outline: none !important;
 }
 

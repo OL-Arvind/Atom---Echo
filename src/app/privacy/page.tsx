@@ -16,12 +16,20 @@ export default function PrivacyPolicyPage() {
         <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/login" className="flex items-center group">
             <Image
+              src="/brand-wordmark-dark.svg"
+              alt="Atom & Echo"
+              width={76}
+              height={28}
+              unoptimized
+              className="theme-logo-light object-contain h-[28px] w-auto select-none"
+            />
+            <Image
               src="/brand-wordmark-white.svg"
               alt="Atom & Echo"
               width={76}
               height={28}
               unoptimized
-              className="object-contain h-[28px] w-auto select-none"
+              className="theme-logo-dark object-contain h-[28px] w-auto select-none"
             />
           </Link>
 

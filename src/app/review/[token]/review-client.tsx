@@ -572,7 +572,7 @@ export function ReviewPortalClient({
                             onClick={() => toggleChip(chip)}
                             className={`rounded-[var(--radius-xs)] px-2.5 py-1 text-xs transition-colors cursor-pointer ${
                               isSelected
-                                ? "bg-[var(--color-accent)] text-white font-medium"
+                                ? "bg-[var(--color-accent)] text-[var(--color-accent-text)] font-semibold"
                                 : "bg-[var(--color-base-subtle)] text-[var(--color-ink-secondary)] border border-[var(--color-line)] hover:bg-[var(--color-surface-active)]"
                             }`}
                           >

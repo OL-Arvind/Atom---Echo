@@ -264,7 +264,7 @@ export function BillingClient({
                       value: c.id,
                       label: c.name,
                       description: c.founder_name,
-                      brandName: c.name,
+                      brandName: c.website_url || c.name,
                     }))}
                     value={selectedClientId}
                     onChange={setSelectedClientId}

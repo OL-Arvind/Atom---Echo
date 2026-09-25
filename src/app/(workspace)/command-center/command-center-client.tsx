@@ -9,12 +9,13 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { OnboardClientModal } from "@/components/clients/onboard-client-modal";
-import { PageHeader } from "@/components/layout/page-header";
+import { HeaderActions } from "@/components/layout/header-actions";
 import { AlertInspectorPane } from "@/components/command-center/alert-inspector-pane";
 import { generateDraftInvoiceAction } from "@/lib/actions/client";
 import { approveContentAction, resolveContentFeedbackAction } from "@/lib/actions/content";
 import { updateInvoiceStatusAction } from "@/lib/actions/billing";
 import { formatDisplayDateIST } from "@/lib/date-utils";
+import { parseFeedbackComment } from "@/lib/feedback-utils";
 import type {
   Client,
   CommandCenterAlert,
@@ -231,7 +232,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
   }, [alerts, selectedAlertId]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-7">
+    <div className="w-full">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-[var(--color-base-overlay)] text-[var(--color-ink)] text-xs px-4 py-2.5 rounded-lg shadow-dialog border border-[var(--color-line-strong)]">
@@ -240,89 +241,79 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
         </div>
       )}
 
-      {/* Standardized Header */}
-      <PageHeader
-        title="Command Center"
-        description={
-          isDayZero
-            ? "Welcome to Atom & Echo. Onboard your first founder to capture their conviction and begin the editorial rhythm."
-            : alerts.length === 0
-            ? "Every client voice is compounding on schedule. No editorial bottlenecks or pending holds."
-            : `${alerts.length} founder account${alerts.length === 1 ? "" : "s"} requiring editorial decisions or dispatch sign-off today.`
-        }
-      >
+      {/* Action Portal Target into TopNav */}
+      <HeaderActions>
         <OnboardClientModal buttonText="Onboard Founder" />
-      </PageHeader>
+      </HeaderActions>
 
-      {/* 2-Column Split Console */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT PANE: Attention Queue & Horizon (5 Cols) */}
-        <div className="lg:col-span-5 space-y-5">
-          {/* Attention Queue Container */}
-          <div className="rounded-xl border border-[var(--color-line)] bg-[var(--color-base-overlay)] shadow-xs overflow-hidden">
-            {/* Header with Filter Pills */}
-            <div className="border-b border-[var(--color-line)] p-3.5 bg-[var(--color-base-subtle)]">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-[var(--color-ink)] tracking-tight">Editorial Queue</span>
-                  <span className="text-[11px] font-sans text-[var(--color-ink-tertiary)] font-normal tabular-nums">
-                    ({alerts.length})
-                  </span>
-                </div>
-                <Link
-                  href="/operations"
-                  className="text-[11px] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors"
-                >
-                  Audit trail &rarr;
-                </Link>
+      {/* Single Unified Studio Console (Linear / Superhuman Master Layout) */}
+      <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] shadow-card overflow-hidden flex flex-col lg:flex-row min-h-[calc(100vh-6.5rem)]">
+        {/* LEFT PANE: Attention Queue & Integrated Horizon (Calibrated 400px Scan Measure) */}
+        <div className="w-full lg:w-[410px] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-[var(--color-line)] bg-[var(--color-base-raised)]">
+          {/* Header with Filter Tabs */}
+          <div className="border-b border-[var(--color-line)] p-4 sm:p-5 bg-[var(--color-base-subtle)]/40">
+            <div className="flex items-center justify-between mb-3.5">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xs font-semibold text-[var(--color-ink)] tracking-tight font-display">Editorial Queue</span>
+                <span className="text-[10.5px] font-sans text-[var(--color-ink-muted)] px-2 py-0.5 rounded-full bg-[var(--color-base-subtle)] border border-[var(--color-line-subtle)] font-normal tabular-nums">
+                  {alerts.length}
+                </span>
               </div>
-
-              {/* Clean Filter Tabs */}
-              <div className="flex items-center gap-1">
-                {[
-                  { id: "all", label: "All", count: alerts.length },
-                  {
-                    id: "review",
-                    label: "Reviews",
-                    count: alerts.filter(
-                      (a) => a.entity_type === "content_item" || a.entity_type === "content_feedback"
-                    ).length,
-                  },
-                  {
-                    id: "request",
-                    label: "Notes",
-                    count: alerts.filter((a) => a.entity_type === "client_request").length,
-                  },
-                  {
-                    id: "billing",
-                    label: "Retainers",
-                    count: alerts.filter(
-                      (a) =>
-                        a.entity_type === "billing" ||
-                        a.entity_type === "invoice_draft" ||
-                        a.entity_type === "tool_renewal"
-                    ).length,
-                  },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setFilter(tab.id as "all" | "review" | "billing" | "request")}
-                    className={`px-2.5 py-1 rounded-md text-xs transition-colors ${
-                      filter === tab.id
-                        ? "bg-[var(--color-base-overlay)] text-[var(--color-ink)] font-medium shadow-2xs border border-[var(--color-line)]"
-                        : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] hover:bg-[var(--color-base-subtle)]"
-                    }`}
-                  >
-                    <span>{tab.label}</span>
-                    <span className="ml-1 opacity-60 text-[10.5px]">({tab.count})</span>
-                  </button>
-                ))}
-              </div>
+              <Link
+                href="/operations"
+                className="text-[11px] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors"
+              >
+                Audit trail &rarr;
+              </Link>
             </div>
 
-            {/* Queue List Items */}
+            {/* Clean Filter Tabs */}
+            <div className="flex items-center gap-1.5">
+              {[
+                { id: "all", label: "All", count: alerts.length },
+                {
+                  id: "review",
+                  label: "Reviews",
+                  count: alerts.filter(
+                    (a) => a.entity_type === "content_item" || a.entity_type === "content_feedback"
+                  ).length,
+                },
+                {
+                  id: "request",
+                  label: "Notes",
+                  count: alerts.filter((a) => a.entity_type === "client_request").length,
+                },
+                {
+                  id: "billing",
+                  label: "Retainers",
+                  count: alerts.filter(
+                    (a) =>
+                      a.entity_type === "billing" ||
+                      a.entity_type === "invoice_draft" ||
+                      a.entity_type === "tool_renewal"
+                  ).length,
+                },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setFilter(tab.id as "all" | "review" | "billing" | "request")}
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                    filter === tab.id
+                      ? "bg-[var(--color-surface)] text-[var(--color-ink)] font-medium shadow-2xs border border-[var(--color-line-strong)]"
+                      : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] hover:bg-[var(--color-base-subtle)]"
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className="ml-1 opacity-60 text-[10.5px] tabular-nums">({tab.count})</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Queue List Items */}
+          <div className="flex-1 overflow-y-auto">
             {filteredAlerts.length > 0 ? (
-              <div className="divide-y divide-[var(--color-line-subtle)]">
+              <div className="divide-y divide-white/[0.04]">
                 {filteredAlerts.map((alert: CommandCenterAlert) => {
                   const isSelected = selectedAlert?.id === alert.id;
                   const isCritical = alert.urgency === "critical";
@@ -337,12 +328,15 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   let badgeLabel = "Attention";
 
                   if (isFeedback) {
-                    primaryLabel = `${alert.founder_name || "Client"} (${alert.client_name || "Account"})`;
-                    secondaryLabel = `Revision on "${alert.post_title}": ${alert.comment}`;
+                    const { tags, note } = parseFeedbackComment(alert.comment);
+                    primaryLabel = alert.post_title || "Thought Leadership Post";
+                    const tagSnippet = tags.length > 0 ? tags.join(" · ") : "";
+                    const detail = note || tagSnippet || "Revision requested";
+                    secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · ${detail}`;
                     badgeLabel = "Revision requested";
                   } else if (isReview) {
-                    primaryLabel = alert.founder_name || alert.client_name || "Client";
-                    secondaryLabel = alert.post_title || alert.title;
+                    primaryLabel = alert.post_title || alert.title;
+                    secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · Awaiting sign-off`;
                     badgeLabel = "Pending review";
                   } else if (isInvoiceDraft) {
                     primaryLabel = `${alert.client_name || "Client"}${alert.founder_name ? ` (${alert.founder_name})` : ""}`;
@@ -363,49 +357,44 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   }
 
                   const dotColor = isCritical
-                    ? "bg-rose-500"
+                    ? "bg-rose-400 ring-2 ring-rose-400/20"
                     : isFeedback
-                    ? "bg-amber-600"
+                    ? "bg-amber-400 ring-2 ring-amber-400/20"
                     : isReview
-                    ? "bg-amber-500"
-                    : isInvoiceDraft
-                    ? "bg-emerald-500"
-                    : isToolRenewal
-                    ? "bg-violet-500"
-                    : isBillingExpense
-                    ? "bg-sky-500"
-                    : "bg-[var(--color-ink-muted)]";
+                    ? "bg-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20"
+                    : "bg-white/30";
 
                   return (
                     <div
                       key={alert.id}
                       onClick={() => setSelectedAlertId(alert.id)}
-                      className={`p-3.5 cursor-pointer transition-colors flex items-start gap-3 ${
+                      className={`p-4 sm:p-4.5 cursor-pointer transition-all flex items-start gap-3.5 ${
                         isSelected
-                          ? "bg-[var(--color-base-subtle)] border-l-2 border-l-[var(--color-accent)]"
-                          : "hover:bg-[var(--color-base-subtle)]"
+                          ? "bg-[var(--color-surface-active)] border-l-2 border-l-[var(--color-sage-border)]"
+                          : "hover:bg-[var(--color-surface-hover)]"
                       }`}
                     >
-                      {/* Status Dot */}
-                      <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${dotColor}`} />
+                      {/* Quiet Status Dot */}
+                      <span className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${dotColor}`} />
 
                       {/* Content Details */}
-                      <div className="min-w-0 flex-1 space-y-0.5">
+                      <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold text-[var(--color-ink)] truncate">
+                          <span className="text-xs font-semibold text-[var(--color-ink)] truncate font-display">
                             {primaryLabel}
                           </span>
-                          <span className="text-[11px] text-[var(--color-ink-muted)] shrink-0 font-medium">
+                          <span className="text-[10px] uppercase font-sans tracking-wider text-[var(--color-ink-muted)] shrink-0 font-medium">
                             {badgeLabel}
                           </span>
                         </div>
 
-                        <p className="text-[12.5px] text-[var(--color-ink-secondary)] line-clamp-1">
+                        <p className="text-[12.5px] text-[var(--color-ink-secondary)] line-clamp-1 leading-snug">
                           {secondaryLabel}
                         </p>
 
-                        <div className="text-[11px] text-[var(--color-ink-muted)] pt-0.5">
-                          Waiting on {alert.waiting_on}
+                        <div className="text-[11px] text-[var(--color-ink-muted)] pt-0.5 flex items-center gap-1.5">
+                          <span>Waiting on</span>
+                          <span className="text-[var(--color-ink-tertiary)]">{alert.waiting_on}</span>
                         </div>
                       </div>
 
@@ -420,65 +409,65 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
               </div>
             ) : (
               <div className="p-8 text-center space-y-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 mx-auto" />
-                <p className="text-xs font-medium text-[var(--color-ink-secondary)]">Queue is clear</p>
+                <CheckCircle2 className="h-4 w-4 text-[var(--color-accent)] mx-auto" />
+                <p className="text-xs font-medium text-[var(--color-ink)]">Queue is clear</p>
                 <p className="text-[11.5px] text-[var(--color-ink-muted)]">Every founder account in this category is progressing smoothly.</p>
               </div>
             )}
           </div>
 
-          {/* Upcoming Posts Horizon */}
-          <div className="rounded-xl border border-[var(--color-line)] bg-[var(--color-base-overlay)] p-4 space-y-3 shadow-xs">
-            <div className="flex items-center justify-between pb-2 border-b border-[var(--color-line)]">
+          {/* Integrated Upcoming Releases Horizon (No separate card!) */}
+          <div className="border-t border-[var(--color-line)] p-4 sm:p-4.5 bg-[var(--color-base-subtle)]/60 mt-auto">
+            <div className="flex items-center justify-between pb-2.5">
               <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)] tracking-tight">
-                <Calendar className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-                <span>Upcoming Publishing Releases</span>
+                <Calendar className="h-3.5 w-3.5 text-[var(--color-accent)]" />
+                <span>Upcoming Releases</span>
               </div>
               <Link
                 href="/content"
                 className="text-[11px] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors"
               >
-                Studio pipeline &rarr;
+                Pipeline &rarr;
               </Link>
             </div>
 
             {initialData.scheduledPosts && initialData.scheduledPosts.length > 0 ? (
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {initialData.scheduledPosts.slice(0, 3).map((post: CommandCenterScheduledPost) => (
                   <div
                     key={post.id}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--color-base-subtle)] text-xs gap-3 transition-colors border border-transparent hover:border-[var(--color-line)]"
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--color-surface-hover)] text-xs gap-3 transition-colors"
                   >
                     <div className="min-w-0 space-y-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-sans text-[11px] text-[var(--color-ok-text)] font-medium tabular-nums">
+                      <div className="flex items-center gap-1.5 text-[11px]">
+                        <span className="font-sans text-[var(--color-accent)] font-semibold tabular-nums">
                           {formatDisplayDateIST(post.scheduled_publish_date, {
                             month: "short",
                             day: "numeric",
                           })}
                         </span>
-                        <span className="text-[var(--color-ink-tertiary)] text-[11px] truncate">
+                        <span className="text-[var(--color-ink-tertiary)] truncate">
                           &middot; {getScheduledPostFounder(post)}
                         </span>
                       </div>
                       <p className="text-[var(--color-ink)] font-medium truncate text-[12px]">{post.title}</p>
                     </div>
-                    <span className="text-[11px] text-[var(--color-ink-muted)] shrink-0">
+                    <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-muted)] shrink-0 font-medium">
                       {post.target_pillar || "Perspective"}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-[var(--color-ink-muted)] py-3 text-center">
-                No upcoming releases queued. Once a founder approves a draft, it locks into this schedule.
+              <p className="text-[11.5px] text-[var(--color-ink-muted)] py-2 text-center">
+                No upcoming releases queued today.
               </p>
             )}
           </div>
         </div>
 
-        {/* RIGHT PANE: Dedicated Instant Action Inspector (7 Cols) */}
-        <div className="lg:col-span-7">
+        {/* RIGHT PANE: Dedicated Instant Action Inspector (Fluid Canvas) */}
+        <div className="flex-1 min-w-0 flex flex-col bg-[var(--color-base)]">
           <AlertInspectorPane
             selectedAlert={selectedAlert}
             unbilledExpensesTotal={initialData.unbilledExpensesTotal}

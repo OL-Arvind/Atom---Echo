@@ -18,6 +18,8 @@ const KNOWN_PLATFORMS: Record<string, string> = {
   twitter: "x.com",
   x: "x.com",
   baseworks: "baseworks.in",
+  debtworks: "debtworks.co.in",
+  reliance: "reliance.com",
   openai: "openai.com",
   chatgpt: "openai.com",
   claude: "anthropic.com",

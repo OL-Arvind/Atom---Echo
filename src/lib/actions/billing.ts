@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { invalidateDbCache } from "@/lib/data/supabase-queries";
 import { InvoiceStatus, ToolBillingCycle } from "@/types/domain";
+
+function revalidate(path: string) {
+  invalidateDbCache();
+  revalidatePath(path);
+}
 import {
   createToolSubscriptionSchema,
   updateInvoiceStatusSchema,
@@ -80,9 +86,9 @@ export async function createToolSubscriptionAction(formData: FormData) {
       return { success: false, error: error?.message || "Failed to create tool subscription." };
     }
 
-    revalidatePath("/billing");
-    revalidatePath("/command-center");
-    revalidatePath("/calendar");
+    revalidate("/billing");
+    revalidate("/command-center");
+    revalidate("/calendar");
     return { success: true, tool };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to create tool subscription.";
@@ -107,9 +113,9 @@ export async function deleteToolSubscriptionAction(id: string) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/billing");
-    revalidatePath("/command-center");
-    revalidatePath("/calendar");
+    revalidate("/billing");
+    revalidate("/command-center");
+    revalidate("/calendar");
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to delete tool subscription.";
@@ -184,9 +190,9 @@ export async function updateInvoiceStatusAction(invoiceId: string, status: Invoi
       }
     }
 
-    revalidatePath("/billing");
-    revalidatePath(`/billing/invoices/${invoiceId}`);
-    revalidatePath("/command-center");
+    revalidate("/billing");
+    revalidate(`/billing/invoices/${invoiceId}`);
+    revalidate("/command-center");
     return { success: true, invoice: inv };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to update invoice status.";
@@ -369,9 +375,9 @@ export async function runBillingAnchorCycleAction(options?: { bypassSessionCheck
       }
     }
 
-    revalidatePath("/billing");
-    revalidatePath("/command-center");
-    revalidatePath("/calendar");
+    revalidate("/billing");
+    revalidate("/command-center");
+    revalidate("/calendar");
 
     return {
       success: true,

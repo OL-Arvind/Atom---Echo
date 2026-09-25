@@ -175,7 +175,8 @@ export default async function ClientsDirectoryPage() {
 
                     <Link
                       href={`/clients/${client.id}`}
-                      className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] hover:border-[var(--color-line-strong)] transition-colors"
+                      prefetch={true}
+                      className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] hover:border-[var(--color-line-strong)] active:scale-[0.95] transition-all"
                       title="View Client Details"
                     >
                       <ArrowUpRight className="h-3.5 w-3.5" />
@@ -247,7 +248,8 @@ export default async function ClientsDirectoryPage() {
                 <div className="border-t border-[var(--color-line-subtle)] pt-3 flex items-center justify-end">
                   <Link
                     href={`/clients/${client.id}`}
-                    className="text-xs font-medium text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-colors flex items-center gap-1"
+                    prefetch={true}
+                    className="text-xs font-medium text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] active:scale-[0.98] transition-all flex items-center gap-1"
                   >
                     <span>Open Founder Workspace</span>
                     <ChevronRight className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />

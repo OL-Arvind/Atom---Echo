@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { invalidateDbCache } from "@/lib/data/supabase-queries";
 import { encryptPassword, decryptPassword } from "@/lib/security/encryption";
+
+function revalidate(path: string) {
+  invalidateDbCache();
+  revalidatePath(path);
+}
 import { addCredentialSchema, formatZodError } from "@/lib/validations";
 import { requireOperatorSession } from "@/lib/auth/session";
 
@@ -48,8 +54,8 @@ export async function revealCredentialAction(credentialId: string) {
     // 3. Decrypt AES-256-GCM payload
     const plaintext = decryptPassword(cred.encrypted_password);
 
-    revalidatePath("/operations");
-    revalidatePath(`/clients/${cred.client_id}`);
+    revalidate("/operations");
+    revalidate(`/clients/${cred.client_id}`);
     return { success: true, plaintext };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to reveal credential.";
@@ -83,8 +89,8 @@ export async function copyCredentialAction(credentialId: string) {
 
     const plaintext = decryptPassword(cred.encrypted_password);
 
-    revalidatePath("/operations");
-    revalidatePath(`/clients/${cred.client_id}`);
+    revalidate("/operations");
+    revalidate(`/clients/${cred.client_id}`);
     return { success: true, plaintext };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to copy credential.";
@@ -151,8 +157,8 @@ export async function addCredentialAction(formData: FormData) {
       user_agent: userAgent,
     });
 
-    revalidatePath(`/clients/${clientId}`);
-    revalidatePath("/operations");
+    revalidate(`/clients/${clientId}`);
+    revalidate("/operations");
     return { success: true, credential: data };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to store credential.";

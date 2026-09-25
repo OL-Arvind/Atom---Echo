@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Manrope } from "next/font/google";
+import { NavigationProgressBar } from "@/components/layout/navigation-progress-bar";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -48,13 +50,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${manrope.variable}`}>
+    <html
+      lang="en"
+      data-theme="light"
+      suppressHydrationWarning
+      className={`${dmSans.variable} ${manrope.variable}`}
+    >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("ae_theme")||"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`,
+          }}
+        />
         <link rel="icon" type="image/svg+xml" href="/icon.svg?v=20260925" />
         <link rel="shortcut icon" href="/icon.svg?v=20260925" />
         <link rel="apple-touch-icon" href="/icon.svg?v=20260925" />
       </head>
-      <body className={`${dmSans.className} font-sans`}>{children}</body>
+      <body className={`${dmSans.className} font-sans`}>
+        <Suspense fallback={null}>
+          <NavigationProgressBar />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }

@@ -6,6 +6,7 @@ import { X, Loader2 } from "lucide-react";
 import { AuthUser, clearStoredUser } from "@/lib/auth/dummy-auth";
 import { createClient } from "@/lib/supabase/client";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 interface LogoutModalProps {
   isOpen: boolean;
@@ -72,6 +73,14 @@ export function LogoutModal({ isOpen, onClose, user }: LogoutModalProps) {
               {user.role}
             </div>
           </div>
+        </div>
+
+        {/* Visual Theme Preference */}
+        <div className="space-y-1.5 pt-1">
+          <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium block">
+            Visual Theme
+          </label>
+          <ThemeToggle showLabel={true} />
         </div>
 
         {/* Modal Actions */}

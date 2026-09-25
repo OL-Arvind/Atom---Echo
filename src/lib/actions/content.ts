@@ -2,6 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { invalidateDbCache } from "@/lib/data/supabase-queries";
+
+function revalidate(path: string) {
+  invalidateDbCache();
+  revalidatePath(path);
+}
 import {
   verifyClientReviewToken,
   getClientActiveReviewToken,
@@ -74,13 +80,13 @@ export async function approvePostByClientAction(postId: string, token: string) {
       return { success: false, error: updateErr.message };
     }
 
-    revalidatePath("/review");
-    revalidatePath(`/review/${token}`);
-    revalidatePath("/calendar");
-    revalidatePath("/content");
-    revalidatePath(`/content/${postId}`);
-    revalidatePath("/command-center");
-    revalidatePath("/clients");
+    revalidate("/review");
+    revalidate(`/review/${token}`);
+    revalidate("/calendar");
+    revalidate("/content");
+    revalidate(`/content/${postId}`);
+    revalidate("/command-center");
+    revalidate("/clients");
 
     return {
       success: true,
@@ -178,13 +184,13 @@ export async function requestContentChangesByClientAction(
       });
     }
 
-    revalidatePath("/review");
-    revalidatePath(`/review/${token}`);
-    revalidatePath("/content");
-    revalidatePath(`/content/${postId}`);
-    revalidatePath("/command-center");
-    revalidatePath("/clients");
-    revalidatePath("/operations");
+    revalidate("/review");
+    revalidate(`/review/${token}`);
+    revalidate("/content");
+    revalidate(`/content/${postId}`);
+    revalidate("/command-center");
+    revalidate("/clients");
+    revalidate("/operations");
 
     return { success: true };
   } catch (err: unknown) {
@@ -209,9 +215,9 @@ export async function resolveContentFeedbackAction(feedbackId: string) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/command-center");
-    revalidatePath("/operations");
-    revalidatePath("/content");
+    revalidate("/command-center");
+    revalidate("/operations");
+    revalidate("/content");
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to resolve content feedback.";
@@ -291,9 +297,9 @@ export async function sendForClientReviewAction(postIdOrClientId: string) {
     );
     const whatsappUrl = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
 
-    revalidatePath("/content");
-    revalidatePath("/command-center");
-    revalidatePath("/clients");
+    revalidate("/content");
+    revalidate("/command-center");
+    revalidate("/clients");
 
     return {
       success: true,
@@ -337,10 +343,10 @@ export async function approveContentAction(contentId: string) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/command-center");
-    revalidatePath("/content");
-    revalidatePath("/calendar");
-    revalidatePath("/clients");
+    revalidate("/command-center");
+    revalidate("/content");
+    revalidate("/calendar");
+    revalidate("/clients");
     return { success: true, data };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to approve content.";
@@ -386,9 +392,9 @@ export async function requestContentChangesAction(
       console.warn("Could not insert feedback record:", feedbackErr.message);
     }
 
-    revalidatePath("/command-center");
-    revalidatePath("/content");
-    revalidatePath("/clients");
+    revalidate("/command-center");
+    revalidate("/content");
+    revalidate("/clients");
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to request content changes.";
@@ -455,9 +461,9 @@ export async function createContentAction(formData: FormData) {
       }
     }
 
-    revalidatePath("/content");
-    revalidatePath("/command-center");
-    revalidatePath("/clients");
+    revalidate("/content");
+    revalidate("/command-center");
+    revalidate("/clients");
     return { success: true, post: newPost };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to create content.";
@@ -524,12 +530,12 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
       }
     }
 
-    revalidatePath("/content");
-    revalidatePath(`/content/${contentId}`);
-    revalidatePath("/calendar");
-    revalidatePath("/command-center");
-    revalidatePath("/clients");
-    revalidatePath("/review");
+    revalidate("/content");
+    revalidate(`/content/${contentId}`);
+    revalidate("/calendar");
+    revalidate("/command-center");
+    revalidate("/clients");
+    revalidate("/review");
     return { success: true, data };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to update content status.";
@@ -606,12 +612,12 @@ export async function publishContentPostAction(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/content");
-    revalidatePath(`/content/${postId}`);
-    revalidatePath("/calendar");
-    revalidatePath("/command-center");
-    revalidatePath("/clients");
-    revalidatePath("/review");
+    revalidate("/content");
+    revalidate(`/content/${postId}`);
+    revalidate("/calendar");
+    revalidate("/command-center");
+    revalidate("/clients");
+    revalidate("/review");
 
     return { success: true, post: updatedPost };
   } catch (err: unknown) {
@@ -694,12 +700,12 @@ export async function updateContentPostAction(postId: string, formData: FormData
       }
     }
 
-    revalidatePath("/content");
-    revalidatePath(`/content/${postId}`);
-    revalidatePath("/calendar");
-    revalidatePath("/command-center");
-    revalidatePath("/clients");
-    revalidatePath("/review");
+    revalidate("/content");
+    revalidate(`/content/${postId}`);
+    revalidate("/calendar");
+    revalidate("/command-center");
+    revalidate("/clients");
+    revalidate("/review");
     return { success: true, post: updatedPost };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to update post.";
@@ -720,9 +726,9 @@ export async function markExpenseBilledAction(expenseId: string) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/billing");
-    revalidatePath("/command-center");
-    revalidatePath("/clients");
+    revalidate("/billing");
+    revalidate("/command-center");
+    revalidate("/clients");
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to mark expense as billed.";
