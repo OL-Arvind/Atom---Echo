@@ -411,7 +411,6 @@ export function Sidebar() {
               >
                 <UserAvatar
                   seed={user.email || user.name}
-                  src={user.avatarUrl}
                   size={32}
                   className="rounded-[6px] hover:border-[var(--color-accent)] transition-colors"
                   alt={user.name}
@@ -500,7 +499,6 @@ export function Sidebar() {
             >
               <UserAvatar
                 seed={user.email || user.name}
-                src={user.avatarUrl}
                 size={28}
                 className="rounded-[6px]"
                 alt={user.name}

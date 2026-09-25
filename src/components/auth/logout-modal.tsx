@@ -57,7 +57,6 @@ export function LogoutModal({ isOpen, onClose, user }: LogoutModalProps) {
         <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-3.5">
           <UserAvatar
             seed={user.email || user.name}
-            src={user.avatarUrl}
             size={40}
             className="rounded-[var(--radius-sm)]"
             alt={user.name}
