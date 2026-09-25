@@ -243,8 +243,8 @@ export function CalendarClient({
     <div className="mx-auto max-w-7xl space-y-7">
       {/* Standardized Header */}
       <PageHeader
-        title="Master Calendar"
-        description="Temporal operational projection of scheduled LinkedIn posts, client billing anchor days, and software renewals."
+        title="Publishing Schedule"
+        description="Unified timeline of upcoming thought leadership releases, retainer renewals, and tool subscriptions."
         portalActionsToTopNav={false}
       >
         <div className="flex items-center gap-2">
@@ -274,7 +274,7 @@ export function CalendarClient({
 
           <Link href="/content" className="btn btn-secondary text-xs">
             <FileText className="h-3.5 w-3.5" />
-            <span>Content Pipeline</span>
+            <span>Content Studio</span>
           </Link>
         </div>
       </PageHeader>
@@ -282,33 +282,33 @@ export function CalendarClient({
       {/* KPI Metric Slabs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card p-5 space-y-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-            Scheduled Slots ({new Date(year, month, 1).toLocaleString("en-US", { month: "short" })})
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
+            Scheduled Releases ({new Date(year, month, 1).toLocaleString("en-US", { month: "short" })})
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ink)]">
             {scheduledCount}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Locked &amp; ready to publish</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Locked &amp; ready for LinkedIn</p>
         </div>
 
         <div className="card p-5 space-y-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ok-text)] font-medium">
-            Monthly Retainer Invoices
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ok-text)] font-medium">
+            Monthly Retainers Due
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ok-text)]">
             ₹{totalBillingProjected.toLocaleString("en-IN")}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Projected across active anchor days</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Projected across founder billing cycles</p>
         </div>
 
         <div className="card p-5 space-y-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-accent-text)] font-medium">
-            Calendar Engine
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
+            Operational Milestones
           </span>
-          <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-accent-text)]">
-            ADR-001
+          <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ink)]">
+            {filteredEvents.length}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Zero manual duplicate date entry</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Releases, billing cycles &amp; renewals</p>
         </div>
       </div>
 
@@ -328,7 +328,7 @@ export function CalendarClient({
             </button>
             <button
               onClick={handleToday}
-              className="px-2 py-0.5 text-xs text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] font-mono transition-colors cursor-pointer"
+              className="px-2 py-0.5 text-xs text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] font-sans tabular-nums transition-colors cursor-pointer"
             >
               Today
             </button>
@@ -350,7 +350,7 @@ export function CalendarClient({
               <CustomSelect
                 size="sm"
                 options={[
-                  { value: "all", label: `All Clients (${clients.length})` },
+                  { value: "all", label: `All Founder Accounts (${clients.length})` },
                   ...clients.map((c) => ({
                     value: c.id,
                     label: c.name,
@@ -365,15 +365,15 @@ export function CalendarClient({
           </div>
 
           {/* Operational Legend */}
-          <div className="hidden lg:flex items-center gap-3 text-[11px] font-mono text-[var(--color-ink-tertiary)] pl-2 border-l border-[var(--color-line)]">
+          <div className="hidden lg:flex items-center gap-3 text-[11px] font-sans tabular-nums text-[var(--color-ink-tertiary)] pl-2 border-l border-[var(--color-line)]">
             <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-[var(--color-accent)]" /> Content
+              <span className="h-2 w-2 rounded-full bg-[var(--color-accent)]" /> Releases
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-[var(--color-ok)]" /> Retainers
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-[var(--color-warn)]" /> Tool Renewal
+              <span className="h-2 w-2 rounded-full bg-[var(--color-warn)]" /> Tool Subscriptions
             </span>
           </div>
         </div>
@@ -383,7 +383,7 @@ export function CalendarClient({
       {view === "month" && (
         <div className="card overflow-hidden border border-[var(--color-line)]">
           {/* Day Headers (Mon - Sun) */}
-          <div className="grid grid-cols-7 border-b border-[var(--color-line)] bg-[var(--color-base-raised)] text-center text-[11px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] py-2.5">
+          <div className="grid grid-cols-7 border-b border-[var(--color-line)] bg-[var(--color-base-raised)] text-center text-[11px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] py-2.5">
             <div>Mon</div>
             <div>Tue</div>
             <div>Wed</div>
@@ -411,7 +411,7 @@ export function CalendarClient({
                   {/* Date Number Header */}
                   <div className="flex items-center justify-between">
                     <span
-                      className={`inline-flex items-center justify-center font-mono text-xs rounded-full h-5 w-5 ${
+                      className={`inline-flex items-center justify-center font-sans tabular-nums text-xs rounded-[4px] h-5 w-5 ${
                         day.isToday
                           ? "bg-[var(--color-accent)] text-black font-bold"
                           : day.isCurrentMonth
@@ -422,7 +422,7 @@ export function CalendarClient({
                       {day.date.getDate()}
                     </span>
                     {hasEvents && (
-                      <span className="text-[10px] font-mono text-[var(--color-ink-tertiary)]">
+                      <span className="text-[10px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
                         {events.length}
                       </span>
                     )}
@@ -439,25 +439,25 @@ export function CalendarClient({
                         <button
                           key={ev.id}
                           onClick={() => setSelectedEvent(ev)}
-                          className={`w-full text-left truncate rounded px-1.5 py-0.5 text-[11px] font-sans transition-all block cursor-pointer border ${
-                            isContent
-                              ? "bg-[var(--color-base-subtle)] border-[var(--color-line)] text-[var(--color-ink)] hover:border-[var(--color-accent-dim)]"
+                          className="w-full text-left truncate px-2 py-1 text-[11px] font-sans transition-all flex items-center gap-1.5 cursor-pointer rounded-[var(--radius-xs)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] border-l-2 group"
+                          style={{
+                            borderLeftColor: isContent
+                              ? "var(--color-accent)"
                               : isBilling
-                              ? "bg-[var(--color-ok-bg)]/60 border-[var(--color-ok-line)] text-[var(--color-ok-text)] hover:bg-[var(--color-ok-bg)]"
-                              : "bg-[var(--color-warn-bg)]/60 border-[var(--color-warn-line)] text-[var(--color-warn-text)] hover:bg-[var(--color-warn-bg)]"
-                          }`}
+                              ? "var(--color-ok)"
+                              : "var(--color-warn)",
+                          }}
                           title={`${ev.title} (${ev.clientName})`}
                         >
-                          <span className="font-mono text-[9px] uppercase mr-1 opacity-75 font-medium">
-                            {isContent ? "Post" : isBilling ? "Retainer" : "Tool"}
+                          <span className="truncate text-[var(--color-ink-secondary)] group-hover:text-[var(--color-ink)] font-normal">
+                            {ev.title}
                           </span>
-                          <span>{ev.title}</span>
                         </button>
                       );
                     })}
 
                     {events.length > 3 && (
-                      <span className="block text-[10px] font-mono text-[var(--color-ink-tertiary)] pl-1">
+                      <span className="block text-[10px] font-sans tabular-nums text-[var(--color-ink-tertiary)] pl-1">
                         +{events.length - 3} more
                       </span>
                     )}
@@ -474,17 +474,17 @@ export function CalendarClient({
         <div className="card p-6 space-y-6">
           <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-3">
             <h3 className="font-display text-base font-normal text-[var(--color-ink)]">
-              Chronological Operational Stream
+              Timeline Schedule
             </h3>
-            <span className="font-mono text-xs text-[var(--color-ink-tertiary)]">
-              {filteredEvents.length} total projected events
+            <span className="font-sans tabular-nums text-xs text-[var(--color-ink-tertiary)]">
+              {filteredEvents.length} scheduled milestones
             </span>
           </div>
 
           {filteredEvents.length === 0 ? (
             <div className="p-8 text-center text-xs text-[var(--color-ink-tertiary)] space-y-2">
               <CalendarIcon className="h-8 w-8 mx-auto text-[var(--color-ink-muted)] opacity-60" />
-              <p>No operational events scheduled for this period.</p>
+              <p>No publishing releases or retainer milestones scheduled for this period.</p>
             </div>
           ) : (
             <div className="divide-y divide-[var(--color-line-subtle)]">
@@ -498,7 +498,7 @@ export function CalendarClient({
                   >
                     <div className="flex items-start gap-3">
                       <div className="rounded border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-2 text-center min-w-[50px]">
-                        <span className="text-[10px] font-mono uppercase text-[var(--color-ink-tertiary)] block">
+                        <span className="text-[10px] font-sans tabular-nums uppercase text-[var(--color-ink-tertiary)] block">
                           {ev.date.toLocaleString("en-US", { month: "short" })}
                         </span>
                         <span className="font-display text-lg font-bold text-[var(--color-ink)] block leading-tight">
@@ -511,16 +511,17 @@ export function CalendarClient({
                           <span className="font-medium text-xs text-[var(--color-ink)]">
                             {ev.title}
                           </span>
-                          <span
-                            className={`font-mono text-[10px] uppercase px-1.5 py-0.5 rounded ${
-                              ev.type === "content"
-                                ? "bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] border border-[var(--color-line)]"
-                                : ev.type === "billing"
-                                ? "bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)]"
-                                : "bg-[var(--color-warn-bg)] text-[var(--color-warn-text)] border border-[var(--color-warn-line)]"
-                            }`}
-                          >
-                            {ev.type}
+                          <span className="inline-flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)]">
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                ev.type === "content"
+                                  ? "bg-[var(--color-accent)]"
+                                  : ev.type === "billing"
+                                  ? "bg-[var(--color-ok)]"
+                                  : "bg-[var(--color-warn)]"
+                              }`}
+                            />
+                            {ev.type === "billing" ? "Retainer" : ev.type === "content" ? "Release" : "Tool"}
                           </span>
                         </div>
                         <p className="text-xs text-[var(--color-ink-secondary)]">
@@ -529,7 +530,7 @@ export function CalendarClient({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0 text-xs text-[var(--color-ink-tertiary)] font-mono">
+                    <div className="flex items-center gap-2 shrink-0 text-xs text-[var(--color-ink-tertiary)] font-sans tabular-nums">
                       <span>{ev.date.toLocaleDateString("en-IN")}</span>
                       <ArrowRight className="h-3.5 w-3.5" />
                     </div>
@@ -549,8 +550,8 @@ export function CalendarClient({
               <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-4">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4 text-[var(--color-accent)]" />
-                  <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-                    Operational Detail · {selectedEvent.type.toUpperCase()}
+                  <span className="font-sans tabular-nums text-xs uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
+                    Schedule Detail · {selectedEvent.type === "content" ? "Perspective Release" : selectedEvent.type === "billing" ? "Retainer Cycle" : "Tool Subscription"}
                   </span>
                 </div>
                 <button
@@ -567,9 +568,9 @@ export function CalendarClient({
                   {selectedEvent.title}
                 </h3>
                 <p className="text-xs text-[var(--color-ink-secondary)]">
-                  Client: <strong className="text-[var(--color-ink)] font-medium">{selectedEvent.clientName}</strong>
+                  Founder Account: <strong className="text-[var(--color-ink)] font-medium">{selectedEvent.clientName}</strong>
                 </p>
-                <div className="flex items-center gap-2 text-xs font-mono text-[var(--color-ink-tertiary)] pt-1">
+                <div className="flex items-center gap-2 text-xs font-sans tabular-nums text-[var(--color-ink-tertiary)] pt-1">
                   <Clock className="h-3.5 w-3.5" />
                   <span>
                     Scheduled: {formatDisplayDateTimeIST(selectedEvent.date, true)}
@@ -582,7 +583,7 @@ export function CalendarClient({
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-[var(--color-ink-tertiary)]">Status:</span>
-                    <span className="font-mono uppercase font-semibold text-[var(--color-accent-text)]">
+                    <span className="font-sans tabular-nums uppercase font-semibold text-[var(--color-accent-text)]">
                       {selectedEvent.rawItem.status}
                     </span>
                   </div>
@@ -596,11 +597,11 @@ export function CalendarClient({
                   )}
 
                   <div className="space-y-1.5 pt-2">
-                    <span className="font-mono text-[10px] uppercase text-[var(--color-ink-tertiary)] block font-medium">
-                      Post Markdown Preview:
+                    <span className="font-sans tabular-nums text-[10px] uppercase text-[var(--color-ink-tertiary)] block font-medium">
+                      Perspective Preview:
                     </span>
                     <div className="rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base)] p-3.5 text-xs text-[var(--color-ink-secondary)] font-sans max-h-60 overflow-y-auto whitespace-pre-wrap leading-relaxed">
-                      {selectedEvent.rawItem.body_markdown || "No body draft available."}
+                      {selectedEvent.rawItem.body_markdown || "No draft available."}
                     </div>
                   </div>
                 </div>
@@ -612,25 +613,25 @@ export function CalendarClient({
                   <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] p-4 border border-[var(--color-line)] space-y-2 text-xs">
                     <div className="flex justify-between">
                       <span className="text-[var(--color-ink-tertiary)]">Monthly Retainer:</span>
-                      <span className="font-mono font-bold text-[var(--color-ink)]">
+                      <span className="font-sans tabular-nums font-bold text-[var(--color-ink)]">
                         ₹{Number(selectedEvent.rawItem.monthly_retainer || 0).toLocaleString("en-IN")}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[var(--color-ink-tertiary)]">Anchor Day:</span>
-                      <span className="font-mono text-[var(--color-accent-text)]">
+                      <span className="font-sans tabular-nums text-[var(--color-accent-text)]">
                         Day {selectedEvent.rawItem.billing_anchor_day} of each month
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[var(--color-ink-tertiary)]">Service:</span>
+                      <span className="text-[var(--color-ink-tertiary)]">Engagement Tier:</span>
                       <span className="font-medium text-[var(--color-ink)]">
                         {selectedEvent.rawItem.service_type?.replace(/_/g, " ")}
                       </span>
                     </div>
                   </div>
                   <p className="text-[11.5px] text-[var(--color-ink-tertiary)]">
-                    Per ADR-001, retainer drafts are aggregated automatically 7 days prior to the anchor day with all unbilled third-party tool expenses.
+                    Retainer invoices are generated automatically 7 days prior to the anchor day, bundling dedicated client software pass-throughs.
                   </p>
                 </div>
               )}
@@ -642,7 +643,7 @@ export function CalendarClient({
                 onClick={() => setSelectedEvent(null)}
                 className="btn btn-secondary text-xs flex-1"
               >
-                Close Drawer
+                Close
               </button>
 
               {selectedEvent.type === "content" && (
@@ -662,7 +663,7 @@ export function CalendarClient({
                     href={`/content/${selectedEvent.rawItem.id}`}
                     className="btn btn-primary text-xs flex-1 inline-flex items-center justify-center gap-1.5"
                   >
-                    <span>Open in Editor</span>
+                    <span>Refine in Studio</span>
                     <ExternalLink className="h-3 w-3" />
                   </Link>
                 </>
@@ -673,7 +674,7 @@ export function CalendarClient({
                   href="/billing"
                   className="btn btn-primary text-xs flex-1 inline-flex items-center justify-center gap-1.5"
                 >
-                  <span>Go to Invoices</span>
+                  <span>View Retainers &amp; Billing</span>
                   <ArrowRight className="h-3 w-3" />
                 </Link>
               )}

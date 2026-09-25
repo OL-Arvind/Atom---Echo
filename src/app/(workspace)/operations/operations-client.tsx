@@ -149,15 +149,15 @@ export function OperationsClient({
 
       {/* Header */}
       <PageHeader
-        title="Operations & Triage"
-        description="Manage client service requests, emergency holds, and credential access audit logs."
+        title="Operations &amp; Escalations"
+        description="Founder requests, emergency publishing freezes, and vault access audit trails."
       >
         <button
           onClick={() => setShowNewRequestModal(true)}
           className="btn btn-primary text-xs"
         >
           <Plus className="h-3.5 w-3.5" />
-          <span>New Request / Hold</span>
+          <span>Log Escalation / Freeze</span>
         </button>
       </PageHeader>
 
@@ -169,21 +169,21 @@ export function OperationsClient({
             activeTab === "requests" ? "ring-1 ring-[var(--color-ink)]" : ""
           }`}
         >
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-            Active Requests & Holds
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
+            Open Escalations &amp; Freezes
           </span>
           <div className="flex items-baseline gap-2">
             <span className="font-display text-3xl font-normal tabular-nums text-[var(--color-ink)]">
               {initialClientRequests.filter((r) => r.status !== "resolved" && r.status !== "closed").length}
             </span>
             {activeHoldsCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-danger-text)] bg-[var(--color-danger-bg)] px-2 py-0.5 rounded-full">
-                <AlertOctagon className="h-3 w-3" />
-                {activeHoldsCount} on Hold
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-sans tabular-nums font-medium text-[var(--color-danger-text)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-danger-text)]" />
+                {activeHoldsCount} Frozen
               </span>
             )}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Triage pipeline</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Active founder requests &amp; pivots</p>
         </div>
 
         <div
@@ -192,13 +192,13 @@ export function OperationsClient({
             activeTab === "credentials" ? "ring-1 ring-[var(--color-ink)]" : ""
           }`}
         >
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-            Credential Accesses
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
+            Vault Access Events
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ink)]">
             {initialCredentialLogs.length}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Audited disclosures & copies</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Audited credential disclosures</p>
         </div>
 
         <div
@@ -207,13 +207,13 @@ export function OperationsClient({
             activeTab === "feedback" ? "ring-1 ring-[var(--color-ink)]" : ""
           }`}
         >
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ok-text)] font-medium">
-            Review Portal Feedback
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ok-text)] font-medium">
+            Founder Desk Notes
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ok-text)]">
             {initialFeedback.length}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">1-tap portal comments</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Direct tone &amp; angle notes from founders</p>
         </div>
       </div>
 
@@ -227,7 +227,7 @@ export function OperationsClient({
               : "text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Service Requests ({initialClientRequests.length})
+          Founder Escalations ({initialClientRequests.length})
         </button>
         <button
           onClick={() => setActiveTab("credentials")}
@@ -247,7 +247,7 @@ export function OperationsClient({
               : "text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Client Feedback Feed ({initialFeedback.length})
+          Founder Desk Notes ({initialFeedback.length})
         </button>
       </div>
 
@@ -257,7 +257,7 @@ export function OperationsClient({
           {/* Filter Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 bg-[var(--color-base-raised)] p-3 rounded-lg border border-[var(--color-line)] text-xs">
             <div className="flex items-center gap-2">
-              <span className="text-[var(--color-ink-tertiary)] font-mono uppercase text-[10px]">Filter Category:</span>
+              <span className="text-[var(--color-ink-tertiary)] font-sans tabular-nums uppercase text-[10px]">Filter Category:</span>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
@@ -333,12 +333,13 @@ export function OperationsClient({
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className={`font-mono text-[10px] uppercase px-2 py-0.5 rounded font-medium ${
+                            className={`font-sans tabular-nums text-[10.5px] uppercase tracking-wider inline-flex items-center gap-1.5 ${
                               isHold
-                                ? "bg-[var(--color-danger)] text-white"
-                                : "bg-[var(--color-base-subtle)] text-[var(--color-ink-secondary)] border border-[var(--color-line)]"
+                                ? "text-[var(--color-danger-text)] font-semibold"
+                                : "text-[var(--color-ink-secondary)]"
                             }`}
                           >
+                            <span className={`h-1.5 w-1.5 rounded-full ${isHold ? "bg-[var(--color-danger-text)]" : "bg-[var(--color-ink-muted)]"}`} />
                             {req.category.replace("_", " ")}
                           </span>
 
@@ -353,7 +354,7 @@ export function OperationsClient({
                           )}
 
                           <span
-                            className={`text-[10px] font-mono px-1.5 py-0.2 rounded uppercase ${
+                            className={`text-[10px] font-sans tabular-nums uppercase tracking-wider ${
                               req.priority === "urgent"
                                 ? "text-[var(--color-danger-text)] font-semibold"
                                 : req.priority === "high"
@@ -361,7 +362,7 @@ export function OperationsClient({
                                 : "text-[var(--color-ink-muted)]"
                             }`}
                           >
-                            {req.priority}
+                            &middot; {req.priority}
                           </span>
                         </div>
 
@@ -409,7 +410,7 @@ export function OperationsClient({
                             </button>
                           </div>
                         ) : (
-                          <span className="inline-flex items-center gap-1 font-mono text-xs text-[var(--color-ok-text)]">
+                          <span className="inline-flex items-center gap-1 font-sans tabular-nums text-xs text-[var(--color-ok-text)]">
                             <CheckCircle2 className="h-3.5 w-3.5" />
                             Resolved
                           </span>
@@ -417,7 +418,7 @@ export function OperationsClient({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-[var(--color-ink-tertiary)] font-mono border-t border-[var(--color-line-subtle)] pt-2">
+                    <div className="flex items-center justify-between text-[11px] text-[var(--color-ink-tertiary)] font-sans tabular-nums border-t border-[var(--color-line-subtle)] pt-2">
                       <span>Status: {req.status.replace("_", " ")}</span>
                       <span>
                         {formatDisplayDateTimeIST(req.created_at, {
@@ -443,17 +444,17 @@ export function OperationsClient({
             <div className="flex items-center gap-2.5">
               <Shield className="h-4 w-4 text-[var(--color-accent)]" />
               <h2 className="font-display text-base font-normal text-[var(--color-ink)]">
-                Immutable Password Access Log
+                Vault Access &amp; Disclosure Trail
               </h2>
             </div>
-            <span className="font-mono text-xs text-[var(--color-ink-tertiary)]">
-              Real-time Audit Trail
+            <span className="font-sans tabular-nums text-xs text-[var(--color-ink-tertiary)]">
+              Immutable Audit Log
             </span>
           </div>
 
           {initialCredentialLogs.length === 0 ? (
             <div className="p-8 text-center text-xs text-[var(--color-ink-tertiary)]">
-              No password disclosure events recorded yet. Every unmask or clipboard copy is logged with user identity and network context.
+              No credential disclosures recorded yet. Every password reveal or clipboard copy is logged with operator identity and IP context.
             </div>
           ) : (
             <div className="divide-y divide-[var(--color-line-subtle)]">
@@ -464,7 +465,7 @@ export function OperationsClient({
                 >
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[11px] text-[var(--color-ink-muted)] uppercase tracking-wider px-1.5 py-0.5 bg-[var(--color-base-subtle)] rounded border border-[var(--color-line)]">
+                      <span className="font-sans tabular-nums text-[10.5px] text-[var(--color-ink-tertiary)] uppercase tracking-wider">
                         {log.action}
                       </span>
                       <span className="font-medium text-xs text-[var(--color-ink)]">
@@ -474,12 +475,12 @@ export function OperationsClient({
                         ({log.credentials?.clients?.name || "Client"})
                       </span>
                     </div>
-                    <p className="text-[11px] text-[var(--color-ink-secondary)] font-mono">
+                    <p className="text-[11px] text-[var(--color-ink-secondary)] font-sans tabular-nums">
                       Operator: {log.users?.full_name || "Admin"} &middot; IP: {log.ip_address} &middot; UA: {log.user_agent}
                     </p>
                   </div>
 
-                  <span className="font-mono text-[11px] text-[var(--color-ink-tertiary)] shrink-0">
+                  <span className="font-sans tabular-nums text-[11px] text-[var(--color-ink-tertiary)] shrink-0">
                     {formatDisplayDateTimeIST(log.created_at, {
                       month: "short",
                       day: "numeric",
@@ -501,17 +502,17 @@ export function OperationsClient({
             <div className="flex items-center gap-2.5">
               <MessageSquare className="h-4 w-4 text-[var(--color-accent)]" />
               <h2 className="font-display text-base font-normal text-[var(--color-ink)]">
-                Review Portal Feedback Stream
+                Founder Desk Notes &amp; Direction
               </h2>
             </div>
-            <span className="font-mono text-xs text-[var(--color-ink-tertiary)]">
-              Client Revisions
+            <span className="font-sans tabular-nums text-xs text-[var(--color-ink-tertiary)]">
+              Editorial Revisions
             </span>
           </div>
 
           {initialFeedback.length === 0 ? (
             <div className="p-8 text-center text-xs text-[var(--color-ink-tertiary)]">
-              No client revision comments recorded yet.
+              No founder revision notes recorded yet.
             </div>
           ) : (
             <div className="divide-y divide-[var(--color-line-subtle)]">
@@ -523,13 +524,13 @@ export function OperationsClient({
                         {fb.author_name}
                       </span>
                       <span className="text-[var(--color-ink-tertiary)]">
-                        on "{fb.content_items?.title || "Post"}"
+                        on &ldquo;{fb.content_items?.title || "Perspective"}&rdquo;
                       </span>
                       <span className="text-[var(--color-ink-muted)]">
-                        ({fb.content_items?.engagements?.clients?.name || "Client"})
+                        ({fb.content_items?.engagements?.clients?.name || "Founder Account"})
                       </span>
                     </div>
-                    <span className="font-mono text-[11px] text-[var(--color-ink-tertiary)]">
+                    <span className="font-sans tabular-nums text-[11px] text-[var(--color-ink-tertiary)]">
                       {formatDisplayDateTimeIST(fb.created_at, {
                         month: "short",
                         day: "numeric",
@@ -538,7 +539,7 @@ export function OperationsClient({
                       })}
                     </span>
                   </div>
-                  <p className="text-xs text-[var(--color-ink-secondary)] bg-[var(--color-base-subtle)] p-2.5 rounded border border-[var(--color-line)]">
+                  <p className="text-xs text-[var(--color-ink-secondary)] border-l-2 border-[var(--color-line-strong)] pl-3.5 py-1.5">
                     {fb.comment}
                   </p>
                 </div>
@@ -556,7 +557,7 @@ export function OperationsClient({
               <div className="flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4 text-[var(--color-accent)]" />
                 <h3 className="font-display text-base font-normal text-[var(--color-ink)]">
-                  Log Client Request / Trigger Hold
+                  Log Founder Escalation or Freeze
                 </h3>
               </div>
               <button
@@ -569,7 +570,7 @@ export function OperationsClient({
 
             <form onSubmit={handleCreateRequest} className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-[var(--color-ink-secondary)] font-medium">Select Client</label>
+                <label className="text-[var(--color-ink-secondary)] font-medium">Founder Account</label>
                 <CustomSelect
                   options={clients.map((c) => ({
                     value: c.id,
@@ -578,7 +579,7 @@ export function OperationsClient({
                   }))}
                   value={selectedClientId}
                   onChange={setSelectedClientId}
-                  placeholder="Select Client"
+                  placeholder="Select Founder Account"
                 />
               </div>
 
@@ -590,11 +591,11 @@ export function OperationsClient({
                     onChange={(e) => setNewCategory(e.target.value)}
                     className="input w-full"
                   >
-                    <option value="emergency_hold">Emergency Hold (Freeze All)</option>
-                    <option value="content_pivot">Content Pivot</option>
-                    <option value="design_tweak">Design Tweak</option>
-                    <option value="tool_issue">Tool Issue</option>
-                    <option value="general_query">General Query</option>
+                    <option value="emergency_hold">Emergency Publishing Freeze</option>
+                    <option value="content_pivot">Narrative / Pillar Pivot</option>
+                    <option value="design_tweak">Visual / Asset Direction</option>
+                    <option value="tool_issue">Outbound / Tooling Issue</option>
+                    <option value="general_query">General Founder Request</option>
                   </select>
                 </div>
 
@@ -614,32 +615,32 @@ export function OperationsClient({
               </div>
 
               {newCategory === "emergency_hold" && (
-                <div className="p-3 bg-[var(--color-danger-bg)] text-[var(--color-danger-text)] rounded border border-[var(--color-danger)]/30 text-[11.5px] space-y-1">
-                  <span className="font-semibold block">⚠️ Emergency Hold Warning</span>
-                  <p>
-                    Triggering this category will immediately pause all scheduled LinkedIn posts for this client and broadcast an alert across the Command Center.
+                <div className="border-l-2 border-[var(--color-danger-line)] pl-3.5 py-1.5 text-[var(--color-danger-text)] text-[11.5px] space-y-1">
+                  <span className="font-semibold block">Immediate Publishing Freeze</span>
+                  <p className="text-[var(--color-ink-secondary)]">
+                    Activating a freeze immediately pauses all scheduled LinkedIn releases for this founder and flags the Command Center.
                   </p>
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="text-[var(--color-ink-secondary)] font-medium">Title</label>
+                <label className="text-[var(--color-ink-secondary)] font-medium">Summary</label>
                 <input
                   type="text"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder={newCategory === "emergency_hold" ? "e.g. Founder requested immediate freeze" : "e.g. Pivot hooks away from hiring"}
+                  placeholder={newCategory === "emergency_hold" ? "e.g. Pause releases during stealth M&A window" : "e.g. Shift narrative toward enterprise GTM"}
                   className="input w-full"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[var(--color-ink-secondary)] font-medium">Details / Instructions</label>
+                <label className="text-[var(--color-ink-secondary)] font-medium">Context &amp; WhatsApp Notes</label>
                 <textarea
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="Paste WhatsApp message or context..."
+                  placeholder="Paste the founder's WhatsApp message or voice-note summary..."
                   rows={3}
                   className="input w-full resize-none"
                 />
@@ -663,8 +664,8 @@ export function OperationsClient({
                   {isPending
                     ? "Saving..."
                     : newCategory === "emergency_hold"
-                    ? "Trigger Emergency Hold"
-                    : "Create Request"}
+                    ? "Activate Publishing Freeze"
+                    : "Log Escalation"}
                 </button>
               </div>
             </form>

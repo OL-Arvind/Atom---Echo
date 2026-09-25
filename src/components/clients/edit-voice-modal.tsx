@@ -129,7 +129,7 @@ export function EditVoiceModal({
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           {/* Positioning Statement */}
           <div className="space-y-1">
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block">
               Positioning Statement
             </label>
             <textarea
@@ -143,7 +143,7 @@ export function EditVoiceModal({
 
           {/* Target Audience / ICP */}
           <div className="space-y-1">
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block">
               Target Audience / ICP
             </label>
             <textarea
@@ -157,7 +157,7 @@ export function EditVoiceModal({
 
           {/* Tone Archetype */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block">
               Tone Archetype
             </label>
             <input
@@ -191,7 +191,7 @@ export function EditVoiceModal({
 
           {/* Voice Guidelines */}
           <div className="space-y-1">
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block">
               Voice Guidelines & Nuances
             </label>
             <textarea
@@ -205,7 +205,7 @@ export function EditVoiceModal({
 
           {/* Core Content Pillars */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block">
               Core Content Pillars
             </label>
             <div className="flex flex-wrap gap-1.5 min-h-[32px] p-2 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)]">
@@ -217,7 +217,7 @@ export function EditVoiceModal({
                 corePillars.map((p) => (
                   <span
                     key={p}
-                    className="inline-flex items-center gap-1 rounded-[var(--radius-xs)] bg-[var(--color-surface)] border border-[var(--color-line-strong)] text-[var(--color-ink)] px-2 py-0.5 text-xs font-mono"
+                    className="inline-flex items-center gap-1.5 rounded-[var(--radius-xs)] bg-[var(--color-base)] border border-[var(--color-line)] text-[var(--color-ink)] px-2 py-0.5 text-xs font-sans"
                   >
                     <span>{p}</span>
                     <button

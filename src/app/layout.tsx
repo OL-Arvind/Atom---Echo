@@ -1,23 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { DM_Sans, Manrope } from "next/font/google";
 import "./globals.css";
 
-const plusJakarta = Plus_Jakarta_Sans({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-sans",
+  variable: "--font-dm-sans",
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-mono",
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-display-manrope",
   display: "swap",
 });
 
 export const viewport: Viewport = {
-  themeColor: "#090a0c",
+  themeColor: "#10110f",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -28,6 +28,13 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Atom & Echo",
   description: "Atom & Echo Agency Operating System",
+  icons: {
+    icon: [
+      { url: "/icon.svg?v=20260925", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg?v=20260925",
+    apple: "/icon.svg?v=20260925",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -41,8 +48,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${plusJakarta.variable} ${jetbrainsMono.variable}`}>
-      <body>{children}</body>
+    <html lang="en" className={`${dmSans.variable} ${manrope.variable}`}>
+      <head>
+        <link rel="icon" type="image/svg+xml" href="/icon.svg?v=20260925" />
+        <link rel="shortcut icon" href="/icon.svg?v=20260925" />
+        <link rel="apple-touch-icon" href="/icon.svg?v=20260925" />
+      </head>
+      <body className={`${dmSans.className} font-sans`}>{children}</body>
     </html>
   );
 }

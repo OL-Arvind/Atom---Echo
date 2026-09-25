@@ -145,8 +145,8 @@ export function BillingClient({
 
       {/* Standardized Header */}
       <PageHeader
-        title="Invoices &amp; Expenses"
-        description="Track monthly retainers, software pass-through expenses, and generate client invoices."
+        title="Retainers &amp; Billing"
+        description="Monthly retainers, transparent tool pass-throughs, and client invoice dispatch."
       >
         <div className="flex items-center gap-2">
           <button
@@ -156,21 +156,21 @@ export function BillingClient({
             title="Auto-draft invoices for clients with anchor day in next 7 days"
           >
             <RotateCw className={`h-3.5 w-3.5 ${isPending ? "animate-spin" : ""}`} />
-            <span>Run Anchor Cycle</span>
+            <span>Run Billing Cycle</span>
           </button>
           <button
             onClick={() => setShowAddToolModal(true)}
             className="btn btn-secondary text-xs"
           >
             <Wrench className="h-3.5 w-3.5" />
-            <span>Add Tool License</span>
+            <span>Add Tool Subscription</span>
           </button>
           <button
             onClick={() => setShowLogModal(true)}
             className="btn btn-primary text-xs"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>Log Software Expense</span>
+            <span>Log Dedicated Tool</span>
           </button>
         </div>
       </PageHeader>
@@ -178,33 +178,33 @@ export function BillingClient({
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card p-5 space-y-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-            Active Tool Licenses
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
+            Tool Infrastructure Catalog
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ink)]">
             {toolSubscriptions.length}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Agency software subscriptions tracked</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Dedicated &amp; shared tool licenses</p>
         </div>
 
         <div className="card p-5 space-y-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-            Unbilled Software Expenses
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
+            Unbilled Client Tooling
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ink)]">
             ₹{unbilledTotal.toLocaleString("en-IN")}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Ready to attach to upcoming invoices</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Pass-through tooling ready for billing</p>
         </div>
 
         <div className="card p-5 space-y-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-            Invoices Drafted
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
+            Invoices &amp; Retainers
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-accent-text)]">
             {initialInvoices.length}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Retainers &amp; software expenses</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Monthly scopes &amp; tool recovery</p>
         </div>
       </div>
 
@@ -228,7 +228,7 @@ export function BillingClient({
               : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Pass-Through Expenses ({initialExpenses.length})
+          Dedicated Client Tooling ({initialExpenses.length})
         </button>
         <button
           onClick={() => setActiveTab("catalog")}
@@ -238,7 +238,7 @@ export function BillingClient({
               : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Tool Catalog ({toolSubscriptions.length})
+          Software Catalog ({toolSubscriptions.length})
         </button>
       </div>
 
@@ -250,10 +250,10 @@ export function BillingClient({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-0.5">
                 <span className="font-display text-base font-normal text-[var(--color-ink)] block">
-                  Create Draft Invoice
+                  Generate Retainer &amp; Tooling Invoice
                 </span>
                 <p className="text-xs text-[var(--color-ink-secondary)]">
-                  Creates an invoice combining monthly retainer and unbilled pass-through expenses.
+                  Generates a client invoice bundling the monthly thought leadership retainer and unbilled pass-through tools.
                 </p>
               </div>
 
@@ -278,7 +278,7 @@ export function BillingClient({
                   className="btn btn-primary text-xs"
                 >
                   <FileCheck className="h-3.5 w-3.5" />
-                  <span>{isPending ? "Creating..." : "Create Invoice"}</span>
+                  <span>{isPending ? "Generating..." : "Generate Invoice"}</span>
                 </button>
               </div>
             </div>
@@ -290,11 +290,11 @@ export function BillingClient({
               <div className="flex items-center gap-2.5">
                 <Receipt className="h-4 w-4 text-[var(--color-accent)]" />
                 <h2 className="font-display text-base font-normal text-[var(--color-ink)]">
-                  All Client Invoices ({initialInvoices.length})
+                  Client Invoice Registry ({initialInvoices.length})
                 </h2>
               </div>
-              <span className="font-mono text-xs text-[var(--color-ink-tertiary)]">
-                Click invoice to review or mark paid
+              <span className="font-sans tabular-nums text-xs text-[var(--color-ink-tertiary)]">
+                Select invoice to review, dispatch, or export
               </span>
             </div>
 
@@ -317,7 +317,7 @@ export function BillingClient({
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-xs font-semibold text-[var(--color-ink)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] px-2.5 py-1 rounded-[var(--radius-xs)]">
+                          <span className="font-sans text-xs font-semibold text-[var(--color-ink)] tabular-nums">
                             {inv.invoice_number}
                           </span>
                           <div className="flex items-center gap-1.5">
@@ -326,13 +326,14 @@ export function BillingClient({
                               {client?.name}
                             </span>
                           </div>
-                          <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-[var(--radius-xs)] border ${
-                            inv.status === "paid"
-                              ? "bg-[var(--color-ok-bg)] border-[var(--color-ok-line)] text-[var(--color-ok-text)]"
-                              : inv.status === "sent"
-                              ? "bg-[var(--color-accent-bg)] border-[var(--color-accent-line)] text-[var(--color-accent-text)]"
-                              : "bg-[var(--color-base-subtle)] border-[var(--color-line)] text-[var(--color-ink-secondary)]"
-                          }`}>
+                          <span className="flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-secondary)]">
+                            <span className={`h-1.5 w-1.5 rounded-full ${
+                              inv.status === "paid"
+                                ? "bg-[var(--color-ok)]"
+                                : inv.status === "sent"
+                                ? "bg-[var(--color-accent)]"
+                                : "bg-[var(--color-ink-muted)]"
+                            }`} />
                             {inv.status}
                           </span>
                         </div>
@@ -342,7 +343,7 @@ export function BillingClient({
                             <span className="font-display text-lg font-normal text-[var(--color-ink)] tabular-nums block">
                               ₹{Number(inv.total_amount).toLocaleString("en-IN")}
                             </span>
-                            <span className="text-[11px] text-[var(--color-ink-tertiary)] font-mono">
+                            <span className="text-[11px] text-[var(--color-ink-tertiary)] font-sans tabular-nums">
                               Due: {inv.due_date}
                             </span>
                           </div>
@@ -355,7 +356,7 @@ export function BillingClient({
                         {items.map((it: any) => (
                           <div key={it.id} className="flex items-center justify-between text-[var(--color-ink-secondary)]">
                             <span>{it.description}</span>
-                            <span className="font-mono font-medium text-[var(--color-ink)] tabular-nums">
+                            <span className="font-sans font-medium text-[var(--color-ink)] tabular-nums">
                               ₹{Number(it.total_price).toLocaleString("en-IN")}
                             </span>
                           </div>
@@ -377,7 +378,7 @@ export function BillingClient({
             <div className="flex items-center gap-2.5">
               <CreditCard className="h-4 w-4 text-[var(--color-accent)]" />
               <h2 className="font-display text-base font-normal text-[var(--color-ink)]">
-                Logged Software Expenses ({initialExpenses.length})
+                Dedicated Client Tool Expenses ({initialExpenses.length})
               </h2>
             </div>
             <button
@@ -385,18 +386,18 @@ export function BillingClient({
               className="btn btn-secondary text-xs"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>Log Expense</span>
+              <span>Add Tool Expense</span>
             </button>
           </div>
 
           {initialExpenses.length === 0 ? (
             <div className="p-8 text-center text-xs text-[var(--color-ink-tertiary)] leading-relaxed space-y-2">
-              <p>No software expenses recorded yet.</p>
+              <p>No dedicated client software expenses recorded yet.</p>
               <button
                 onClick={() => setShowLogModal(true)}
                 className="btn btn-secondary text-xs"
               >
-                Log Software Expense
+                Add Tool Expense
               </button>
             </div>
           ) : (
@@ -413,19 +414,20 @@ export function BillingClient({
                       className="rounded-[var(--radius-xs)] border border-[var(--color-line)] shrink-0"
                     />
                     <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <span className="font-medium text-xs text-[var(--color-ink)]">{exp.description}</span>
-                        <span className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded-[var(--radius-xs)] border ${
-                          exp.status === "invoiced"
-                            ? "bg-[var(--color-ok-bg)] border-[var(--color-ok-line)] text-[var(--color-ok-text)]"
-                            : exp.status === "drafted_in_invoice"
-                            ? "bg-[var(--color-accent-bg)] border-[var(--color-accent-line)] text-[var(--color-accent-text)]"
-                            : "bg-[var(--color-base-subtle)] border-[var(--color-line)] text-[var(--color-ink-secondary)]"
-                        }`}>
+                        <span className="flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-secondary)]">
+                          <span className={`h-1.5 w-1.5 rounded-full ${
+                            exp.status === "invoiced"
+                              ? "bg-[var(--color-ok)]"
+                              : exp.status === "drafted_in_invoice"
+                              ? "bg-[var(--color-accent)]"
+                              : "bg-[var(--color-ink-muted)]"
+                          }`} />
                           {exp.status.replace(/_/g, " ")}
                         </span>
                       </div>
-                      <p className="text-xs text-[var(--color-ink-tertiary)] font-mono">
+                      <p className="text-xs text-[var(--color-ink-tertiary)] font-sans tabular-nums">
                         Client: {exp.engagements?.clients?.name || "Client"} &middot; Incurred: {exp.incurred_date}
                       </p>
                     </div>
@@ -511,20 +513,20 @@ export function BillingClient({
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-xs text-[var(--color-ink)]">{tool.tool_name}</span>
-                          <span className="text-[10px] font-mono uppercase text-[var(--color-ink-muted)]">
+                          <span className="text-[10px] font-sans tabular-nums uppercase text-[var(--color-ink-muted)]">
                             {tool.billing_cycle}
                           </span>
                           {tool.default_pass_through && (
-                            <span className="text-[10px] font-mono bg-[var(--color-base-subtle)] border border-[var(--color-line)] px-1.5 py-0.2 rounded text-[var(--color-ink-tertiary)]">
-                              Pass-Through
+                            <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-muted)]">
+                              · Pass-Through
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-xs font-mono text-[var(--color-ink-tertiary)]">
+                        <div className="flex items-center gap-3 text-xs font-sans tabular-nums text-[var(--color-ink-tertiary)]">
                           <span>Next Renewal: {tool.next_renewal_date}</span>
                           {isRenewingSoon && (
-                            <span className="flex items-center gap-1 text-[var(--color-warning-text)] bg-[var(--color-warning-bg)] border border-[var(--color-warning-line)] px-1.5 py-0.2 rounded text-[10px]">
-                              <AlertTriangle className="h-3 w-3" />
+                            <span className="flex items-center gap-1.5 text-[11px] font-sans tabular-nums text-[var(--color-warn-text)]">
+                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-warn)]" />
                               Renews in &le; 5 days
                             </span>
                           )}
@@ -537,7 +539,7 @@ export function BillingClient({
                         <span className="font-display text-base font-normal text-[var(--color-ink)] tabular-nums block">
                           {tool.currency} {Number(tool.cost_amount).toLocaleString("en-IN")}
                         </span>
-                        <span className="text-[10px] text-[var(--color-ink-tertiary)] font-mono">
+                        <span className="text-[10px] text-[var(--color-ink-tertiary)] font-sans tabular-nums">
                           per {tool.billing_cycle}
                         </span>
                       </div>

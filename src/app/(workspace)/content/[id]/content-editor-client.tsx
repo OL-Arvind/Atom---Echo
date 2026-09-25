@@ -210,11 +210,11 @@ export function ContentEditorClient({
             className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors mb-2"
           >
             <ChevronLeft className="h-4 w-4" />
-            <span>Back to Content Pipeline</span>
+            <span>Back to Content Studio</span>
           </Link>
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
-              Post Editor
+              Perspective Editor
             </h1>
             <span className="text-[var(--color-ink-tertiary)]">·</span>
             <span className="text-sm font-medium text-[var(--color-ink)]">
@@ -228,18 +228,19 @@ export function ContentEditorClient({
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Status Badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] text-xs font-mono">
-            <span className="text-[var(--color-ink-tertiary)] uppercase text-[10px]">Status:</span>
-            <span
-              className={`font-semibold uppercase ${
-                status === "approved" || status === "scheduled"
-                  ? "text-[var(--color-ok-text)]"
-                  : status === "client_review"
-                  ? "text-[var(--color-warn-text)]"
-                  : "text-[var(--color-ink)]"
-              }`}
-            >
+          {/* Status Indicator */}
+          <div className="flex items-center gap-2 text-xs font-sans tabular-nums">
+            <span className="text-[var(--color-ink-tertiary)] uppercase text-[10.5px]">Status:</span>
+            <span className="inline-flex items-center gap-1.5 uppercase font-medium text-[var(--color-ink)]">
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  status === "approved" || status === "scheduled"
+                    ? "bg-[var(--color-ok)]"
+                    : status === "client_review"
+                    ? "bg-[var(--color-warn)]"
+                    : "bg-[var(--color-ink-muted)]"
+                }`}
+              />
               {status}
             </span>
           </div>
@@ -251,7 +252,7 @@ export function ContentEditorClient({
               disabled={isPending}
               className="btn btn-secondary text-xs cursor-pointer"
             >
-              Submit for Internal QA
+              Send to Editorial QA
             </button>
           )}
 
@@ -261,7 +262,7 @@ export function ContentEditorClient({
               disabled={isPending}
               className="btn text-xs bg-[var(--color-warn-bg)] text-[var(--color-warn-text)] border border-[var(--color-warn-line)] hover:bg-[var(--color-warn-bg)]/80 cursor-pointer"
             >
-              Send to Client Review
+              Send to Founder Desk
             </button>
           )}
 
@@ -272,14 +273,14 @@ export function ContentEditorClient({
                 className="btn btn-primary text-xs cursor-pointer inline-flex items-center gap-1.5"
               >
                 <WhatsAppIcon size={14} className="text-[#25D366]" />
-                <span>Nudge on WhatsApp</span>
+                <span>Ping Founder on WhatsApp</span>
               </button>
               <button
                 onClick={() => handleStatusTransition("approved")}
                 disabled={isPending}
                 className="btn btn-secondary text-xs cursor-pointer"
               >
-                Force Approve &amp; Lock
+                Approve &amp; Lock
               </button>
             </>
           )}
@@ -290,7 +291,7 @@ export function ContentEditorClient({
               disabled={isPending}
               className="btn btn-primary text-xs cursor-pointer"
             >
-              Confirm Scheduled Slot
+              Lock Publishing Slot
             </button>
           )}
 
@@ -318,7 +319,7 @@ export function ContentEditorClient({
                 <ExternalLink className="h-3 w-3" />
               </a>
             ) : (
-              <div className="flex items-center gap-1.5 text-xs text-[var(--color-ok-text)] font-mono px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--color-ok-bg)] border border-[var(--color-ok-line)]">
+              <div className="flex items-center gap-1.5 text-xs text-[var(--color-ok-text)] font-sans tabular-nums">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>Published Live</span>
               </div>
@@ -332,45 +333,45 @@ export function ContentEditorClient({
             className="btn btn-primary text-xs cursor-pointer inline-flex items-center gap-1.5"
           >
             <Save className="h-3.5 w-3.5" />
-            <span>{isPending ? "Saving..." : "Save Post"}</span>
+            <span>{isPending ? "Saving..." : "Save Perspective"}</span>
           </button>
         </div>
       </div>
 
-      {/* Real-time Taboo Words Linter Banner */}
+      {/* Real-time Taboo Words Linter */}
       {flaggedWords.length > 0 ? (
-        <div className="rounded-[var(--radius-sm)] border border-[var(--color-danger-line)] bg-[var(--color-danger-bg)] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5">
-            <ShieldAlert className="h-4 w-4 text-[var(--color-danger-text)] shrink-0" />
+        <div className="border-l-2 border-[var(--color-danger-line)] pl-3.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-[var(--color-base-subtle)]/40 rounded-r-[var(--radius-xs)]">
+          <div className="flex items-start gap-2.5">
+            <ShieldAlert className="h-4 w-4 text-[var(--color-danger-text)] shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-[var(--color-danger-text)]">
-                Taboo Buzzwords Detected ({flaggedWords.length}):
-              </span>{" "}
-              <span className="text-[var(--color-ink-secondary)]">
-                Per {client?.name}&apos;s voice rules, avoid hollow corporate jargon:
-              </span>
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
+              <p className="font-medium text-[var(--color-danger-text)]">
+                Taboo Buzzwords Detected ({flaggedWords.length}) &middot;{" "}
+                <span className="text-[var(--color-ink-secondary)] font-normal">
+                  Per {client?.name}&apos;s voice rules, avoid hollow corporate jargon:
+                </span>
+              </p>
+              <div className="flex flex-wrap gap-2 mt-1.5">
                 {flaggedWords.map((word) => (
                   <span
                     key={word}
-                    className="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded bg-black/40 text-[var(--color-danger-text)] border border-[var(--color-danger-line)]"
+                    className="inline-flex items-center gap-1 font-sans tabular-nums text-[11px] text-[var(--color-danger-text)] border-b border-[var(--color-danger-line)] pb-0.5"
                   >
                     <span>&ldquo;{word}&rdquo;</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveTabooWord(word)}
-                      className="text-xs hover:text-white font-bold ml-1 cursor-pointer"
+                      className="text-xs hover:text-[var(--color-ink)] cursor-pointer"
                       title="Remove from text"
                     >
-                      ×
+                      &times;
                     </button>
                   </span>
                 ))}
               </div>
             </div>
           </div>
-          <span className="text-[11px] font-mono text-[var(--color-danger-text)] shrink-0">
-            AUT-12 Active
+          <span className="text-[11px] font-sans tabular-nums text-[var(--color-danger-text)] shrink-0">
+            Voice Linter Active
           </span>
         </div>
       ) : (
@@ -379,7 +380,7 @@ export function ContentEditorClient({
             <CheckCircle2 className="h-3.5 w-3.5" />
             <span>Copy is clean: 0 taboo buzzwords detected</span>
           </span>
-          <span className="font-mono text-[11px] text-[var(--color-ink-tertiary)]">
+          <span className="font-sans tabular-nums text-[11px] text-[var(--color-ink-tertiary)]">
             {tabooWords.length} protected terms
           </span>
         </div>
@@ -393,8 +394,8 @@ export function ContentEditorClient({
             {/* Title & Pillar Row */}
             <div className="space-y-3">
               <div>
-                <label className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block mb-1">
-                  Post Headline / Internal Working Title
+                <label className="text-[11px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block mb-1">
+                  Perspective Working Title / Core Angle
                 </label>
                 <input
                   type="text"
@@ -407,33 +408,33 @@ export function ContentEditorClient({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block mb-1">
-                    Content Pillar
+                  <label className="text-[11px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block mb-1">
+                    Editorial Pillar
                   </label>
                   <CustomSelect
                     options={pillars.map((p) => ({ value: p, label: p }))}
                     value={targetPillar}
                     onChange={setTargetPillar}
-                    placeholder="Select Content Pillar"
+                    placeholder="Select Editorial Pillar"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block mb-1">
-                    Scheduled Publish Date
+                  <label className="text-[11px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block mb-1">
+                    Target Release Slot
                   </label>
                   <input
                     type="datetime-local"
                     value={scheduledDate}
                     onChange={(e) => setScheduledDate(e.target.value)}
-                    className="input w-full text-xs font-mono"
+                    className="input w-full text-xs font-sans tabular-nums"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)]">
+                  <label className="text-[11px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)]">
                     Live LinkedIn Post URL
                   </label>
                   {linkedinPostUrl && (
@@ -441,9 +442,9 @@ export function ContentEditorClient({
                       href={linkedinPostUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[11px] font-mono text-[var(--color-accent-text)] hover:underline inline-flex items-center gap-1"
+                      className="text-[11px] font-sans tabular-nums text-[var(--color-accent-text)] hover:underline inline-flex items-center gap-1"
                     >
-                      <span>Open Live Post</span>
+                      <span>Open Live Perspective</span>
                       <ExternalLink className="h-2.5 w-2.5" />
                     </a>
                   )}
@@ -454,7 +455,7 @@ export function ContentEditorClient({
                   value={linkedinPostUrl}
                   onChange={(e) => setLinkedinPostUrl(e.target.value)}
                   placeholder="https://www.linkedin.com/posts/..."
-                  className="input w-full font-mono text-xs text-[var(--color-ink)]"
+                  className="input w-full font-sans tabular-nums text-xs text-[var(--color-ink)]"
                 />
               </div>
             </div>
@@ -462,10 +463,10 @@ export function ContentEditorClient({
             {/* Markdown Post Body */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)]">
-                  Post Body (Markdown)
+                <label className="text-[11px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)]">
+                  Perspective Draft
                 </label>
-                <span className="text-[11px] font-mono text-[var(--color-ink-tertiary)]">
+                <span className="text-[11px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
                   {readingTimeMin} min read
                 </span>
               </div>
@@ -480,7 +481,7 @@ export function ContentEditorClient({
 
             {/* Metrics Footer Bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[var(--color-line-subtle)] text-xs">
-              <div className="flex items-center gap-4 font-mono text-[11.5px] text-[var(--color-ink-secondary)]">
+              <div className="flex items-center gap-4 font-sans tabular-nums text-[11.5px] text-[var(--color-ink-secondary)]">
                 <span>
                   Words: <strong className="text-[var(--color-ink)]">{wordCount}</strong>
                 </span>
@@ -490,7 +491,7 @@ export function ContentEditorClient({
               </div>
 
               {/* LinkedIn Character Range Meter */}
-              <div className="flex items-center gap-2 text-[11px] font-mono">
+              <div className="flex items-center gap-2 text-[11px] font-sans tabular-nums">
                 <span className="text-[var(--color-ink-tertiary)]">Sweet spot: 1,200–1,800 chars</span>
                 <div className="w-24 h-1.5 rounded-full bg-[var(--color-line)] overflow-hidden">
                   <div
@@ -511,18 +512,17 @@ export function ContentEditorClient({
           {/* Feedback Section if feedback items exist */}
           {feedbackItems && feedbackItems.length > 0 && (
             <div className="card p-5 space-y-3">
-              <h3 className="font-display text-sm font-normal text-[var(--color-ink)] flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-[var(--color-warn)]" />
-                <span>Client Feedback &amp; Revision Requests</span>
+              <h3 className="font-display text-sm font-semibold text-[var(--color-ink)]">
+                Founder Desk Notes &amp; Direction
               </h3>
               <div className="divide-y divide-[var(--color-line-subtle)]">
                 {feedbackItems.map((fb) => (
-                  <div key={fb.id} className="py-2.5 text-xs space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-ink-tertiary)]">
+                  <div key={fb.id} className="py-2.5 text-xs space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
                       <span>{fb.author_name} ({fb.author_type})</span>
                       <span>{formatDisplayDateTimeIST(fb.created_at, true)}</span>
                     </div>
-                    <p className="text-[var(--color-ink)] bg-[var(--color-base-subtle)] p-2 rounded">
+                    <p className="border-l-2 border-[var(--color-line-strong)] pl-3.5 py-1 text-[var(--color-ink)] leading-relaxed">
                       {fb.comment}
                     </p>
                   </div>
@@ -564,10 +564,10 @@ export function ContentEditorClient({
           {activeRightTab === "preview" && (
             <div className="card p-5 space-y-4">
               <div className="flex items-center justify-between text-xs pb-2 border-b border-[var(--color-line-subtle)]">
-                <span className="font-mono uppercase text-[10px] text-[var(--color-ink-tertiary)] font-medium">
+                <span className="font-sans tabular-nums uppercase text-[10px] text-[var(--color-ink-tertiary)] font-medium">
                   Realistic LinkedIn Mobile Feed
                 </span>
-                <span className="font-mono text-[10.5px] text-[var(--color-ink-tertiary)]">
+                <span className="font-sans tabular-nums text-[10.5px] text-[var(--color-ink-tertiary)]">
                   Fold: ~210 chars
                 </span>
               </div>
@@ -584,7 +584,7 @@ export function ContentEditorClient({
                       <span className="font-semibold text-xs text-white truncate">
                         {client?.founder_name || "Founder Name"}
                       </span>
-                      <span className="text-[10px] text-gray-400 font-mono">· 1st</span>
+                      <span className="text-[10px] text-gray-400 font-sans tabular-nums">· 1st</span>
                     </div>
                     <p className="text-[11px] text-gray-400 truncate">
                       {client?.founder_title || "Founder & CEO"} at {client?.name || "Company"}
@@ -630,7 +630,7 @@ export function ContentEditorClient({
 
               {/* Hook Analysis Box */}
               <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] p-3 border border-[var(--color-line)] text-xs space-y-1">
-                <span className="font-mono uppercase text-[9.5px] text-[var(--color-ink-tertiary)] block font-medium">
+                <span className="font-sans tabular-nums uppercase text-[9.5px] text-[var(--color-ink-tertiary)] block font-medium">
                   Hook Optimization Rule:
                 </span>
                 <p className="text-[var(--color-ink-secondary)] text-[11.5px] leading-relaxed">
@@ -644,10 +644,10 @@ export function ContentEditorClient({
           {activeRightTab === "context" && (
             <div className="card p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-2">
-                <span className="font-mono uppercase text-[10px] text-[var(--color-ink-tertiary)] font-medium">
+                <span className="font-sans tabular-nums uppercase text-[10px] text-[var(--color-ink-tertiary)] font-medium">
                   Verified Proof Points &amp; Stories
                 </span>
-                <span className="text-xs text-[var(--color-ink-tertiary)] font-mono">
+                <span className="text-xs text-[var(--color-ink-tertiary)] font-sans tabular-nums">
                   1-Click Insert
                 </span>
               </div>
@@ -656,7 +656,7 @@ export function ContentEditorClient({
               {context && (
                 <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] p-3 border border-[var(--color-line)] space-y-1.5 text-xs">
                   <div>
-                    <span className="text-[var(--color-ink-tertiary)] text-[10px] font-mono uppercase block">
+                    <span className="text-[var(--color-ink-tertiary)] text-[10px] font-sans tabular-nums uppercase block">
                       Target ICP:
                     </span>
                     <p className="text-[var(--color-ink)] font-medium">
@@ -664,7 +664,7 @@ export function ContentEditorClient({
                     </p>
                   </div>
                   <div>
-                    <span className="text-[var(--color-ink-tertiary)] text-[10px] font-mono uppercase block">
+                    <span className="text-[var(--color-ink-tertiary)] text-[10px] font-sans tabular-nums uppercase block">
                       Tone Archetype:
                     </span>
                     <p className="text-[var(--color-ink)] font-medium">
@@ -691,7 +691,7 @@ export function ContentEditorClient({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <span className="font-mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] border border-[var(--color-line)] inline-block mb-1">
+                          <span className="font-sans tabular-nums text-[10px] uppercase tracking-wider text-[var(--color-ink-muted)] block mb-1">
                             {item.category}
                           </span>
                           <h4 className="font-medium text-xs text-[var(--color-ink)]">
@@ -714,7 +714,7 @@ export function ContentEditorClient({
                       </p>
 
                       {item.verified_metrics && Object.keys(item.verified_metrics).length > 0 && (
-                        <div className="flex flex-wrap gap-1 pt-1 border-t border-[var(--color-line-subtle)] text-[10.5px] font-mono text-[var(--color-accent-text)]">
+                        <div className="flex flex-wrap gap-1 pt-1 border-t border-[var(--color-line-subtle)] text-[10.5px] font-sans tabular-nums text-[var(--color-accent-text)]">
                           {Object.entries(item.verified_metrics).map(([k, v]) => (
                             <span key={k}>
                               {k}: {String(v)}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -154,9 +155,14 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 border-b border-slate-200 pb-8">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="font-display text-2xl font-bold tracking-tight text-slate-900">
-                Atom &amp; Echo
-              </span>
+              <Image
+                src="/brand-wordmark-dark.svg"
+                alt="Atom & Echo"
+                width={150}
+                height={55}
+                priority
+                className="h-10 w-auto object-contain"
+              />
             </div>
             <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
               BaseWorks Executive Personal Branding &amp; Growth Studio
@@ -171,23 +177,22 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
             <h1 className="font-display text-3xl font-extrabold text-slate-900 uppercase tracking-tight">
               Invoice
             </h1>
-            <div className="space-y-0.5 text-xs text-slate-500 font-mono">
+            <div className="space-y-0.5 text-xs text-slate-500 font-sans tabular-nums">
               <p className="font-bold text-slate-800 text-sm">{invoice.invoice_number}</p>
               <p>Issue Date: {invoice.issue_date}</p>
               <p>Payment Due: {invoice.due_date}</p>
             </div>
-            <div>
-              <span className={`inline-block text-[11px] font-mono font-semibold uppercase px-2.5 py-0.5 rounded border ${
+            <div className="flex items-center justify-end gap-1.5 text-[11px] font-sans tabular-nums font-semibold uppercase tracking-wider text-slate-700">
+              <span className={`h-1.5 w-1.5 rounded-full ${
                 status === "paid"
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  ? "bg-emerald-600"
                   : status === "sent"
-                  ? "bg-purple-50 text-purple-700 border-purple-200"
+                  ? "bg-purple-600"
                   : status === "approved"
-                  ? "bg-blue-50 text-blue-700 border-blue-200"
-                  : "bg-slate-100 text-slate-700 border-slate-200"
-              }`}>
-                {status}
-              </span>
+                  ? "bg-blue-600"
+                  : "bg-slate-400"
+              }`} />
+              {status}
             </div>
           </div>
         </div>
@@ -195,17 +200,17 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
         {/* Client & Service Info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
           <div className="space-y-1">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">
+            <span className="font-sans tabular-nums text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">
               Billed To
             </span>
             <p className="font-bold text-slate-900 text-sm">{client?.name || "Client"}</p>
             <p className="text-slate-600 font-medium">Attn: {client?.founder_name} ({client?.founder_title || "Founder"})</p>
             {client?.founder_email && <p className="text-slate-500">{client.founder_email}</p>}
-            {client?.founder_phone && <p className="text-slate-500 font-mono">{client.founder_phone}</p>}
+            {client?.founder_phone && <p className="text-slate-500 font-sans tabular-nums">{client.founder_phone}</p>}
           </div>
 
           <div className="sm:text-right space-y-1">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">
+            <span className="font-sans tabular-nums text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">
               Engagement Terms
             </span>
             <p className="font-semibold text-slate-800">
@@ -215,10 +220,10 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
                 ? "Outbound Growth & Campaigns"
                 : "Hybrid Growth Retainer"}
             </p>
-            <p className="text-slate-500 font-mono">
+            <p className="text-slate-500 font-sans tabular-nums">
               Anchor Day: {engagement?.billing_anchor_day || 1}st of month
             </p>
-            <p className="text-slate-500 font-mono">Currency: INR (₹)</p>
+            <p className="text-slate-500 font-sans tabular-nums">Currency: INR (₹)</p>
           </div>
         </div>
 
@@ -239,16 +244,16 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
                   <td className="py-3.5 px-3">
                     <span className="font-medium text-slate-900 block">{item.description}</span>
                     {item.tool_expense_id && (
-                      <span className="text-[10px] font-mono text-slate-400">
+                      <span className="text-[10px] font-sans tabular-nums text-slate-400">
                         Pass-through tool license reimbursement
                       </span>
                     )}
                   </td>
-                  <td className="py-3.5 px-3 text-center font-mono">{item.quantity}</td>
-                  <td className="py-3.5 px-3 text-right font-mono tabular-nums">
+                  <td className="py-3.5 px-3 text-center font-sans tabular-nums">{item.quantity}</td>
+                  <td className="py-3.5 px-3 text-right font-sans tabular-nums">
                     ₹{Number(item.unit_price).toLocaleString("en-IN")}
                   </td>
-                  <td className="py-3.5 px-3 text-right font-mono font-semibold text-slate-900 tabular-nums">
+                  <td className="py-3.5 px-3 text-right font-sans font-semibold text-slate-900 tabular-nums">
                     ₹{Number(item.total_price).toLocaleString("en-IN")}
                   </td>
                 </tr>
@@ -262,17 +267,17 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
           <div className="w-64 space-y-2 text-xs">
             <div className="flex justify-between text-slate-600">
               <span>Subtotal</span>
-              <span className="font-mono font-medium tabular-nums">
+              <span className="font-sans font-medium tabular-nums">
                 ₹{Number(invoice.subtotal_amount).toLocaleString("en-IN")}
               </span>
             </div>
             <div className="flex justify-between text-slate-500">
               <span>Taxes / GST</span>
-              <span className="font-mono tabular-nums">₹0.00</span>
+              <span className="font-sans tabular-nums">₹0.00</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-slate-300 font-bold text-sm text-slate-900">
               <span>Total Due</span>
-              <span className="font-mono text-lg tabular-nums text-slate-950">
+              <span className="font-sans text-lg tabular-nums text-slate-950">
                 ₹{Number(invoice.total_amount).toLocaleString("en-IN")}
               </span>
             </div>
@@ -284,7 +289,7 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
           <p className="font-semibold text-slate-800">Payment Instructions</p>
           <p className="leading-relaxed">
             Please transfer the total amount via NEFT / RTGS / IMPS to the Atom &amp; Echo operating account.
-            For any billing queries or updated purchase order numbers, contact Sudeesh at <span className="font-mono">sudeesh@atomecho.com</span>.
+            For any billing queries or updated purchase order numbers, contact Sudeesh at <span className="font-sans tabular-nums">sudeesh@atomecho.com</span>.
           </p>
         </div>
       </div>

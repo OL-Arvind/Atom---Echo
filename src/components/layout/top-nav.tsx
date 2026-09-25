@@ -34,28 +34,28 @@ function getRouteMetadata(pathname: string): RouteMeta {
   }
   if (pathname.startsWith("/clients/")) {
     return {
-      title: "Client Profile",
+      title: "Client Roster",
       icon: Users,
       breadcrumbs: [
-        { label: "Clients", href: "/clients" },
-        { label: "Client 360" },
+        { label: "Client Roster", href: "/clients" },
+        { label: "Founder Desk" },
       ],
     };
   }
   if (pathname.startsWith("/clients")) {
     return {
-      title: "Clients",
+      title: "Client Roster",
       icon: Users,
-      breadcrumbs: [{ label: "Clients" }],
+      breadcrumbs: [{ label: "Client Roster" }],
     };
   }
   if (pathname.startsWith("/content/")) {
     return {
-      title: "Post Editor",
+      title: "Story & Post Editor",
       icon: Feather,
       breadcrumbs: [
-        { label: "Content", href: "/content" },
-        { label: "Post Editor" },
+        { label: "Content Studio", href: "/content" },
+        { label: "Story Editor" },
       ],
     };
   }
@@ -68,23 +68,23 @@ function getRouteMetadata(pathname: string): RouteMeta {
   }
   if (pathname.startsWith("/calendar")) {
     return {
-      title: "Master Calendar",
+      title: "Publishing Schedule",
       icon: Calendar,
-      breadcrumbs: [{ label: "Master Calendar" }],
+      breadcrumbs: [{ label: "Publishing Schedule" }],
     };
   }
   if (pathname.startsWith("/campaigns")) {
     return {
-      title: "Outbound Campaigns",
+      title: "Outbound & GTM",
       icon: Send,
-      breadcrumbs: [{ label: "Outbound Campaigns" }],
+      breadcrumbs: [{ label: "Outbound & GTM" }],
     };
   }
   if (pathname.startsWith("/billing")) {
     return {
-      title: "Invoices & Billing",
+      title: "Retainers & Billing",
       icon: Receipt,
-      breadcrumbs: [{ label: "Invoices & Billing" }],
+      breadcrumbs: [{ label: "Retainers & Billing" }],
     };
   }
   if (pathname.startsWith("/operations")) {
@@ -97,7 +97,7 @@ function getRouteMetadata(pathname: string): RouteMeta {
   return {
     title: "Command Center",
     icon: Crosshair,
-    breadcrumbs: [{ label: "Workspace" }],
+    breadcrumbs: [{ label: "Command Center" }],
   };
 }
 
@@ -140,8 +140,8 @@ export function TopNav() {
           height: "52px",
           alignItems: "center",
           justifyContent: "space-between",
-          borderBottom: "1px solid var(--color-line-subtle)",
-          background: "rgba(255, 255, 255, 0.95)",
+          borderBottom: "1px solid var(--color-line)",
+          background: "rgba(19, 28, 19, 0.85)",
           backdropFilter: "blur(12px)",
           padding: "0 24px",
         }}
@@ -219,10 +219,10 @@ export function TopNav() {
             }}
           >
             <Search size={12} strokeWidth={1.75} />
-            <span style={{ flex: 1 }}>Search clients, posts...</span>
+            <span style={{ flex: 1 }}>Search founders, stories, retainers...</span>
             <kbd
               style={{
-                fontFamily: "var(--font-mono)",
+                fontFamily: "var(--font-sans tabular-nums)",
                 fontSize: "10px",
                 padding: "1.5px 4.5px",
                 borderRadius: "3px",

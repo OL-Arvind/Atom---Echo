@@ -81,3 +81,16 @@ This document records the foundational architectural and design decisions for At
   4. **No Explanatory Slop or Sidebar Promo Cards**: Internal executive tools do not need marketing promo boxes explaining what a client directory is. Delete explanatory filler.
   5. **Quiet Defaults, Loud Exceptions (Linear / Amie reference)**: Quiet monochrome canvas, crisp typography (Inter / Plus Jakarta Sans), subtle hairlines, and generous breathing room. Color is a high-value currency never wasted on decorative fluff.
 * **Consequence**: Delivers a serene, high-velocity operating environment that respects human executive function and provides instant clarity for neurodivergent and neurotypical operators alike.
+
+---
+
+## ADR-008: Absolute Ban on AI-Slop UI Patterns (Pill Confetti, Tinted Callouts & Clipart Clutter)
+* **Status**: ACCEPTED (Human Approved)
+* **Context**: LLM coding agents habitually generate generic "AI slop" UI tropes: wrapping every status in a pastel candy capsule pill (e.g. '● Client Revision Requested'), rendering Notion-style yellow callout cards ('bg-amber-50 border-amber-200') with message bubble icons, and stacking multi-tiered eyebrows. This makes bespoke software look like a cheap SaaS template.
+* **Decision**: Codify and enforce the Emil Kowalski & Impeccable Design Engineering standards across all components:
+  1. **No Pill Badge Confetti & No Technical Monospace**: Prohibit `rounded-full px-2 py-0.5` colored status pills and technical monospace fonts (`JetBrains Mono`). Replace with quiet typographic indicators: an understated 6px colored dot + crisp uppercase sans tracking (`text-[10.5px] font-sans tabular-nums tracking-wider text-[var(--color-ink-secondary)]`).
+  2. **No Tinted Callout Boxes / Alert Banners**: Prohibit pastel yellow/amber/blue background cards with chat bubble icons. Replace client feedback and quotes with an **editorial hairline inset** (`border-l-2 border-amber-500/80 bg-[var(--color-base-subtle)] px-3.5 py-2.5 rounded-r-md`) or crisp indented quote.
+  3. **No Multi-Tiered Eyebrow Stacking**: Prohibit stacking "Client Feedback Note" over "1-Tap Portal Comment" over "Aravind commented:". State author and context once in clear, human language.
+  4. **No Decorative Icon Clutter**: Icons are reserved for interactive controls and navigation. Never stick clipart emojis or decorative speech bubbles next to plain text.
+  5. **Responsive Interaction Feedback (Emil Kowalski)**: All clickable elements must have active press scaling (`active:scale-[0.98] transition-transform duration-150 ease-out`).
+* **Consequence**: Eliminates visual noise, restores bespoke studio elegance, and ensures all future agent contributions adhere to high-craft human design principles.

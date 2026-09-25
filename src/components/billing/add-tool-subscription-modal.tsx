@@ -76,7 +76,7 @@ export function AddToolSubscriptionModal({
         <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
           {/* Tool Name */}
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Tool / Software Name *
             </label>
             <input
@@ -91,7 +91,7 @@ export function AddToolSubscriptionModal({
           {/* Cost Amount and Currency */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+              <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
                 Cost Amount *
               </label>
               <div className="relative">
@@ -107,7 +107,7 @@ export function AddToolSubscriptionModal({
             </div>
 
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+              <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
                 Currency *
               </label>
               <select
@@ -125,7 +125,7 @@ export function AddToolSubscriptionModal({
           {/* Billing Cycle and Next Renewal Date */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+              <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
                 Billing Cycle *
               </label>
               <select
@@ -140,7 +140,7 @@ export function AddToolSubscriptionModal({
             </div>
 
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+              <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
                 Renewal Date *
               </label>
               <CustomDatePicker

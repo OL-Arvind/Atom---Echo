@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { runBillingAnchorCycleAction } from "@/lib/actions/billing";
+import { getServerOperatorSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Automated Cron Endpoint for Invoicing Cycle
- * Can be triggered daily by Vercel Cron, Inngest, or external scheduler.
+ * Triggered daily by Vercel Cron, Inngest, or an authenticated operator.
  * Finds clients within 7 days of their billing anchor day and drafts consolidated invoices.
  */
 export async function GET(request: Request) {
@@ -13,8 +14,14 @@ export async function GET(request: Request) {
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const hasValidCronSecret = Boolean(cronSecret && authHeader === `Bearer ${cronSecret}`);
+
+    if (!hasValidCronSecret) {
+      // Allow authenticated operator sessions if triggered manually from workspace
+      const operatorSession = await getServerOperatorSession();
+      if (!operatorSession || (process.env.NODE_ENV === "production" && !cronSecret && operatorSession.provider === "demo")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
     }
 
     const result = await runBillingAnchorCycleAction();
@@ -23,8 +30,9 @@ export async function GET(request: Request) {
       timestamp: new Date().toISOString(),
       ...result,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal billing cron error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

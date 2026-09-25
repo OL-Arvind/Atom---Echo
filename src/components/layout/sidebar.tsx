@@ -17,23 +17,23 @@ import {
 } from "lucide-react";
 import { useSidebar } from "./sidebar-context";
 import { LogoutModal } from "@/components/auth/logout-modal";
-import { getStoredUser, DEFAULT_USER, AuthUser } from "@/lib/auth/dummy-auth";
+import { getStoredUser, syncSupabaseSessionUser, DEFAULT_USER, AuthUser } from "@/lib/auth/dummy-auth";
 import { SidebarTooltip } from "@/components/ui/sidebar-tooltip";
 
 const NAV_ITEMS = [
   { name: "Command Center", href: "/command-center", icon: Crosshair, section: "ops" },
-  { name: "Clients", href: "/clients", icon: Users, section: "ops" },
-  { name: "Content", href: "/content", icon: Feather, section: "ops" },
-  { name: "Calendar", href: "/calendar", icon: Calendar, section: "ops" },
-  { name: "Outbound", href: "/campaigns", icon: Send, section: "revenue" },
-  { name: "Invoices & Billing", href: "/billing", icon: Receipt, section: "revenue" },
+  { name: "Client Roster", href: "/clients", icon: Users, section: "ops" },
+  { name: "Content Studio", href: "/content", icon: Feather, section: "ops" },
+  { name: "Publishing Schedule", href: "/calendar", icon: Calendar, section: "ops" },
+  { name: "Outbound & GTM", href: "/campaigns", icon: Send, section: "revenue" },
+  { name: "Retainers & Billing", href: "/billing", icon: Receipt, section: "revenue" },
   { name: "Activity Log", href: "/operations", icon: Activity, section: "system" },
 ];
 
 const SECTIONS: Record<string, string> = {
-  ops: "Workspace",
-  revenue: "Finance",
-  system: "System",
+  ops: "Editorial & Roster",
+  revenue: "Commercials",
+  system: "Operations",
 };
 
 export function Sidebar() {
@@ -45,6 +45,9 @@ export function Sidebar() {
 
   useEffect(() => {
     setUser(getStoredUser() || DEFAULT_USER);
+    syncSupabaseSessionUser().then((synced) => {
+      if (synced) setUser(synced);
+    });
     const handleAuth = () => {
       setUser(getStoredUser() || DEFAULT_USER);
     };
@@ -115,31 +118,14 @@ export function Sidebar() {
                 e.currentTarget.style.borderColor = "transparent";
               }}
             >
-              <div
-                style={{
-                  width: "26px",
-                  height: "26px",
-                  borderRadius: "6px",
-                  overflow: "hidden",
-                  border: "1px solid var(--color-line)",
-                  background: "#000",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  transition: "transform 0.15s ease",
-                }}
-                className="group-hover:scale-95"
-              >
-                <Image
-                  src="/logo.png"
-                  alt="Atom & Echo"
-                  width={26}
-                  height={26}
-                  priority
-                  className="object-cover w-full h-full"
-                />
-              </div>
+              <Image
+                src="/icon-symbol-white.png"
+                alt="Atom & Echo"
+                width={22}
+                height={22}
+                priority
+                className="object-contain w-[22px] h-[22px] select-none transition-transform duration-150 group-hover:scale-95"
+              />
             </button>
           </SidebarTooltip>
         ) : (
@@ -150,48 +136,18 @@ export function Sidebar() {
                 textDecoration: "none",
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
                 minWidth: 0,
               }}
             >
-              <div
-                style={{
-                  width: "26px",
-                  height: "26px",
-                  borderRadius: "6px",
-                  overflow: "hidden",
-                  border: "1px solid var(--color-line)",
-                  background: "#000",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Image
-                  src="/logo.png"
-                  alt="Atom & Echo"
-                  width={26}
-                  height={26}
-                  priority
-                  className="object-cover w-full h-full"
-                />
-              </div>
-
-              <div style={{ minWidth: 0, whiteSpace: "nowrap" }}>
-                <div
-                  style={{
-                    fontFamily: "var(--font-sans)",
-                    fontWeight: 600,
-                    fontSize: "13.5px",
-                    color: "var(--color-ink)",
-                    lineHeight: 1.1,
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  Atom & Echo
-                </div>
-              </div>
+              <Image
+                src="/brand-wordmark-white.svg"
+                alt="Atom & Echo"
+                width={76}
+                height={28}
+                priority
+                unoptimized
+                className="object-contain h-[28px] w-auto select-none"
+              />
             </Link>
 
             {/* Toggle Button */}
@@ -263,7 +219,7 @@ export function Sidebar() {
               ) : (
                 <div
                   style={{
-                    fontFamily: "var(--font-mono)",
+                    fontFamily: "var(--font-sans tabular-nums)",
                     fontSize: "9.5px",
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
@@ -322,7 +278,7 @@ export function Sidebar() {
                     >
                       <Icon
                         size={isCollapsed ? 16 : 14}
-                        color={isActive ? "var(--color-ink)" : "currentColor"}
+                        color={isActive ? "var(--color-accent)" : "currentColor"}
                         strokeWidth={isActive ? 2 : 1.75}
                         style={{ flexShrink: 0 }}
                       />
@@ -346,7 +302,8 @@ export function Sidebar() {
                                 width: "4px",
                                 height: "4px",
                                 borderRadius: "50%",
-                                background: "var(--color-ink)",
+                                background: "var(--color-accent)",
+                                boxShadow: "0 0 6px rgba(211, 255, 90, 0.4)",
                                 flexShrink: 0,
                               }}
                             />
@@ -442,7 +399,7 @@ export function Sidebar() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontFamily: "var(--font-mono)",
+                  fontFamily: "var(--font-sans tabular-nums)",
                   fontSize: "10.5px",
                   fontWeight: 600,
                   color: "var(--color-ink-secondary)",
@@ -500,7 +457,7 @@ export function Sidebar() {
               <span style={{ flex: 1, textAlign: "left" }}>Collapse sidebar</span>
               <kbd
                 style={{
-                  fontFamily: "var(--font-mono)",
+                  fontFamily: "var(--font-sans tabular-nums)",
                   fontSize: "10px",
                   padding: "1px 4px",
                   borderRadius: "3px",
@@ -553,7 +510,7 @@ export function Sidebar() {
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
-                  fontFamily: "var(--font-mono)",
+                  fontFamily: "var(--font-sans tabular-nums)",
                   fontSize: "10px",
                   fontWeight: 500,
                   color: "var(--color-ink-secondary)",
@@ -578,7 +535,7 @@ export function Sidebar() {
                 </div>
                 <div
                   style={{
-                    fontFamily: "var(--font-mono)",
+                    fontFamily: "var(--font-sans tabular-nums)",
                     fontSize: "9px",
                     color: "var(--color-ink-muted)",
                     display: "flex",
@@ -588,7 +545,7 @@ export function Sidebar() {
                     letterSpacing: "0.02em",
                   }}
                 >
-                  <span>Auth: Coming Soon</span>
+                  <span>{user.role}</span>
                 </div>
               </div>
             </button>

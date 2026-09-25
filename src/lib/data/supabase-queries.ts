@@ -90,62 +90,53 @@ export async function getClientByIdFromDb(id: string) {
         .single();
 
       if (!error && client) {
-        const engagementIds = (client.engagements || []).map((e: any) => e.id);
-        let contentItems: any[] = [];
-        let toolExpenses: any[] = [];
-        let clientRequests: any[] = [];
-        let credentials: any[] = [];
-        let reviewTokens: any[] = [];
+        const engagementIds = (client.engagements || []).map((e: { id: string }) => e.id);
+        const nowIso = new Date().toISOString();
 
-        if (engagementIds.length > 0) {
-          const { data: posts } = await supabase
-            .from("content_items")
+        const [postsRes, toolsRes, requestsRes, credsRes, tokensRes] = await Promise.all([
+          engagementIds.length > 0
+            ? supabase
+                .from("content_items")
+                .select("*")
+                .in("engagement_id", engagementIds)
+                .order("created_at", { ascending: false })
+            : Promise.resolve({ data: [] }),
+          engagementIds.length > 0
+            ? supabase
+                .from("tool_expenses")
+                .select("*")
+                .in("engagement_id", engagementIds)
+                .order("incurred_date", { ascending: false })
+            : Promise.resolve({ data: [] }),
+          supabase
+            .from("client_requests")
             .select("*")
-            .in("engagement_id", engagementIds)
-            .order("created_at", { ascending: false });
-          if (posts) contentItems = posts;
-
-          const { data: tools } = await supabase
-            .from("tool_expenses")
-            .select("*")
-            .in("engagement_id", engagementIds)
-            .order("incurred_date", { ascending: false });
-          if (tools) toolExpenses = tools;
-        }
-
-        const { data: requests } = await supabase
-          .from("client_requests")
-          .select("*")
-          .eq("client_id", id)
-          .order("created_at", { ascending: false });
-        if (requests) clientRequests = requests;
-
-        const { data: creds } = await supabase
-          .from("credentials")
-          .select("id, client_id, platform, username_or_email, two_factor_method, notes, created_at")
-          .eq("client_id", id)
-          .order("created_at", { ascending: false });
-        if (creds) credentials = creds;
-
-        const { data: tokens } = await supabase
-          .from("review_tokens")
-          .select("id, token_hash, expires_at, revoked, last_accessed_at")
-          .eq("client_id", id)
-          .eq("revoked", false)
-          .gt("expires_at", new Date().toISOString())
-          .order("created_at", { ascending: false });
-        if (tokens) reviewTokens = tokens;
+            .eq("client_id", id)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("credentials")
+            .select("id, client_id, platform, username_or_email, two_factor_method, notes, created_at")
+            .eq("client_id", id)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("review_tokens")
+            .select("id, token_hash, expires_at, revoked, last_accessed_at")
+            .eq("client_id", id)
+            .eq("revoked", false)
+            .gt("expires_at", nowIso)
+            .order("created_at", { ascending: false }),
+        ]);
 
         return {
           ...client,
           context: Array.isArray(client.client_contexts)
             ? client.client_contexts[0]
             : client.client_contexts,
-          content_items: contentItems,
-          tool_expenses: toolExpenses,
-          client_requests: clientRequests,
-          credentials,
-          review_tokens: reviewTokens,
+          content_items: postsRes.data || [],
+          tool_expenses: toolsRes.data || [],
+          client_requests: requestsRes.data || [],
+          credentials: credsRes.data || [],
+          review_tokens: tokensRes.data || [],
         };
       }
     }
@@ -160,142 +151,41 @@ export async function getClientByIdFromDb(id: string) {
 export async function getCommandCenterDataFromDb() {
   try {
     const supabase = createAdminClient();
+    const nowIso = new Date().toISOString();
+    const todayStr = getTodayDateStringIST();
+    const todayDate = new Date();
+    const fiveDaysFromNowStr = toDateStringIST(new Date(todayDate.getTime() + 5 * 86400000));
 
-    // 1. Fetch active clients count and list
-    const { data: clients } = await supabase
-      .from("clients")
-      .select("id, name, founder_name, founder_phone, status, website_url");
-
-    const activeClients = clients?.filter((c) => c.status === "active") || [];
-
-    // 2. Fetch active engagements for MRR calculation
-    const { data: engagements } = await supabase
-      .from("engagements")
-      .select("id, client_id, service_type, monthly_retainer, status, billing_anchor_day")
-      .eq("status", "active");
-
-    const activeEngagements = engagements || [];
-    const mrrTotal = activeEngagements.reduce((acc, e) => acc + Number(e.monthly_retainer || 0), 0);
-    const brandingCount = activeEngagements.filter(e => e.service_type === "linkedin_branding").length;
-    const outreachCount = activeEngagements.filter(e => e.service_type === "cold_outreach").length;
-
-    // 3. Fetch posts in client review
-    const { data: reviewPosts } = await supabase
-      .from("content_items")
-      .select(`
-        id,
-        title,
-        status,
-        target_pillar,
-        body_markdown,
-        scheduled_publish_date,
-        created_at,
-        engagements (
-          id,
-          clients (
-            id,
-            name,
-            founder_name,
-            founder_phone
-          )
-        )
-      `)
-      .eq("status", "client_review");
-
-    // 4. Fetch scheduled posts for timeline horizon
-    const { data: scheduledPosts } = await supabase
-      .from("content_items")
-      .select(`
-        id,
-        title,
-        status,
-        target_pillar,
-        scheduled_publish_date,
-        body_markdown,
-        engagements (
-          clients (
-            name,
-            founder_name
-          )
-        )
-      `)
-      .in("status", ["scheduled", "published"])
-      .order("scheduled_publish_date", { ascending: true })
-      .limit(6);
-
-    // 5. Fetch unbilled tool expenses
-    const { data: unbilledExpenses } = await supabase
-      .from("tool_expenses")
-      .select(`
-        id,
-        description,
-        amount,
-        currency,
-        incurred_date,
-        status,
-        engagements (
-          id,
-          clients (
-            id,
-            name
-          )
-        )
-      `)
-      .eq("status", "unbilled");
-
-    const totalLeakage = (unbilledExpenses || []).reduce((acc, t) => acc + Number(t.amount || 0), 0);
-
-    // 6. Fetch urgent client requests
-    const { data: urgentRequests } = await supabase
-      .from("client_requests")
-      .select(`
-        id,
-        title,
-        description,
-        category,
-        priority,
-        status,
-        created_at,
-        clients (
-          id,
-          name,
-          founder_name
-        )
-      `)
-      .in("status", ["submitted", "in_progress"])
-      .order("priority", { ascending: false });
-
-    // 7. Fetch active unexpired review tokens map
-    const { data: reviewTokens } = await supabase
-      .from("review_tokens")
-      .select("client_id, token_hash, expires_at")
-      .eq("revoked", false)
-      .gt("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: false });
-
-    const tokenMap = new Map<string, string>();
-    for (const t of reviewTokens || []) {
-      if (!tokenMap.has(t.client_id)) {
-        tokenMap.set(t.client_id, t.token_hash);
-      }
-    }
-
-    // 8. Fetch unresolved client feedback from review portal
-    const { data: unresolvedFeedback } = await supabase
-      .from("content_feedback")
-      .select(`
-        id,
-        comment,
-        author_name,
-        author_type,
-        created_at,
-        is_resolved,
-        content_items (
+    // Execute all 10 independent queries concurrently via Promise.all
+    const [
+      clientsRes,
+      engagementsRes,
+      reviewPostsRes,
+      scheduledPostsRes,
+      unbilledExpensesRes,
+      urgentRequestsRes,
+      reviewTokensRes,
+      unresolvedFeedbackRes,
+      renewingToolsRes,
+      draftInvoicesRes,
+    ] = await Promise.all([
+      supabase
+        .from("clients")
+        .select("id, name, founder_name, founder_phone, status, website_url"),
+      supabase
+        .from("engagements")
+        .select("id, client_id, service_type, monthly_retainer, status, billing_anchor_day")
+        .eq("status", "active"),
+      supabase
+        .from("content_items")
+        .select(`
           id,
           title,
-          body_markdown,
-          target_pillar,
           status,
+          target_pillar,
+          body_markdown,
+          scheduled_publish_date,
+          created_at,
           engagements (
             id,
             clients (
@@ -305,17 +195,169 @@ export async function getCommandCenterDataFromDb() {
               founder_phone
             )
           )
-        )
-      `)
-      .eq("is_resolved", false)
-      .eq("author_type", "client")
-      .order("created_at", { ascending: false });
+        `)
+        .eq("status", "client_review"),
+      supabase
+        .from("content_items")
+        .select(`
+          id,
+          title,
+          status,
+          target_pillar,
+          scheduled_publish_date,
+          body_markdown,
+          engagements (
+            clients (
+              name,
+              founder_name
+            )
+          )
+        `)
+        .in("status", ["scheduled", "published"])
+        .order("scheduled_publish_date", { ascending: true })
+        .limit(6),
+      supabase
+        .from("tool_expenses")
+        .select(`
+          id,
+          description,
+          amount,
+          currency,
+          incurred_date,
+          status,
+          engagements (
+            id,
+            clients (
+              id,
+              name
+            )
+          )
+        `)
+        .eq("status", "unbilled"),
+      supabase
+        .from("client_requests")
+        .select(`
+          id,
+          title,
+          description,
+          category,
+          priority,
+          status,
+          created_at,
+          clients (
+            id,
+            name,
+            founder_name
+          )
+        `)
+        .in("status", ["submitted", "in_progress"])
+        .order("priority", { ascending: false }),
+      supabase
+        .from("review_tokens")
+        .select("client_id, token_hash, expires_at")
+        .eq("revoked", false)
+        .gt("expires_at", nowIso)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("content_feedback")
+        .select(`
+          id,
+          comment,
+          author_name,
+          author_type,
+          created_at,
+          is_resolved,
+          content_items (
+            id,
+            title,
+            body_markdown,
+            target_pillar,
+            status,
+            engagements (
+              id,
+              clients (
+                id,
+                name,
+                founder_name,
+                founder_phone
+              )
+            )
+          )
+        `)
+        .eq("is_resolved", false)
+        .eq("author_type", "client")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("tool_subscriptions")
+        .select("id, tool_name, cost_amount, currency, next_renewal_date, default_pass_through")
+        .gte("next_renewal_date", todayStr)
+        .lte("next_renewal_date", fiveDaysFromNowStr)
+        .order("next_renewal_date", { ascending: true }),
+      supabase
+        .from("invoices")
+        .select(`
+          id,
+          invoice_number,
+          total_amount,
+          subtotal_amount,
+          tax_amount,
+          due_date,
+          created_at,
+          engagements (
+            id,
+            service_type,
+            monthly_retainer,
+            clients (
+              id,
+              name,
+              founder_name,
+              founder_phone,
+              founder_email
+            )
+          ),
+          invoice_line_items (
+            id,
+            description,
+            quantity,
+            unit_price,
+            total_price
+          )
+        `)
+        .eq("status", "draft")
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const clients = clientsRes.data || [];
+    const activeClients = clients.filter((c) => c.status === "active");
+
+    const activeEngagements = engagementsRes.data || [];
+    const mrrTotal = activeEngagements.reduce((acc, e) => acc + Number(e.monthly_retainer || 0), 0);
+    const brandingCount = activeEngagements.filter((e) => e.service_type === "linkedin_branding").length;
+    const outreachCount = activeEngagements.filter((e) => e.service_type === "cold_outreach").length;
+
+    const reviewPosts = reviewPostsRes.data || [];
+    const scheduledPosts = scheduledPostsRes.data || [];
+    const unbilledExpenses = unbilledExpensesRes.data || [];
+    const urgentRequests = urgentRequestsRes.data || [];
+    const reviewTokens = reviewTokensRes.data || [];
+    const unresolvedFeedback = unresolvedFeedbackRes.data || [];
+    const renewingTools = renewingToolsRes.data || [];
+    const draftInvoices = draftInvoicesRes.data || [];
+
+    const totalLeakage = unbilledExpenses.reduce((acc, t) => acc + Number(t.amount || 0), 0);
+
+    const tokenMap = new Map<string, string>();
+    for (const t of reviewTokens) {
+      if (!tokenMap.has(t.client_id)) {
+        tokenMap.set(t.client_id, t.token_hash);
+      }
+    }
 
     // Derive operational alerts dynamically from actual records
     const alerts: any[] = [];
 
     // Alert 0: Client Content Revision Feedback (Immediate Action Required)
-    for (const fb of unresolvedFeedback || []) {
+    for (const fb of unresolvedFeedback) {
       const post = fb.content_items as any;
       const client = (post?.engagements as any)?.clients;
       const clientName = client?.name || "Client";
@@ -350,7 +392,7 @@ export async function getCommandCenterDataFromDb() {
     }
 
     // Alert 1: Urgent Client Requests (Emergency holds, tone pivots)
-    for (const req of urgentRequests || []) {
+    for (const req of urgentRequests) {
       const client = req.clients as any;
       const clientName = client?.name || "Client";
       alerts.push({
@@ -369,7 +411,7 @@ export async function getCommandCenterDataFromDb() {
     }
 
     // Alert 2: Posts pending client review
-    for (const post of reviewPosts || []) {
+    for (const post of reviewPosts) {
       const client = (post.engagements as any)?.clients;
       const clientName = client?.name || "Client";
       const founderName = client?.founder_name || "Founder";
@@ -401,7 +443,7 @@ export async function getCommandCenterDataFromDb() {
         id: "alert-tool-leakage",
         urgency: "info",
         title: `₹${totalLeakage.toLocaleString("en-IN")} Unbilled Software Expenses`,
-        reason: `${unbilledExpenses?.length} unbilled tool expenses (HeyReach, Clay, Proxies) incurred across active clients.`,
+        reason: `${unbilledExpenses.length} unbilled tool expenses (HeyReach, Clay, Proxies) incurred across active clients.`,
         waiting_on: "Monthly Invoice Draft",
         entity_id: "billing",
         entity_type: "billing",
@@ -410,17 +452,7 @@ export async function getCommandCenterDataFromDb() {
     }
 
     // Alert 4: Tool subscriptions renewing within 5 days
-    const todayStr = getTodayDateStringIST();
-    const todayDate = new Date();
-    const fiveDaysFromNowStr = toDateStringIST(new Date(todayDate.getTime() + 5 * 86400000));
-    const { data: renewingTools } = await supabase
-      .from("tool_subscriptions")
-      .select("id, tool_name, cost_amount, currency, next_renewal_date, default_pass_through")
-      .gte("next_renewal_date", todayStr)
-      .lte("next_renewal_date", fiveDaysFromNowStr)
-      .order("next_renewal_date", { ascending: true });
-
-    for (const tool of renewingTools || []) {
+    for (const tool of renewingTools) {
       alerts.push({
         id: `alert-tool-renew-${tool.id}`,
         urgency: "warning",
@@ -440,40 +472,7 @@ export async function getCommandCenterDataFromDb() {
     }
 
     // Alert 5: Pending draft invoices
-    const { data: draftInvoices } = await supabase
-      .from("invoices")
-      .select(`
-        id,
-        invoice_number,
-        total_amount,
-        subtotal_amount,
-        tax_amount,
-        due_date,
-        created_at,
-        engagements (
-          id,
-          service_type,
-          monthly_retainer,
-          clients (
-            id,
-            name,
-            founder_name,
-            founder_phone,
-            founder_email
-          )
-        ),
-        invoice_line_items (
-          id,
-          description,
-          quantity,
-          unit_price,
-          total_price
-        )
-      `)
-      .eq("status", "draft")
-      .order("created_at", { ascending: false });
-
-    for (const inv of draftInvoices || []) {
+    for (const inv of draftInvoices) {
       const client = (inv.engagements as any)?.clients;
       const clientName = client?.name || "Client";
       const founderName = client?.founder_name || "Founder";
@@ -500,17 +499,17 @@ export async function getCommandCenterDataFromDb() {
 
     return {
       activeClientsCount: activeClients.length,
-      pendingReviewCount: (reviewPosts || []).length + (unresolvedFeedback || []).length,
+      pendingReviewCount: reviewPosts.length + unresolvedFeedback.length,
       unbilledExpensesTotal: totalLeakage,
       mrrTotal,
       brandingCount,
       outreachCount,
       alerts,
-      clients: clients || [],
-      reviewPosts: reviewPosts || [],
-      unresolvedFeedback: unresolvedFeedback || [],
-      scheduledPosts: scheduledPosts || [],
-      unbilledExpenses: unbilledExpenses || [],
+      clients,
+      reviewPosts,
+      unresolvedFeedback,
+      scheduledPosts,
+      unbilledExpenses,
     };
   } catch (err) {
     console.error("Error in getCommandCenterDataFromDb:", err);
@@ -524,6 +523,7 @@ export async function getCommandCenterDataFromDb() {
       alerts: [],
       clients: [],
       reviewPosts: [],
+      unresolvedFeedback: [],
       scheduledPosts: [],
       unbilledExpenses: [],
     };
@@ -628,24 +628,25 @@ export async function getReviewPortalDataByToken(token: string): Promise<ReviewP
         .eq("id", tokenRecord.id)
     ).catch(() => {});
 
-    // 2. Fetch client details
-    const { data: client, error: clientErr } = await supabase
-      .from("clients")
-      .select("id, name, founder_name, founder_title, founder_email, founder_phone, linkedin_url")
-      .eq("id", tokenRecord.client_id)
-      .single();
+    // 2 & 3. Fetch client details and engagements concurrently
+    const [clientRes, engagementsRes] = await Promise.all([
+      supabase
+        .from("clients")
+        .select("id, name, founder_name, founder_title, founder_email, founder_phone, linkedin_url")
+        .eq("id", tokenRecord.client_id)
+        .single(),
+      supabase
+        .from("engagements")
+        .select("id")
+        .eq("client_id", tokenRecord.client_id),
+    ]);
 
-    if (clientErr || !client) {
+    const client = clientRes.data;
+    if (clientRes.error || !client) {
       return { ...emptyResult, reason: "not_found" };
     }
 
-    // 3. Fetch all engagements for this client
-    const { data: engagements } = await supabase
-      .from("engagements")
-      .select("id")
-      .eq("client_id", client.id);
-
-    const engagementIds = (engagements || []).map((e) => e.id);
+    const engagementIds = (engagementsRes.data || []).map((e) => e.id);
 
     if (engagementIds.length === 0) {
       return {
@@ -756,64 +757,69 @@ export async function getReviewPostByToken(token: string) {
   }
 }
 
-
 export async function getContentStudioDataFromDb() {
   try {
     const supabase = createAdminClient();
+    const nowIso = new Date().toISOString();
 
-    // 1. Fetch all posts with engagement & client details
-    const { data: posts } = await supabase
-      .from("content_items")
-      .select(`
-        id,
-        title,
-        body_markdown,
-        target_pillar,
-        status,
-        scheduled_publish_date,
-        published_at,
-        linkedin_post_url,
-        created_at,
-        engagements (
+    const [postsRes, engagementsRes, tokensRes] = await Promise.all([
+      supabase
+        .from("content_items")
+        .select(`
+          id,
+          title,
+          body_markdown,
+          target_pillar,
+          status,
+          scheduled_publish_date,
+          published_at,
+          linkedin_post_url,
+          created_at,
+          engagements (
+            id,
+            service_type,
+            clients (
+              id,
+              name,
+              founder_name,
+              founder_phone,
+              client_contexts (
+                taboo_words
+              )
+            )
+          ),
+          content_feedback (
+            id,
+            comment,
+            author_name,
+            created_at
+          )
+        `)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("engagements")
+        .select(`
           id,
           service_type,
           clients (
             id,
             name,
             founder_name,
-            founder_phone,
             client_contexts (
               taboo_words
             )
           )
-        ),
-        content_feedback (
-          id,
-          comment,
-          author_name,
-          created_at
-        )
-      `)
-      .order("created_at", { ascending: false });
+        `)
+        .eq("status", "active"),
+      supabase
+        .from("review_tokens")
+        .select("client_id, token_hash, expires_at")
+        .eq("revoked", false)
+        .gt("expires_at", nowIso)
+        .order("created_at", { ascending: false }),
+    ]);
 
-    // 2. Fetch active engagements for new post creation
-    const { data: engagements } = await supabase
-      .from("engagements")
-      .select(`
-        id,
-        service_type,
-        clients (
-          id,
-          name,
-          founder_name,
-          client_contexts (
-            taboo_words
-          )
-        )
-      `)
-      .eq("status", "active");
-
-    const formattedEngagements = (engagements || []).map((eng: any) => {
+    const formattedEngagements = (engagementsRes.data || []).map((eng: any) => {
       const client = eng.clients;
       const ctx = Array.isArray(client?.client_contexts)
         ? client.client_contexts[0]
@@ -827,23 +833,15 @@ export async function getContentStudioDataFromDb() {
       };
     });
 
-    // 3. Fetch active unexpired review tokens map
-    const { data: tokens } = await supabase
-      .from("review_tokens")
-      .select("client_id, token_hash, expires_at")
-      .eq("revoked", false)
-      .gt("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: false });
-
     const tokenMap: Record<string, string> = {};
-    for (const t of tokens || []) {
+    for (const t of tokensRes.data || []) {
       if (!tokenMap[t.client_id]) {
         tokenMap[t.client_id] = t.token_hash;
       }
     }
 
     return {
-      posts: posts || [],
+      posts: postsRes.data || [],
       engagements: formattedEngagements,
       tokenMap,
     };
@@ -861,84 +859,79 @@ export async function getBillingDataFromDb() {
   try {
     const supabase = createAdminClient();
 
-    // 1. Fetch all tool expenses
-    const { data: expenses } = await supabase
-      .from("tool_expenses")
-      .select(`
-        id,
-        description,
-        amount,
-        currency,
-        incurred_date,
-        status,
-        engagements (
-          id,
-          service_type,
-          monthly_retainer,
-          clients (
-            id,
-            name,
-            founder_name
-          )
-        )
-      `)
-      .order("incurred_date", { ascending: false });
-
-    // 2. Fetch invoices
-    const { data: invoices } = await supabase
-      .from("invoices")
-      .select(`
-        id,
-        invoice_number,
-        issue_date,
-        due_date,
-        subtotal_amount,
-        total_amount,
-        status,
-        created_at,
-        engagements (
-          clients (
-            id,
-            name,
-            founder_name
-          )
-        ),
-        invoice_line_items (
+    const [expensesRes, invoicesRes, clientsRes, toolSubscriptionsRes] = await Promise.all([
+      supabase
+        .from("tool_expenses")
+        .select(`
           id,
           description,
-          quantity,
-          unit_price,
-          total_price
-        )
-      `)
-      .order("created_at", { ascending: false });
-
-    // 3. Fetch clients with active engagements for logging expenses
-    const { data: clients } = await supabase
-      .from("clients")
-      .select(`
-        id,
-        name,
-        founder_name,
-        engagements (
+          amount,
+          currency,
+          incurred_date,
+          status,
+          engagements (
+            id,
+            service_type,
+            monthly_retainer,
+            clients (
+              id,
+              name,
+              founder_name
+            )
+          )
+        `)
+        .order("incurred_date", { ascending: false }),
+      supabase
+        .from("invoices")
+        .select(`
           id,
-          service_type,
-          monthly_retainer
-        )
-      `)
-      .eq("status", "active");
-
-    // 4. Fetch agency tool subscriptions catalog
-    const { data: toolSubscriptions } = await supabase
-      .from("tool_subscriptions")
-      .select("*")
-      .order("next_renewal_date", { ascending: true });
+          invoice_number,
+          issue_date,
+          due_date,
+          subtotal_amount,
+          total_amount,
+          status,
+          created_at,
+          engagements (
+            clients (
+              id,
+              name,
+              founder_name
+            )
+          ),
+          invoice_line_items (
+            id,
+            description,
+            quantity,
+            unit_price,
+            total_price
+          )
+        `)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("clients")
+        .select(`
+          id,
+          name,
+          founder_name,
+          engagements (
+            id,
+            service_type,
+            monthly_retainer
+          )
+        `)
+        .eq("status", "active"),
+      supabase
+        .from("tool_subscriptions")
+        .select("*")
+        .order("next_renewal_date", { ascending: true }),
+    ]);
 
     return {
-      expenses: expenses || [],
-      invoices: invoices || [],
-      clients: clients || [],
-      toolSubscriptions: toolSubscriptions || [],
+      expenses: expensesRes.data || [],
+      invoices: invoicesRes.data || [],
+      clients: clientsRes.data || [],
+      toolSubscriptions: toolSubscriptionsRes.data || [],
     };
   } catch (err) {
     console.error("Error in getBillingDataFromDb:", err);
@@ -1029,75 +1022,72 @@ export async function getOperationsDataFromDb() {
   try {
     const supabase = createAdminClient();
 
-    // 1. Fetch credential audit logs
-    const { data: credLogs } = await supabase
-      .from("credential_audit_logs")
-      .select(`
-        id,
-        action,
-        ip_address,
-        user_agent,
-        created_at,
-        credentials (
-          platform,
+    const [credLogsRes, requestsRes, feedbackRes] = await Promise.all([
+      supabase
+        .from("credential_audit_logs")
+        .select(`
+          id,
+          action,
+          ip_address,
+          user_agent,
+          created_at,
+          credentials (
+            platform,
+            clients (
+              name,
+              founder_name
+            )
+          ),
+          users (
+            full_name,
+            email
+          )
+        `)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("client_requests")
+        .select(`
+          id,
+          title,
+          description,
+          category,
+          priority,
+          status,
+          created_at,
           clients (
+            id,
             name,
             founder_name
           )
-        ),
-        users (
-          full_name,
-          email
-        )
-      `)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    // 2. Fetch client requests (emergency holds, pivots)
-    const { data: requests } = await supabase
-      .from("client_requests")
-      .select(`
-        id,
-        title,
-        description,
-        category,
-        priority,
-        status,
-        created_at,
-        clients (
+        `)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("content_feedback")
+        .select(`
           id,
-          name,
-          founder_name
-        )
-      `)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    // 3. Fetch content feedback comments from review portal
-    const { data: feedback } = await supabase
-      .from("content_feedback")
-      .select(`
-        id,
-        comment,
-        author_name,
-        author_type,
-        created_at,
-        content_items (
-          title,
-          engagements (
-            clients (
-              name
+          comment,
+          author_name,
+          author_type,
+          created_at,
+          content_items (
+            title,
+            engagements (
+              clients (
+                name
+              )
             )
           )
-        )
-      `)
-      .order("created_at", { ascending: false })
-      .limit(10);
+        `)
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
 
     return {
-      credentialLogs: credLogs || [],
-      clientRequests: requests || [],
-      feedback: feedback || [],
+      credentialLogs: credLogsRes.data || [],
+      clientRequests: requestsRes.data || [],
+      feedback: feedbackRes.data || [],
     };
   } catch (err) {
     console.error("Error in getOperationsDataFromDb:", err);
@@ -1113,78 +1103,73 @@ export async function getCalendarDataFromDb() {
   try {
     const supabase = createAdminClient();
 
-    // 1. Fetch content items with scheduled publish date or approved/scheduled status
-    const { data: contentPosts } = await supabase
-      .from("content_items")
-      .select(`
-        id,
-        title,
-        status,
-        target_pillar,
-        body_markdown,
-        scheduled_publish_date,
-        published_at,
-        linkedin_post_url,
-        created_at,
-        engagements (
+    const [contentPostsRes, engagementsRes, toolSubsRes, allClientsRes] = await Promise.all([
+      supabase
+        .from("content_items")
+        .select(`
+          id,
+          title,
+          status,
+          target_pillar,
+          body_markdown,
+          scheduled_publish_date,
+          published_at,
+          linkedin_post_url,
+          created_at,
+          engagements (
+            id,
+            service_type,
+            clients (
+              id,
+              name,
+              founder_name,
+              founder_title,
+              linkedin_url
+            )
+          )
+        `)
+        .not("scheduled_publish_date", "is", null)
+        .order("scheduled_publish_date", { ascending: true }),
+      supabase
+        .from("engagements")
+        .select(`
           id,
           service_type,
+          status,
+          monthly_retainer,
+          billing_anchor_day,
+          start_date,
+          renewal_date,
           clients (
             id,
             name,
-            founder_name,
-            founder_title,
-            linkedin_url
+            founder_name
           )
-        )
-      `)
-      .not("scheduled_publish_date", "is", null)
-      .order("scheduled_publish_date", { ascending: true });
-
-    // 2. Fetch active engagements for billing anchor day projection
-    const { data: engagements } = await supabase
-      .from("engagements")
-      .select(`
-        id,
-        service_type,
-        status,
-        monthly_retainer,
-        billing_anchor_day,
-        start_date,
-        renewal_date,
-        clients (
+        `)
+        .eq("status", "active"),
+      supabase
+        .from("tool_subscriptions")
+        .select(`
           id,
-          name,
-          founder_name
-        )
-      `)
-      .eq("status", "active");
-
-    // 3. Fetch tool subscriptions for renewal milestones
-    const { data: toolSubs } = await supabase
-      .from("tool_subscriptions")
-      .select(`
-        id,
-        tool_name,
-        billing_cycle,
-        cost_amount,
-        currency,
-        next_renewal_date,
-        default_pass_through
-      `)
-      .not("next_renewal_date", "is", null);
-
-    // 4. Fetch all clients for calendar filtering
-    const { data: allClients } = await supabase
-      .from("clients")
-      .select("id, name, founder_name")
-      .order("name", { ascending: true });
+          tool_name,
+          billing_cycle,
+          cost_amount,
+          currency,
+          next_renewal_date,
+          default_pass_through
+        `)
+        .not("next_renewal_date", "is", null),
+      supabase
+        .from("clients")
+        .select("id, name, founder_name")
+        .order("name", { ascending: true }),
+    ]);
 
     return {
-      contentPosts: contentPosts || [],
-      engagements: engagements || [],
-      toolSubscriptions: toolSubs || [],
-      clients: allClients || [],
+      contentPosts: contentPostsRes.data || [],
+      engagements: engagementsRes.data || [],
+      toolSubscriptions: toolSubsRes.data || [],
+      clients: allClientsRes.data || [],
     };
   } catch (err) {
     console.error("Error in getCalendarDataFromDb:", err);
@@ -1240,60 +1225,51 @@ export async function getContentPostByIdFromDb(id: string) {
     }
 
     const clientId = (post.engagements as any)?.clients?.id;
-    let context: any = null;
-    let knowledgeItems: any[] = [];
-    let feedbackItems: any[] = [];
-    let reviewToken: string | null = null;
+    const nowIso = new Date().toISOString();
 
-    if (clientId) {
-      // 1. Fetch Client Context (taboo words, tone, pillars)
-      const { data: ctx } = await supabase
-        .from("client_contexts")
-        .select("*")
-        .eq("client_id", clientId)
-        .maybeSingle();
-      if (ctx) context = ctx;
+    const [ctxRes, kItemsRes, tokensRes, fbRes] = await Promise.all([
+      clientId
+        ? supabase
+            .from("client_contexts")
+            .select("*")
+            .eq("client_id", clientId)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      clientId
+        ? supabase
+            .from("knowledge_items")
+            .select("*")
+            .eq("client_id", clientId)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+      clientId
+        ? supabase
+            .from("review_tokens")
+            .select("token_hash, expires_at")
+            .eq("client_id", clientId)
+            .eq("revoked", false)
+            .gt("expires_at", nowIso)
+            .order("created_at", { ascending: false })
+            .limit(1)
+        : Promise.resolve({ data: [] }),
+      supabase
+        .from("content_feedback")
+        .select("id, author_type, author_name, comment, created_at")
+        .eq("content_item_id", id)
+        .order("created_at", { ascending: false }),
+    ]);
 
-      // 2. Fetch Knowledge Items (stories, verified metrics, frameworks)
-      const { data: kItems } = await supabase
-        .from("knowledge_items")
-        .select("*")
-        .eq("client_id", clientId)
-        .order("created_at", { ascending: false });
-      if (kItems) knowledgeItems = kItems;
-
-      // 3. Fetch active review token
-      const { data: tokens } = await supabase
-        .from("review_tokens")
-        .select("token_hash, expires_at")
-        .eq("client_id", clientId)
-        .eq("revoked", false)
-        .gt("expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false })
-        .limit(1);
-      if (tokens && tokens.length > 0) {
-        reviewToken = tokens[0].token_hash;
-      }
-    }
-
-    // 4. Fetch feedback on this specific post
-    const { data: fb } = await supabase
-      .from("content_feedback")
-      .select("id, author_type, author_name, comment, created_at")
-      .eq("content_item_id", id)
-      .order("created_at", { ascending: false });
-    if (fb) feedbackItems = fb;
+    const tokens = tokensRes.data || [];
 
     return {
       post,
-      context,
-      knowledgeItems,
-      feedbackItems,
-      reviewToken,
+      context: ctxRes.data || null,
+      knowledgeItems: kItemsRes.data || [],
+      feedbackItems: fbRes.data || [],
+      reviewToken: tokens.length > 0 ? tokens[0].token_hash : null,
     };
   } catch (err) {
     console.error("Error in getContentPostByIdFromDb:", err);
     return null;
   }
 }
-

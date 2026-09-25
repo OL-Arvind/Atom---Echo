@@ -226,7 +226,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
     <div className="mx-auto max-w-6xl space-y-7">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-zinc-900 text-white text-xs px-4 py-2.5 rounded-lg shadow-lg border border-zinc-800">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-[var(--color-base-overlay)] text-[var(--color-ink)] text-xs px-4 py-2.5 rounded-lg shadow-dialog border border-[var(--color-line-strong)]">
           <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -237,13 +237,13 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
         title="Command Center"
         description={
           isDayZero
-            ? "Welcome to Atom & Echo. Add your first client to start tracking content and billing."
+            ? "Welcome to Atom & Echo. Onboard your first founder to capture their conviction and begin the editorial rhythm."
             : alerts.length === 0
-            ? "Everything is on schedule. No pending reviews or holds right now."
-            : `${alerts.length} item${alerts.length === 1 ? "" : "s"} need your attention today.`
+            ? "Every client voice is compounding on schedule. No editorial bottlenecks or pending holds."
+            : `${alerts.length} founder account${alerts.length === 1 ? "" : "s"} requiring editorial decisions or dispatch sign-off today.`
         }
       >
-        <OnboardClientModal buttonText="Add Client" />
+        <OnboardClientModal buttonText="Onboard Founder" />
       </PageHeader>
 
 
@@ -252,21 +252,21 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
         {/* LEFT PANE: Attention Queue & Horizon (5 Cols) */}
         <div className="lg:col-span-5 space-y-5">
           {/* Attention Queue Container */}
-          <div className="rounded-xl border border-zinc-200/90 bg-white shadow-xs overflow-hidden">
+          <div className="rounded-xl border border-[var(--color-line)] bg-[var(--color-base-overlay)] shadow-xs overflow-hidden">
             {/* Header with Filter Pills */}
-            <div className="border-b border-zinc-150 p-3.5 bg-zinc-50/60">
+            <div className="border-b border-[var(--color-line)] p-3.5 bg-[var(--color-base-subtle)]">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-zinc-900 tracking-tight">Attention Required</span>
-                  <span className="px-1.5 py-0.5 rounded text-[11px] font-mono bg-zinc-200/80 text-zinc-700 font-medium tabular-nums">
-                    {alerts.length}
+                  <span className="text-xs font-semibold text-[var(--color-ink)] tracking-tight">Editorial Queue</span>
+                  <span className="text-[11px] font-sans text-[var(--color-ink-tertiary)] font-normal tabular-nums">
+                    ({alerts.length})
                   </span>
                 </div>
                 <Link
                   href="/operations"
-                  className="text-[11px] text-zinc-500 hover:text-zinc-900 transition-colors"
+                  className="text-[11px] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors"
                 >
-                  Activity log &rarr;
+                  Audit trail &rarr;
                 </Link>
               </div>
 
@@ -283,12 +283,12 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   },
                   {
                     id: "request",
-                    label: "Requests",
+                    label: "Notes",
                     count: alerts.filter((a) => a.entity_type === "client_request").length,
                   },
                   {
                     id: "billing",
-                    label: "Billing",
+                    label: "Retainers",
                     count: alerts.filter(
                       (a) =>
                         a.entity_type === "billing" ||
@@ -302,8 +302,8 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                     onClick={() => setFilter(tab.id as any)}
                     className={`px-2.5 py-1 rounded-md text-xs transition-colors ${
                       filter === tab.id
-                        ? "bg-white text-zinc-900 font-medium shadow-2xs border border-zinc-200"
-                        : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100/60"
+                        ? "bg-[var(--color-base-overlay)] text-[var(--color-ink)] font-medium shadow-2xs border border-[var(--color-line)]"
+                        : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] hover:bg-[var(--color-base-subtle)]"
                     }`}
                   >
                     <span>{tab.label}</span>
@@ -315,7 +315,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
 
             {/* Queue List Items */}
             {filteredAlerts.length > 0 ? (
-              <div className="divide-y divide-zinc-100">
+              <div className="divide-y divide-[var(--color-line-subtle)]">
                 {filteredAlerts.map((alert: any) => {
                   const isSelected = selectedAlert?.id === alert.id;
                   const isCritical = alert.urgency === "critical";
@@ -367,7 +367,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                     ? "bg-violet-500"
                     : isBillingExpense
                     ? "bg-sky-500"
-                    : "bg-zinc-400";
+                    : "bg-[var(--color-ink-muted)]";
 
                   return (
                     <div
@@ -375,8 +375,8 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                       onClick={() => setSelectedAlertId(alert.id)}
                       className={`p-3.5 cursor-pointer transition-colors flex items-start gap-3 ${
                         isSelected
-                          ? "bg-zinc-50 border-l-2 border-l-zinc-900"
-                          : "hover:bg-zinc-50/70"
+                          ? "bg-[var(--color-base-subtle)] border-l-2 border-l-[var(--color-accent)]"
+                          : "hover:bg-[var(--color-base-subtle)]"
                       }`}
                     >
                       {/* Status Dot */}
@@ -385,26 +385,26 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                       {/* Content Details */}
                       <div className="min-w-0 flex-1 space-y-0.5">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold text-zinc-900 truncate">
+                          <span className="text-xs font-semibold text-[var(--color-ink)] truncate">
                             {primaryLabel}
                           </span>
-                          <span className="text-[11px] text-zinc-400 shrink-0 font-medium">
+                          <span className="text-[11px] text-[var(--color-ink-muted)] shrink-0 font-medium">
                             {badgeLabel}
                           </span>
                         </div>
 
-                        <p className="text-[12.5px] text-zinc-600 line-clamp-1">
+                        <p className="text-[12.5px] text-[var(--color-ink-secondary)] line-clamp-1">
                           {secondaryLabel}
                         </p>
 
-                        <div className="text-[11px] text-zinc-400 pt-0.5">
+                        <div className="text-[11px] text-[var(--color-ink-muted)] pt-0.5">
                           Waiting on {alert.waiting_on}
                         </div>
                       </div>
 
                       <ChevronRight
                         className={`h-4 w-4 shrink-0 self-center transition-transform ${
-                          isSelected ? "text-zinc-900 translate-x-0.5" : "text-zinc-300"
+                          isSelected ? "text-[var(--color-ink)] translate-x-0.5" : "text-[var(--color-ink-ghost)]"
                         }`}
                       />
                     </div>
@@ -413,25 +413,25 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
               </div>
             ) : (
               <div className="p-8 text-center space-y-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" />
-                <p className="text-xs font-medium text-zinc-700">Queue is clear</p>
-                <p className="text-[11.5px] text-zinc-400">All deliverables in this category are up to date.</p>
+                <CheckCircle2 className="h-4 w-4 text-emerald-400 mx-auto" />
+                <p className="text-xs font-medium text-[var(--color-ink-secondary)]">Queue is clear</p>
+                <p className="text-[11.5px] text-[var(--color-ink-muted)]">Every founder account in this category is progressing smoothly.</p>
               </div>
             )}
           </div>
 
           {/* Upcoming Posts Horizon */}
-          <div className="rounded-xl border border-zinc-200/90 bg-white p-4 space-y-3 shadow-xs">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-150">
-              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-900 tracking-tight">
-                <Calendar className="h-3.5 w-3.5 text-zinc-500" />
-                <span>Upcoming Posts</span>
+          <div className="rounded-xl border border-[var(--color-line)] bg-[var(--color-base-overlay)] p-4 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--color-line)]">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)] tracking-tight">
+                <Calendar className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
+                <span>Upcoming Publishing Releases</span>
               </div>
               <Link
                 href="/content"
-                className="text-[11px] text-zinc-500 hover:text-zinc-900 transition-colors"
+                className="text-[11px] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors"
               >
-                View all &rarr;
+                Studio pipeline &rarr;
               </Link>
             </div>
 
@@ -440,31 +440,31 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                 {initialData.scheduledPosts.slice(0, 3).map((post: any) => (
                   <div
                     key={post.id}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-zinc-50 text-xs gap-3 transition-colors border border-transparent hover:border-zinc-200/60"
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--color-base-subtle)] text-xs gap-3 transition-colors border border-transparent hover:border-[var(--color-line)]"
                   >
                     <div className="min-w-0 space-y-0.5">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-[10.5px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-medium tabular-nums">
+                        <span className="font-sans text-[11px] text-[var(--color-ok-text)] font-medium tabular-nums">
                           {formatDisplayDateIST(post.scheduled_publish_date, {
                             month: "short",
                             day: "numeric",
                           })}
                         </span>
-                        <span className="text-zinc-500 text-[11px] truncate">
+                        <span className="text-[var(--color-ink-tertiary)] text-[11px] truncate">
                           &middot; {post.engagements?.clients?.founder_name || "Founder"}
                         </span>
                       </div>
-                      <p className="text-zinc-800 font-medium truncate text-[12px]">{post.title}</p>
+                      <p className="text-[var(--color-ink)] font-medium truncate text-[12px]">{post.title}</p>
                     </div>
-                    <span className="text-[11px] text-zinc-400 shrink-0">
-                      {post.target_pillar || "Post"}
+                    <span className="text-[11px] text-[var(--color-ink-muted)] shrink-0">
+                      {post.target_pillar || "Perspective"}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-zinc-400 py-3 text-center">
-                No scheduled posts right now. Approved drafts will appear here automatically.
+              <p className="text-xs text-[var(--color-ink-muted)] py-3 text-center">
+                No upcoming releases queued. Once a founder approves a draft, it locks into this schedule.
               </p>
             )}
           </div>
@@ -473,24 +473,24 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
         {/* RIGHT PANE: Dedicated Instant Action Inspector (7 Cols) */}
         <div className="lg:col-span-7">
           {selectedAlert ? (
-            <div className="rounded-xl border border-zinc-200/90 bg-white p-6 space-y-5 sticky top-6 shadow-xs">
+            <div className="rounded-xl border border-[var(--color-line)] bg-[var(--color-base-overlay)] p-6 space-y-5 sticky top-6 shadow-xs">
               {/* CASE 0: CLIENT CONTENT REVISION FEEDBACK */}
               {selectedAlert.entity_type === "content_feedback" && (
                 <>
                   {/* Header */}
-                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                  <div className="flex items-start justify-between border-b border-[var(--color-line)] pb-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
-                        <span className="text-xs text-amber-800 font-medium bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                          Client Revision Requested
+                      <div className="flex items-center gap-2 text-[11px] font-sans tabular-nums tracking-wider text-[var(--color-ink-tertiary)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                        <span className="uppercase text-[10.5px] font-medium text-[var(--color-ink-secondary)]">
+                          Founder Revision &amp; Voice Refinement
                         </span>
                       </div>
-                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900 leading-snug">
+                      <h2 className="text-base sm:text-lg font-semibold text-[var(--color-ink)] leading-snug">
                         {selectedAlert.post_title}
                       </h2>
-                      <div className="text-xs text-zinc-500 flex items-center gap-1.5 pt-0.5">
-                        <span className="text-zinc-800 font-medium">
+                      <div className="text-xs text-[var(--color-ink-tertiary)] flex items-center gap-1.5 pt-0.5">
+                        <span className="text-[var(--color-ink)] font-medium">
                           {selectedAlert.founder_name} ({selectedAlert.client_name})
                         </span>
                         <span>&middot;</span>
@@ -500,26 +500,21 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
 
                     <button
                       onClick={() => handleDismissAlert(selectedAlert.id)}
-                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] p-1 transition-colors"
                       title="Dismiss"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
 
-                  {/* Feedback Highlight Card */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-zinc-500">
-                      <span className="font-medium text-zinc-700">Client Feedback Note</span>
-                      <span className="text-[11px] text-zinc-400">1-Tap Portal Comment</span>
+                  {/* Feedback Note - Clean Inset */}
+                  <div className="space-y-1.5">
+                    <div className="text-[11px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)]">
+                      Founder Note &middot; {selectedAlert.founder_name}
                     </div>
 
-                    <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-4 space-y-1.5">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-amber-900">
-                        <MessageCircle className="h-3.5 w-3.5 text-amber-600" />
-                        <span>{selectedAlert.founder_name} commented:</span>
-                      </div>
-                      <p className="text-xs text-zinc-800 font-sans leading-relaxed select-text font-medium">
+                    <div className="border-l-2 border-amber-500/80 bg-[var(--color-base-subtle)] rounded-r-md px-4 py-3">
+                      <p className="text-[13px] text-[var(--color-ink)] font-sans leading-relaxed select-text font-normal">
                         {selectedAlert.comment}
                       </p>
                     </div>
@@ -528,12 +523,14 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   {/* Post Draft Content Preview */}
                   {selectedAlert.body_markdown && (
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs text-zinc-500">
-                        <span className="font-medium text-zinc-700">Draft Content Preview</span>
-                        <span className="text-[11px] text-zinc-400">Status: {selectedAlert.post_status || "draft"}</span>
+                      <div className="flex items-center justify-between text-xs text-[var(--color-ink-tertiary)]">
+                        <span className="font-medium text-[var(--color-ink-secondary)]">Working Story Draft</span>
+                        <span className="text-[11px] text-[var(--color-ink-muted)]">
+                          Stage: {selectedAlert.post_status === "internal_review" ? "Internal Voice QA" : selectedAlert.post_status === "client_review" ? "Founder Review" : "Draft"}
+                        </span>
                       </div>
-                      <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-4 max-h-52 overflow-y-auto">
-                        <p className="text-xs text-zinc-700 leading-relaxed whitespace-pre-line select-text font-sans">
+                      <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-4 max-h-52 overflow-y-auto">
+                        <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed whitespace-pre-line select-text font-sans">
                           {selectedAlert.body_markdown}
                         </p>
                       </div>
@@ -546,16 +543,16 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                       {selectedAlert.post_id && (
                         <Link
                           href={`/content/${selectedAlert.post_id}`}
-                          className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                          className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 btn btn-primary text-xs"
                         >
                           <ArrowUpRight className="h-3.5 w-3.5" />
-                          <span>Open in Editor &amp; Revise</span>
+                          <span>Refine in Story Editor</span>
                         </Link>
                       )}
 
                       <button
                         onClick={() => openFeedbackWhatsAppPing(selectedAlert)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 text-xs font-medium px-4 py-2 rounded-md transition-colors shadow-2xs"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 btn btn-secondary text-emerald-400 border-[var(--color-line)] text-xs"
                       >
                         <WhatsAppIcon size={14} className="text-[#25D366]" />
                         <span>Ack on WhatsApp</span>
@@ -564,32 +561,32 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                       <button
                         onClick={() => handleResolveFeedback(selectedAlert)}
                         disabled={isPending}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-50 text-xs font-medium px-4 py-2 rounded-md transition-colors shadow-2xs"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 btn btn-secondary text-xs"
                       >
-                        <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        <Check className="h-3.5 w-3.5 text-emerald-400" />
                         <span>{isPending ? "Updating..." : "Mark as Resolved"}</span>
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-zinc-150 text-xs">
+                    <div className="flex items-center justify-between pt-3 border-t border-[var(--color-line)] text-xs">
                       {selectedAlert.review_token ? (
                         <Link
                           href={`/review/${selectedAlert.review_token}`}
                           target="_blank"
-                          className="text-zinc-500 hover:text-zinc-900 inline-flex items-center gap-1 transition-colors"
+                          className="text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] inline-flex items-center gap-1 transition-colors"
                         >
                           <ExternalLink className="h-3 w-3" />
-                          <span>Preview Client Review Portal</span>
+                          <span>Preview Founder Desk ↗</span>
                         </Link>
                       ) : (
-                        <span className="text-zinc-400">Portal active</span>
+                        <span className="text-[var(--color-ink-muted)]">Portal active</span>
                       )}
 
                       <Link
                         href="/operations"
-                        className="text-zinc-500 hover:text-zinc-900 inline-flex items-center gap-1 transition-colors"
+                        className="text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] inline-flex items-center gap-1 transition-colors"
                       >
-                        <span>View in Feedback Feed &rarr;</span>
+                        <span>Editorial audit stream &rarr;</span>
                       </Link>
                     </div>
                   </div>
@@ -600,19 +597,19 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
               {selectedAlert.entity_type === "content_item" && (
                 <>
                   {/* Header */}
-                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                  <div className="flex items-start justify-between border-b border-[var(--color-line)] pb-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
-                        <span className="text-xs text-amber-700 font-medium bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                          Waiting for Client Review
+                      <div className="flex items-center gap-2 text-[11px] font-sans tabular-nums tracking-wider text-[var(--color-ink-tertiary)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
+                        <span className="uppercase text-[10.5px] font-medium text-[var(--color-ink-secondary)]">
+                          Awaiting Founder Sign-Off
                         </span>
                       </div>
-                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900 leading-snug">
+                      <h2 className="text-base sm:text-lg font-semibold text-[var(--color-ink)] leading-snug">
                         {selectedAlert.post_title || selectedAlert.title}
                       </h2>
-                      <div className="text-xs text-zinc-500 flex items-center gap-1.5 pt-0.5">
-                        <span className="text-zinc-800 font-medium">{selectedAlert.founder_name}</span>
+                      <div className="text-xs text-[var(--color-ink-tertiary)] flex items-center gap-1.5 pt-0.5">
+                        <span className="text-[var(--color-ink)] font-medium">{selectedAlert.founder_name}</span>
                         <span>&middot;</span>
                         <span>{selectedAlert.target_pillar || "Thought Leadership"}</span>
                       </div>
@@ -620,7 +617,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
 
                     <button
                       onClick={() => handleDismissAlert(selectedAlert.id)}
-                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] p-1 transition-colors"
                       title="Dismiss"
                     >
                       <X className="h-4 w-4" />
@@ -629,23 +626,23 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
 
                   {/* LinkedIn Live Post Preview Container */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-zinc-500">
-                      <span className="font-medium text-zinc-700">Draft Preview</span>
-                      <span className="text-[11px] text-zinc-400">LinkedIn Preview</span>
+                    <div className="flex items-center justify-between text-xs text-[var(--color-ink-tertiary)]">
+                      <span className="font-medium text-[var(--color-ink-secondary)]">Founder Voice Preview</span>
+                      <span className="text-[11px] text-[var(--color-ink-muted)]">Simulated LinkedIn Format</span>
                     </div>
 
-                    <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-4.5 space-y-3">
-                      <div className="flex items-center gap-2.5 pb-2.5 border-b border-zinc-200/70">
-                        <div className="h-8 w-8 rounded-full bg-zinc-200 border border-zinc-300 flex items-center justify-center text-xs text-zinc-700 font-semibold">
+                    <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-4.5 space-y-3">
+                      <div className="flex items-center gap-2.5 pb-2.5 border-b border-[var(--color-line)]">
+                        <div className="h-8 w-8 rounded-full bg-[var(--color-base-subtle)] border border-[var(--color-line)] flex items-center justify-center text-xs text-[var(--color-accent)] font-semibold">
                           {(selectedAlert.founder_name || "F")[0]}
                         </div>
                         <div>
-                          <div className="text-xs font-semibold text-zinc-900">{selectedAlert.founder_name}</div>
-                          <div className="text-[11px] text-zinc-500">Founder Profile &middot; Thought Leadership</div>
+                          <div className="text-xs font-semibold text-[var(--color-ink)]">{selectedAlert.founder_name}</div>
+                          <div className="text-[11px] text-[var(--color-ink-tertiary)]">Founder Profile &middot; Thought Leadership</div>
                         </div>
                       </div>
 
-                      <div className="text-[13px] text-zinc-800 leading-relaxed whitespace-pre-line select-text font-sans">
+                      <div className="text-[13px] text-[var(--color-ink)] leading-relaxed whitespace-pre-line select-text font-sans">
                         {selectedAlert.body_markdown || "No draft content written yet."}
                       </div>
                     </div>
@@ -656,7 +653,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                     <div className="flex flex-col sm:flex-row items-center gap-2.5">
                       <button
                         onClick={() => copyReviewLink(selectedAlert)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 btn btn-primary text-xs"
                       >
                         {copiedToken === selectedAlert.id ? (
                           <>
@@ -666,38 +663,38 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                         ) : (
                           <>
                             <Copy className="h-3.5 w-3.5" />
-                            <span>Copy Review Link</span>
+                            <span>Copy Founder Desk Link</span>
                           </>
                         )}
                       </button>
 
                       <button
                         onClick={() => openWhatsAppPing(selectedAlert)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 text-xs font-medium px-4 py-2 rounded-md transition-colors shadow-2xs"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 btn btn-secondary text-emerald-400 border-[var(--color-line)] text-xs"
                       >
                         <WhatsAppIcon size={14} className="text-[#25D366]" />
-                        <span>Message on WhatsApp</span>
+                        <span>Ping Founder on WhatsApp</span>
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-zinc-150 text-xs">
+                    <div className="flex items-center justify-between pt-3 border-t border-[var(--color-line)] text-xs">
                       {selectedAlert.review_token ? (
                         <Link
                           href={`/review/${selectedAlert.review_token}`}
                           target="_blank"
-                          className="text-zinc-500 hover:text-zinc-900 inline-flex items-center gap-1 transition-colors"
+                          className="text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] inline-flex items-center gap-1 transition-colors"
                         >
                           <ExternalLink className="h-3 w-3" />
                           <span>Preview Client View</span>
                         </Link>
                       ) : (
-                        <span className="text-zinc-400">No review link generated</span>
+                        <span className="text-[var(--color-ink-muted)]">No review link generated</span>
                       )}
 
                       <button
                         onClick={() => handleQuickApprove(selectedAlert)}
                         disabled={isPending}
-                        className="text-zinc-600 hover:text-zinc-900 transition-colors inline-flex items-center gap-1 cursor-pointer font-medium"
+                        className="text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-colors inline-flex items-center gap-1 cursor-pointer font-medium"
                       >
                         <Check className="h-3.5 w-3.5 text-emerald-600" />
                         <span>{isPending ? "Approving..." : "Approve Post"}</span>
@@ -710,25 +707,25 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
               {/* CASE 2: UNBILLED TOOL EXPENSES */}
               {selectedAlert.entity_type === "billing" && (
                 <>
-                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                  <div className="flex items-start justify-between border-b border-[var(--color-line)] pb-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-sky-500 shrink-0" />
-                        <span className="text-xs text-sky-700 font-medium bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full">
-                          Software Expenses to Bill
+                      <div className="flex items-center gap-2 text-[11px] font-sans tabular-nums tracking-wider text-[var(--color-ink-tertiary)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-sky-500 shrink-0" />
+                        <span className="uppercase text-[10.5px] font-medium text-[var(--color-ink-secondary)]">
+                          Dedicated Client Tooling
                         </span>
                       </div>
-                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900">
+                      <h2 className="text-base sm:text-lg font-semibold text-[var(--color-ink)]">
                         {selectedAlert.title}
                       </h2>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-[var(--color-ink-tertiary)]">
                         {selectedAlert.reason}
                       </p>
                     </div>
 
                     <button
                       onClick={() => handleDismissAlert(selectedAlert.id)}
-                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] p-1 transition-colors"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -736,31 +733,31 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
 
                   {/* Tool List */}
                   <div className="space-y-2">
-                    <div className="text-xs text-zinc-500 flex justify-between">
-                      <span className="font-medium text-zinc-700">Unbilled Software Expenses</span>
-                      <span className="text-zinc-900 font-semibold font-mono">
+                    <div className="text-xs text-[var(--color-ink-tertiary)] flex justify-between">
+                      <span className="font-medium text-[var(--color-ink-secondary)]">Transparent Tool Pass-Throughs</span>
+                      <span className="text-[var(--color-ink)] font-semibold font-sans tabular-nums">
                         Total: ₹{initialData.unbilledExpensesTotal.toLocaleString("en-IN")}
                       </span>
                     </div>
 
-                    <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 divide-y divide-zinc-200/70">
+                    <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)] divide-y divide-[var(--color-line-subtle)]">
                       {initialData.unbilledExpenses && initialData.unbilledExpenses.length > 0 ? (
                         initialData.unbilledExpenses.map((exp: any, i: number) => (
                           <div key={exp.id || i} className="p-3 flex items-center justify-between text-xs">
                             <div>
-                              <div className="text-zinc-900 font-medium">{exp.description}</div>
-                              <div className="text-[11px] text-zinc-500">
+                              <div className="text-[var(--color-ink)] font-medium">{exp.description}</div>
+                              <div className="text-[11px] text-[var(--color-ink-tertiary)]">
                                 Client: {exp.engagements?.clients?.name || exp.client || "Client"}
                               </div>
                             </div>
-                            <div className="font-mono text-zinc-900 font-semibold tabular-nums">
+                            <div className="font-sans text-[var(--color-ink)] font-semibold tabular-nums">
                               ₹{Number(exp.amount).toLocaleString("en-IN")}
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="p-4 text-center text-xs text-zinc-500">
-                          No unbilled software expenses recorded.
+                        <div className="p-4 text-center text-xs text-[var(--color-ink-tertiary)]">
+                          No unbilled client tooling recorded.
                         </div>
                       )}
                     </div>
@@ -771,16 +768,16 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                     <button
                       onClick={() => handleQuickDraftInvoice()}
                       disabled={isPending}
-                      className="w-full inline-flex items-center justify-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2.5 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                      className="w-full inline-flex items-center justify-center gap-1.5 btn btn-accent text-xs font-semibold py-2.5"
                     >
                       <Receipt className="h-3.5 w-3.5" />
-                      <span>{isPending ? "Generating..." : "Create Invoice (Include Software Expenses)"}</span>
+                      <span>{isPending ? "Drafting..." : "Draft Retainer & Tooling Invoice"}</span>
                     </button>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-zinc-150 text-xs text-zinc-500">
-                      <span>Pass software costs directly to client</span>
-                      <Link href="/billing" className="text-zinc-700 hover:text-zinc-900 font-medium transition-colors">
-                        View Invoices & Billing &rarr;
+                    <div className="flex items-center justify-between pt-2 border-t border-[var(--color-line)] text-xs text-[var(--color-ink-tertiary)]">
+                      <span>Transparent pass-through tooling (zero agency markup)</span>
+                      <Link href="/billing" className="text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] font-medium transition-colors">
+                        Retainers &amp; Invoices &rarr;
                       </Link>
                     </div>
                   </div>
@@ -790,32 +787,32 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
               {/* CASE 3: CLIENT REQUEST / EMERGENCY HOLD */}
               {selectedAlert.entity_type === "client_request" && (
                 <>
-                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                  <div className="flex items-start justify-between border-b border-[var(--color-line)] pb-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
-                        <span className="text-xs text-rose-700 font-medium bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
-                          Client Request / Hold
+                      <div className="flex items-center gap-2 text-[11px] font-sans tabular-nums tracking-wider text-[var(--color-ink-tertiary)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0" />
+                        <span className="uppercase text-[10.5px] font-medium text-[var(--color-ink-secondary)]">
+                          Founder Note &middot; Active Hold
                         </span>
                       </div>
-                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900">
+                      <h2 className="text-base sm:text-lg font-semibold text-[var(--color-ink)]">
                         {selectedAlert.title}
                       </h2>
-                      <p className="text-xs text-zinc-500">
-                        Client: {selectedAlert.founder_name || "Client"}
+                      <p className="text-xs text-[var(--color-ink-tertiary)]">
+                        Founder: {selectedAlert.founder_name || "Client"}
                       </p>
                     </div>
 
                     <button
                       onClick={() => handleDismissAlert(selectedAlert.id)}
-                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] p-1 transition-colors"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
 
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-4">
-                    <p className="text-xs text-zinc-800 leading-relaxed select-text font-sans">
+                  <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-4">
+                    <p className="text-xs text-[var(--color-ink)] leading-relaxed select-text font-sans">
                       {selectedAlert.reason}
                     </p>
                   </div>
@@ -824,17 +821,17 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                     {selectedAlert.client_id && (
                       <Link
                         href={`/clients/${selectedAlert.client_id}`}
-                        className="inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                        className="inline-flex items-center gap-1.5 btn btn-primary text-xs"
                       >
-                        <span>View Client Profile</span>
+                        <span>Open Founder Desk</span>
                       </Link>
                     )}
 
                     <button
                       onClick={() => handleDismissAlert(selectedAlert.id)}
-                      className="inline-flex items-center gap-1.5 bg-white text-zinc-700 border border-zinc-200 text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-50 transition-colors shadow-2xs"
+                      className="inline-flex items-center gap-1.5 btn btn-secondary text-xs"
                     >
-                      <span>Mark as Done</span>
+                      <span>Resolve &amp; Resume</span>
                     </button>
                   </div>
                 </>
@@ -843,19 +840,19 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
               {/* CASE 4: DRAFT INVOICE AWAITING SIGN-OFF */}
               {selectedAlert.entity_type === "invoice_draft" && (
                 <>
-                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                  <div className="flex items-start justify-between border-b border-[var(--color-line)] pb-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                        <span className="text-xs text-emerald-800 font-medium bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          Draft Invoice Awaiting Sign-off
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                        <span className="text-[11px] text-emerald-400 font-medium font-sans tabular-nums uppercase tracking-wider">
+                          Retainer Invoice &middot; Ready for Dispatch
                         </span>
                       </div>
-                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900">
+                      <h2 className="text-base sm:text-lg font-semibold text-[var(--color-ink)]">
                         {selectedAlert.title}
                       </h2>
-                      <div className="text-xs text-zinc-500 flex items-center gap-1.5 pt-0.5">
-                        <span className="text-zinc-800 font-medium">{selectedAlert.client_name || "Client"}</span>
+                      <div className="text-xs text-[var(--color-ink-tertiary)] flex items-center gap-1.5 pt-0.5">
+                        <span className="text-[var(--color-ink)] font-medium">{selectedAlert.client_name || "Client"}</span>
                         {selectedAlert.founder_name && (
                           <>
                             <span>&middot;</span>
@@ -873,7 +870,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
 
                     <button
                       onClick={() => handleDismissAlert(selectedAlert.id)}
-                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] p-1 transition-colors"
                       title="Dismiss"
                     >
                       <X className="h-4 w-4" />
@@ -881,49 +878,49 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   </div>
 
                   {/* Invoice Summary Banner */}
-                  <div className="flex items-baseline justify-between p-4 rounded-lg bg-zinc-50/80 border border-zinc-200">
+                  <div className="flex items-baseline justify-between p-4 rounded-lg bg-[var(--color-base-subtle)] border border-[var(--color-line)]">
                     <div>
-                      <span className="text-[11px] uppercase tracking-wider font-semibold text-zinc-400 block">
+                      <span className="text-[11px] uppercase tracking-wider font-semibold text-[var(--color-ink-muted)] block">
                         Total Invoice Amount
                       </span>
-                      <div className="text-2xl font-bold font-mono text-zinc-900 tabular-nums">
+                      <div className="text-2xl font-bold font-sans text-[var(--color-ink)] tabular-nums">
                         ₹{Number(selectedAlert.total_amount || 0).toLocaleString("en-IN")}
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-[11px] text-zinc-400 block">Status</span>
-                      <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
-                        Draft &middot; Waiting on Sudeesh
+                      <span className="text-[11px] text-[var(--color-ink-muted)] block">Status</span>
+                      <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">
+                        Draft &middot; Founder Sign-Off
                       </span>
                     </div>
                   </div>
 
                   {/* Line Items Breakdown */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-zinc-500">
-                      <span className="font-medium text-zinc-700">Line Items &amp; Retainer</span>
-                      <span className="text-[11px] text-zinc-400">
+                    <div className="flex items-center justify-between text-xs text-[var(--color-ink-tertiary)]">
+                      <span className="font-medium text-[var(--color-ink-secondary)]">Retainer Scope &amp; Tool Infrastructure</span>
+                      <span className="text-[11px] text-[var(--color-ink-muted)]">
                         {selectedAlert.line_items?.length || 0} line item{selectedAlert.line_items?.length === 1 ? "" : "s"}
                       </span>
                     </div>
 
-                    <div className="rounded-lg border border-zinc-200 bg-white divide-y divide-zinc-150">
+                    <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)] divide-y divide-[var(--color-line-subtle)]">
                       {selectedAlert.line_items && selectedAlert.line_items.length > 0 ? (
                         selectedAlert.line_items.map((item: any, idx: number) => (
                           <div key={item.id || idx} className="p-3 flex items-center justify-between text-xs">
                             <div className="min-w-0 pr-3">
-                              <p className="font-medium text-zinc-900 truncate">{item.description}</p>
+                              <p className="font-medium text-[var(--color-ink)] truncate">{item.description}</p>
                               {item.quantity > 1 && (
-                                <p className="text-[11px] text-zinc-400">Qty: {item.quantity}</p>
+                                <p className="text-[11px] text-[var(--color-ink-muted)]">Qty: {item.quantity}</p>
                               )}
                             </div>
-                            <div className="font-mono font-semibold text-zinc-900 tabular-nums shrink-0">
+                            <div className="font-sans font-semibold text-[var(--color-ink)] tabular-nums shrink-0">
                              ₹{Number(item.total_price || item.unit_price || 0).toLocaleString("en-IN")}
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="p-4 text-center text-xs text-zinc-500">
+                        <div className="p-4 text-center text-xs text-[var(--color-ink-tertiary)]">
                           {selectedAlert.reason || "Monthly Retainer draft pending dispatch."}
                         </div>
                       )}
@@ -936,33 +933,33 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                       <button
                         onClick={() => handleApproveInvoice(selectedAlert)}
                         disabled={isPending}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2.5 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 btn btn-accent text-xs font-semibold py-2.5"
                       >
-                        <FileCheck className="h-3.5 w-3.5 text-emerald-400" />
-                        <span>{isPending ? "Approving..." : "Approve Invoice"}</span>
+                        <FileCheck className="h-3.5 w-3.5 text-[var(--color-base)]" />
+                        <span>{isPending ? "Approving..." : "Approve & Ready for Client"}</span>
                       </button>
 
                       <Link
                         href={`/billing/invoices/${selectedAlert.entity_id}`}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-50 text-xs font-medium px-4 py-2.5 rounded-md transition-colors shadow-2xs"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 btn btn-secondary text-xs py-2.5"
                       >
-                        <ArrowUpRight className="h-3.5 w-3.5 text-zinc-500" />
-                        <span>View Full Invoice</span>
+                        <ArrowUpRight className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
+                        <span>View Printable Invoice</span>
                       </Link>
 
                       <button
                         onClick={() => openInvoiceWhatsAppPing(selectedAlert)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 text-xs font-medium px-4 py-2.5 rounded-md transition-colors shadow-2xs"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 btn btn-secondary text-emerald-400 border-[var(--color-line)] text-xs py-2.5"
                       >
                         <WhatsAppIcon size={14} className="text-[#25D366]" />
-                        <span>WhatsApp Summary</span>
+                        <span>Send WhatsApp Summary</span>
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-zinc-150 text-xs text-zinc-500">
-                      <span>Approval confirms amounts &amp; readies dispatch</span>
-                      <Link href="/billing" className="text-zinc-700 hover:text-zinc-900 font-medium transition-colors">
-                        All Invoices &rarr;
+                    <div className="flex items-center justify-between pt-2 border-t border-[var(--color-line)] text-xs text-[var(--color-ink-tertiary)]">
+                      <span>Confirms retainer &amp; software totals for client dispatch</span>
+                      <Link href="/billing" className="text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] font-medium transition-colors">
+                        Retainers &amp; Billing &rarr;
                       </Link>
                     </div>
                   </div>
@@ -972,45 +969,45 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
               {/* CASE 5: TOOL SUBSCRIPTION RENEWAL */}
               {selectedAlert.entity_type === "tool_renewal" && (
                 <>
-                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                  <div className="flex items-start justify-between border-b border-[var(--color-line)] pb-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
-                        <span className="text-xs text-violet-700 font-medium bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
-                          Tool Renewal Alert
+                        <span className="h-1.5 w-1.5 rounded-full bg-violet-500 shrink-0" />
+                        <span className="text-[11px] text-violet-400 font-medium font-sans tabular-nums uppercase tracking-wider">
+                          Agency Tooling Renewal
                         </span>
                       </div>
-                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900">
+                      <h2 className="text-base sm:text-lg font-semibold text-[var(--color-ink)]">
                         {selectedAlert.tool_name || selectedAlert.title}
                       </h2>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-[var(--color-ink-tertiary)]">
                         Renews on {selectedAlert.next_renewal_date}
                       </p>
                     </div>
 
                     <button
                       onClick={() => handleDismissAlert(selectedAlert.id)}
-                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] p-1 transition-colors"
                       title="Dismiss"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
 
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-4 space-y-2">
+                  <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-4 space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500">Subscription Cost:</span>
-                      <span className="font-mono font-semibold text-zinc-900">
+                      <span className="text-[var(--color-ink-tertiary)]">Subscription Cost:</span>
+                      <span className="font-sans tabular-nums font-semibold text-[var(--color-ink)]">
                         {selectedAlert.currency || "INR"} {Number(selectedAlert.cost_amount || 0).toLocaleString("en-IN")}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500">Allocation:</span>
-                      <span className="font-medium text-zinc-800">
+                      <span className="text-[var(--color-ink-tertiary)]">Allocation:</span>
+                      <span className="font-medium text-[var(--color-ink)]">
                         {selectedAlert.default_pass_through ? "Client Pass-through" : "Agency Overhead"}
                       </span>
                     </div>
-                    <p className="text-xs text-zinc-600 pt-1 border-t border-zinc-200/60">
+                    <p className="text-xs text-[var(--color-ink-secondary)] pt-1 border-t border-[var(--color-line)]">
                       {selectedAlert.reason}
                     </p>
                   </div>
@@ -1018,16 +1015,16 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   <div className="flex items-center gap-2.5 pt-2">
                     <Link
                       href="/billing"
-                      className="inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                      className="inline-flex items-center gap-1.5 btn btn-primary text-xs"
                     >
-                      <span>Manage Tool Catalog</span>
+                      <span>Tool Infrastructure Catalog</span>
                     </Link>
 
                     <button
                       onClick={() => handleDismissAlert(selectedAlert.id)}
-                      className="inline-flex items-center gap-1.5 bg-white text-zinc-700 border border-zinc-200 text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-50 transition-colors shadow-2xs"
+                      className="inline-flex items-center gap-1.5 btn btn-secondary text-xs"
                     >
-                      <span>Mark Reviewed</span>
+                      <span>Acknowledge Renewal</span>
                     </button>
                   </div>
                 </>
@@ -1042,19 +1039,19 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                 "tool_renewal",
               ].includes(selectedAlert.entity_type) && (
                 <>
-                  <div className="flex items-start justify-between border-b border-zinc-150 pb-4">
+                  <div className="flex items-start justify-between border-b border-[var(--color-line)] pb-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-zinc-400 shrink-0" />
-                        <span className="text-xs text-zinc-700 font-medium bg-zinc-100 border border-zinc-200 px-2 py-0.5 rounded-full">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ink-muted)] shrink-0" />
+                        <span className="text-[11px] text-[var(--color-ink-secondary)] font-medium font-sans tabular-nums uppercase tracking-wider">
                           Operational Alert
                         </span>
                       </div>
-                      <h2 className="text-base sm:text-lg font-semibold text-zinc-900">
+                      <h2 className="text-base sm:text-lg font-semibold text-[var(--color-ink)]">
                         {selectedAlert.title}
                       </h2>
                       {selectedAlert.waiting_on && (
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-[var(--color-ink-tertiary)]">
                           Waiting on: {selectedAlert.waiting_on}
                         </p>
                       )}
@@ -1062,15 +1059,15 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
 
                     <button
                       onClick={() => handleDismissAlert(selectedAlert.id)}
-                      className="text-zinc-400 hover:text-zinc-600 p-1 transition-colors"
+                      className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] p-1 transition-colors"
                       title="Dismiss"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
 
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-4">
-                    <p className="text-xs text-zinc-800 leading-relaxed select-text font-sans">
+                  <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-4">
+                    <p className="text-xs text-[var(--color-ink)] leading-relaxed select-text font-sans">
                       {selectedAlert.reason || "Operational item requiring review."}
                     </p>
                   </div>
@@ -1078,7 +1075,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                   <div className="flex items-center gap-2.5 pt-2">
                     <button
                       onClick={() => handleDismissAlert(selectedAlert.id)}
-                      className="inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-zinc-800 transition-colors shadow-xs"
+                      className="inline-flex items-center gap-1.5 btn btn-primary text-xs"
                     >
                       <span>Mark as Resolved</span>
                     </button>
@@ -1087,16 +1084,16 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
               )}
             </div>
           ) : (
-            <div className="rounded-xl border border-zinc-200/90 bg-white p-12 text-center space-y-3 shadow-xs">
-              <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
+            <div className="rounded-xl border border-[var(--color-line)] bg-[var(--color-base-overlay)] p-12 text-center space-y-3 shadow-xs">
+              <div className="h-10 w-10 rounded-xl bg-[var(--color-base-subtle)] border border-[var(--color-line)] text-[var(--color-accent)] flex items-center justify-center mx-auto">
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900">
-                  All caught up
+                <h3 className="text-sm font-semibold text-[var(--color-ink)]">
+                  Every founder account is on track
                 </h3>
-                <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto leading-relaxed">
-                  No pending reviews, client holds, or unbilled software expenses right now.
+                <p className="text-xs text-[var(--color-ink-tertiary)] mt-1 max-w-sm mx-auto leading-relaxed">
+                  No pending founder reviews, editorial revisions, or unbilled tooling right now.
                 </p>
               </div>
             </div>

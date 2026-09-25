@@ -97,7 +97,7 @@ export function LogExpenseModal({
 
         <form onSubmit={handleSubmit} noValidate className="space-y-3">
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Service Retainer *
             </label>
             <CustomSelect
@@ -120,7 +120,7 @@ export function LogExpenseModal({
           {/* Tool Catalog Quick Selector */}
           {toolSubscriptions.length > 0 && (
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-accent-text)] block mb-1">
+              <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-accent-text)] block mb-1">
                 Pick From Agency Tool Catalog (Optional)
               </label>
               <select
@@ -145,7 +145,7 @@ export function LogExpenseModal({
           />
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Software or Tool *
             </label>
             <input
@@ -159,7 +159,7 @@ export function LogExpenseModal({
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Amount (₹ INR) *
             </label>
             <input
@@ -170,12 +170,12 @@ export function LogExpenseModal({
               onChange={(e) => setAmountVal(e.target.value)}
               placeholder="e.g. 6600"
               step={100}
-              className="input text-xs font-mono"
+              className="input text-xs font-sans tabular-nums"
             />
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Description *
             </label>
             <input
@@ -189,7 +189,7 @@ export function LogExpenseModal({
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Date
             </label>
             <CustomDatePicker

@@ -8,12 +8,14 @@ import {
   updateInvoiceStatusSchema,
   formatZodError,
 } from "@/lib/validations";
+import { requireOperatorSession } from "@/lib/auth/session";
 
 /**
  * Register a new software tool subscription to the agency catalog
  */
 export async function createToolSubscriptionAction(formData: FormData) {
   try {
+    await requireOperatorSession();
     const rawInput = {
       tool_name: formData.get("tool_name"),
       cost_amount: formData.get("cost_amount") || undefined,

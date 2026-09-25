@@ -1,64 +1,60 @@
 @import "tailwindcss";
 
 :root {
-  /* ─── ATOM & ECHO OS — Executive Light Canvas Surface (Linear / Stripe / Amie Light) ─── */
-  /* Base: pristine airy white and soft neutral tints */
-  --color-base:          #ffffff;
-  --color-base-raised:   #fafafa;
-  --color-base-overlay:  #f4f4f5;
-  --color-base-subtle:   #f4f4f6;
-  --color-base-muted:    #e4e4e7;
+  /* ─── ATOM & ECHO OS — Executive Dark Obsidian Canvas (atomnecho.com) ─── */
+  /* Base: deep obsidian charcoal and warm olive darks */
+  --color-base:          #10110f; /* Deep warm obsidian body background */
+  --color-base-raised:   #131c13; /* Elevated sidebar / topbar surface */
+  --color-base-overlay:  #1b1e17; /* Card / panel / modal background */
+  --color-base-subtle:   #181c15; /* Table row / input background */
+  --color-base-muted:    #242a1e; /* Active hover background */
 
   /* Surface: cards, panels */
-  --color-surface:       #ffffff;
-  --color-surface-hover: #f9fafb;
-  --color-surface-active:#f3f4f6;
-  --color-surface-border:#e5e7eb;
+  --color-surface:       #151913;
+  --color-surface-hover: #1e241a;
+  --color-surface-active:#262e21;
+  --color-surface-border:#34392c;
 
-  /* Hairlines */
-  --color-line:          #e5e7eb;
-  --color-line-subtle:   #f3f4f6;
-  --color-line-strong:   #d1d5db;
+  /* Hairlines & borders */
+  --color-line:          #2e3328;
+  --color-line-subtle:   #23271e;
+  --color-line-strong:   #424737;
 
-  /* Ink hierarchy — deep graphite and clean neutrals */
-  --color-ink:           #09090b;
-  --color-ink-secondary: #4b5563;
-  --color-ink-tertiary:  #6b7280;
-  --color-ink-muted:     #9ca3af;
-  --color-ink-ghost:     #e5e7eb;
+  /* Ink hierarchy — warm paper whites and olive-sage neutrals */
+  --color-ink:           #f4f5f0; /* Primary warm paper */
+  --color-ink-secondary: #c1c8b5; /* Light sage secondary */
+  --color-ink-tertiary:  #a8aaa3; /* Muted olive slate */
+  --color-ink-muted:     #74796a; /* Quiet captions & placeholders */
+  --color-ink-ghost:     #383a33; /* Faint hairline ink */
 
-  /* Accent — pure near-black */
-  --color-accent:        #09090b;
-  --color-accent-dim:    #27272a;
-  --color-accent-bg:     #f4f4f5;
-  --color-accent-line:   #e5e7eb;
-  --color-accent-text:   #09090b;
+  /* Accent — signature electric acid lime / chartreuse */
+  --color-accent:        #d3ff5a;
+  --color-accent-hover:  #bfff70;
+  --color-accent-dim:    #50603c;
+  --color-accent-bg:     rgba(211, 255, 90, 0.12);
+  --color-accent-line:   #d3ff5a;
+  --color-accent-text:   #d3ff5a;
 
-  /* Operational state signals */
-  --color-ok:            #059669;
-  --color-ok-bg:         #ecfdf5;
-  --color-ok-line:       #a7f3d0;
-  --color-ok-text:       #065f46;
+  /* Operational state signals calibrated for obsidian dark mode */
+  --color-ok:            #d3ff5a;
+  --color-ok-bg:         rgba(211, 255, 90, 0.12);
+  --color-ok-line:       rgba(211, 255, 90, 0.35);
+  --color-ok-text:       #d3ff5a;
 
-  --color-warn:          #d97706;
-  --color-warn-bg:       #fffbeb;
-  --color-warn-line:     #fde68a;
-  --color-warn-text:     #92400e;
+  --color-warn:          #fbbf24;
+  --color-warn-bg:       rgba(251, 191, 36, 0.12);
+  --color-warn-line:     rgba(251, 191, 36, 0.35);
+  --color-warn-text:     #fde047;
 
-  --color-danger:        #dc2626;
-  --color-danger-bg:     #fef2f2;
-  --color-danger-line:   #fecaca;
-  --color-danger-text:   #991b1b;
+  --color-danger:        #f87171;
+  --color-danger-bg:     rgba(248, 113, 113, 0.12);
+  --color-danger-line:   rgba(248, 113, 113, 0.35);
+  --color-danger-text:   #fca5a5;
 
-  --color-info:          #2563eb;
-  --color-info-bg:       #eff6ff;
-  --color-info-line:     #bfdbfe;
-  --color-info-text:     #1e40af;
-
-  /* Typography */
-  --font-display:        var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-  --font-sans:           var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-  --font-mono:           var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  --color-info:          #60a5fa;
+  --color-info-bg:       rgba(96, 165, 250, 0.12);
+  --color-info-line:     rgba(96, 165, 250, 0.35);
+  --color-info-text:     #93c5fd;
 
   /* Radii */
   --radius-xs:           3px;
@@ -66,20 +62,22 @@
   --radius-md:           8px;
   --radius-lg:           12px;
   --radius-xl:           16px;
+  --radius-full:         100px;
 
-  /* Shadows */
-  --shadow-card:         0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
-  --shadow-lifted:       0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.03);
-  --shadow-accent:       0 0 0 1px rgba(9,9,11,0.08);
-  --shadow-dialog:       0 20px 50px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.05);
+  /* Shadows (subtle dark obsidian glows rather than muddy black drop shadows) */
+  --shadow-card:         0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-lifted:       0 4px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.25);
+  --shadow-accent:       0 0 15px rgba(211, 255, 90, 0.15);
+  --shadow-dialog:       0 20px 50px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
 
   --ease-out-expo:       cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@theme {
-  --font-sans: var(--font-sans);
-  --font-display: var(--font-sans);
-  --font-mono: var(--font-mono);
+@theme inline {
+  --font-sans: var(--font-dm-sans), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-display-manrope), "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-dm-sans), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: Georgia, serif;
 }
 
 /* ─── BASE RESET ─── */
@@ -87,13 +85,13 @@
   *, *::before, *::after { box-sizing: border-box; }
 
   html {
-    color-scheme: light;
+    color-scheme: dark;
   }
 
   body {
     background-color: var(--color-base);
     color: var(--color-ink);
-    font-family: var(--font-sans);
+    font-family: var(--font-dm-sans, "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
     font-size: 13.5px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -102,12 +100,12 @@
   }
 
   ::selection {
-    background-color: rgba(9, 9, 11, 0.08);
-    color: #09090b;
+    background-color: rgba(211, 255, 90, 0.25);
+    color: #ffffff;
   }
 
   h1, h2, h3 {
-    font-family: var(--font-display);
+    font-family: var(--font-display-manrope, "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
     font-weight: 600;
     letter-spacing: -0.025em;
     color: var(--color-ink);
@@ -117,6 +115,14 @@
     font-family: var(--font-sans);
     font-weight: 600;
     letter-spacing: -0.015em;
+  }
+
+  /* Editorial italic highlight pattern matching atomnecho.com */
+  em {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--color-accent);
   }
 }
 
@@ -160,24 +166,39 @@
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .btn-primary {
-  background: #09090b;
-  color: #ffffff;
-  font-weight: 550;
-  border-color: #09090b;
+  background: var(--color-ink);
+  color: var(--color-base);
+  font-weight: 600;
+  border-color: var(--color-ink);
 }
 .btn-primary:hover:not(:disabled) {
-  background: #27272a;
-  border-color: #27272a;
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #10110f;
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background: var(--color-accent);
+  color: #10110f;
+  font-weight: 600;
+  border-color: var(--color-accent);
+}
+.btn-accent:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(211, 255, 90, 0.25);
 }
 
 .btn-secondary {
-  background: #ffffff;
-  color: #09090b;
+  background: var(--color-base-subtle);
+  color: var(--color-ink);
   border-color: var(--color-line);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-base-subtle);
+  background: var(--color-base-muted);
   border-color: var(--color-line-strong);
 }
 
@@ -191,6 +212,10 @@
   color: var(--color-ink);
 }
 
+.btn-pill {
+  border-radius: 100px;
+}
+
 /* ─── STATUS BADGES ─── */
 .badge {
   display: inline-flex;
@@ -200,8 +225,8 @@
   border-radius: var(--radius-xs);
   font-size: 11px;
   font-weight: 500;
-  font-family: var(--font-mono);
-  letter-spacing: 0.03em;
+  font-family: var(--font-sans);
+  letter-spacing: 0.02em;
   border: 1px solid transparent;
 }
 .badge-ok      { background: var(--color-ok-bg);     color: var(--color-ok-text);     border-color: var(--color-ok-line); }
@@ -221,9 +246,10 @@
   font-variant-numeric: tabular-nums;
 }
 .metric-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-ink-tertiary);
 }
@@ -263,10 +289,10 @@
 
 /* ─── SECTION LABEL ─── */
 .section-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-ink-muted);
 }
@@ -308,8 +334,8 @@ select:focus-visible,
 .input::placeholder { color: var(--color-ink-muted); }
 .input:focus,
 .input:focus-visible {
-  border-color: var(--color-line-strong);
-  box-shadow: 0 0 0 1.5px var(--color-line-strong);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1.5px rgba(211, 255, 90, 0.3);
   outline: none !important;
 }
 

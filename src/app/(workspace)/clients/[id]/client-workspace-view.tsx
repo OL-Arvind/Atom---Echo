@@ -363,7 +363,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors w-fit"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          <span>Clients</span>
+          <span>Client Roster</span>
           <span className="text-[var(--color-ink-muted)]">/</span>
           <span className="text-[var(--color-ink)] font-medium">{client.name}</span>
         </Link>
@@ -374,20 +374,20 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           <button
             onClick={openFounderWhatsApp}
             className="btn btn-primary text-xs"
-            title="Open WhatsApp with client review link"
+            title="Ping founder on WhatsApp with review link"
           >
             <WhatsAppIcon size={14} className="text-[#25D366]" />
-            <span>Message on WhatsApp</span>
+            <span>Ping on WhatsApp</span>
           </button>
 
           {/* Quick Copy Link */}
           <button
             onClick={handleCopyReviewLink}
             className="btn btn-secondary text-xs"
-            title="Copy zero-login review portal link"
+            title="Copy private Founder Desk link"
           >
             <Copy className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-            <span className="hidden sm:inline">Copy Link</span>
+            <span className="hidden sm:inline">Copy Desk</span>
           </button>
 
           {/* Draft Invoice */}
@@ -395,10 +395,10 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
             onClick={handleDraftInvoice}
             disabled={isPending}
             className="btn btn-secondary text-xs"
-            title="Generate a draft invoice combining retainer and tool expenses"
+            title="Generate draft invoice bundling retainer and tooling pass-throughs"
           >
             <FileCheck className="h-3.5 w-3.5 text-[var(--color-accent)]" />
-            <span className="hidden sm:inline">Draft Invoice</span>
+            <span className="hidden sm:inline">Draft Retainer</span>
           </button>
 
           {/* Overflow Menu for Quiet & Destructive Actions */}
@@ -427,7 +427,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-ink)] hover:bg-[var(--color-surface-hover)] transition-colors text-left cursor-pointer"
                 >
                   <ShieldAlert className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-                  <span>{hasEmergencyHold ? "Resume Publishing" : "Pause All Posts"}</span>
+                  <span>{hasEmergencyHold ? "Resume Publishing" : "Emergency Pause"}</span>
                 </button>
                 <div className="h-[1px] bg-[var(--color-line-subtle)] my-1" />
                 <button
@@ -454,9 +454,9 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
             <BrandLogo
               nameOrDomain={client.website || client.founder_email || client.name}
               size={48}
-              className="h-12 w-12 rounded-[var(--radius-md)] border border-[var(--color-line)] p-1 bg-white shadow-xs"
+              className="h-12 w-12 rounded-[var(--radius-md)] border border-[var(--color-line)] p-1 bg-[var(--color-base-overlay)] shadow-xs"
               fallback={
-                <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-ink)] text-white text-base font-medium shrink-0 tracking-wide">
+                <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-base-subtle)] text-[var(--color-accent)] text-base font-semibold shrink-0 tracking-wide border border-[var(--color-line)]">
                   {founderInitials}
                 </div>
               }
@@ -473,7 +473,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                       hasEmergencyHold ? "bg-[var(--color-warn)]" : "bg-[var(--color-ok)]"
                     }`}
                   />
-                  <span className="font-mono text-[11px] text-[var(--color-ink-muted)] uppercase">
+                  <span className="font-sans tabular-nums text-[11px] text-[var(--color-ink-muted)] uppercase">
                     {hasEmergencyHold ? "Paused" : client.status || "Active"}
                   </span>
                 </span>
@@ -492,7 +492,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                     <span className="text-[var(--color-ink-muted)]">·</span>
                     <a
                       href={`mailto:${client.founder_email}`}
-                      className="inline-flex items-center gap-1 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors font-mono text-[11.5px]"
+                      className="inline-flex items-center gap-1 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors font-sans tabular-nums text-[11.5px]"
                     >
                       <Mail className="h-3 w-3" />
                       <span>{client.founder_email}</span>
@@ -505,7 +505,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                     <button
                       type="button"
                       onClick={openFounderWhatsApp}
-                      className="inline-flex items-center gap-1.5 text-[var(--color-ink-tertiary)] hover:text-[#25D366] transition-colors font-mono text-[11.5px] cursor-pointer"
+                      className="inline-flex items-center gap-1.5 text-[var(--color-ink-tertiary)] hover:text-[#25D366] transition-colors font-sans tabular-nums text-[11.5px] cursor-pointer"
                       title="Open WhatsApp chat with review link"
                     >
                       <WhatsAppIcon size={13} className="text-[#25D366]" />
@@ -521,7 +521,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
         {/* Commercial & Operational Telemetry Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
           <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] p-3">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
+            <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
               Monthly Retainer
             </span>
             <div className="font-display text-lg font-normal text-[var(--color-ink)] tabular-nums mt-0.5">
@@ -531,8 +531,8 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           </div>
 
           <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] p-3">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
-              Billing Anchor
+            <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
+              Billing Anchor Day
             </span>
             <div className="font-display text-lg font-normal text-[var(--color-ink)] tabular-nums mt-0.5">
               Day {billingAnchorDay}{" "}
@@ -541,13 +541,14 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           </div>
 
           <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] p-3">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
-              Content Pipeline
+            <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
+              Perspectives
             </span>
             <div className="font-display text-lg font-normal text-[var(--color-ink)] tabular-nums mt-0.5 flex items-baseline gap-2">
-              <span>{clientPosts.length} posts</span>
+              <span>{clientPosts.length} stories</span>
               {reviewPendingCount > 0 && (
-                <span className="text-[10px] font-mono text-[var(--color-warn-text)] bg-[var(--color-warn-bg)] px-1.5 py-0.5 rounded-[var(--radius-xs)] border border-[var(--color-warn-line)]">
+                <span className="text-[11px] font-sans tabular-nums text-[var(--color-warn-text)] inline-flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-warn)]" />
                   {reviewPendingCount} in review
                 </span>
               )}
@@ -555,8 +556,8 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           </div>
 
           <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] p-3">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
-              Unbilled Software
+            <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
+              Dedicated Tooling
             </span>
             <div className="font-display text-lg font-normal text-[var(--color-ink)] tabular-nums mt-0.5">
               ₹{unbilledToolTotal.toLocaleString("en-IN")}{" "}
@@ -579,7 +580,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           }`}
         >
           <FileText className="h-3.5 w-3.5" />
-          <span>Overview &amp; Pipeline</span>
+          <span>Perspectives &amp; Schedule</span>
         </button>
 
         <button
@@ -591,7 +592,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           }`}
         >
           <Sparkles className="h-3.5 w-3.5" />
-          <span>Voice &amp; Positioning</span>
+          <span>Founder Voice &amp; Edges</span>
         </button>
 
         <button
@@ -603,7 +604,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           }`}
         >
           <Wrench className="h-3.5 w-3.5" />
-          <span>Software Expenses ({clientTools.length})</span>
+          <span>Dedicated Tooling ({clientTools.length})</span>
         </button>
 
         <button
@@ -627,7 +628,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           }`}
         >
           <Share2 className="h-3.5 w-3.5" />
-          <span>Client Review Link</span>
+          <span>Founder Desk Portal</span>
         </button>
       </div>
 
@@ -641,10 +642,10 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                  Content Operations Stream
+                  Editorial Publishing Stream
                 </h2>
                 <p className="text-xs text-[var(--color-ink-secondary)]">
-                  Active drafts, posts awaiting client approval, and scheduled publications.
+                  Active drafts, perspectives awaiting founder sign-off, and scheduled releases.
                 </p>
               </div>
 
@@ -653,7 +654,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                 className="btn btn-secondary text-xs py-1 px-2.5 inline-flex items-center gap-1.5"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>New Post</span>
+                <span>New Perspective</span>
               </Link>
             </div>
 
@@ -661,9 +662,9 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-line)] bg-[var(--color-base-subtle)]/50 p-8 text-center space-y-3">
                 <FileText className="h-7 w-7 text-[var(--color-ink-muted)] mx-auto" />
                 <div className="space-y-1 max-w-sm mx-auto">
-                  <p className="text-xs font-medium text-[var(--color-ink)]">No content drafted yet</p>
+                  <p className="text-xs font-medium text-[var(--color-ink)]">No perspectives drafted yet</p>
                   <p className="text-[11.5px] text-[var(--color-ink-tertiary)]">
-                    Create founder thought leadership posts in the Content Studio to send for WhatsApp review.
+                    Shape founder conviction in the Content Studio to send to their private Founder Desk.
                   </p>
                 </div>
                 <Link
@@ -671,7 +672,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                   className="btn btn-primary text-xs inline-flex items-center gap-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  <span>Draft First Post</span>
+                  <span>Draft First Perspective</span>
                 </Link>
               </div>
             ) : (
@@ -703,7 +704,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                                   : "bg-[var(--color-ink-muted)]"
                               }`}
                             />
-                            <span className="font-mono text-[10.5px] uppercase text-[var(--color-ink-muted)]">
+                            <span className="font-sans tabular-nums text-[10.5px] uppercase text-[var(--color-ink-muted)]">
                               {post.status?.replace("_", " ")}
                             </span>
                           </span>
@@ -724,7 +725,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                             <span>Copy Review Link</span>
                           </button>
                         )}
-                        <span className="font-mono text-[11px] text-[var(--color-ink-tertiary)] bg-[var(--color-base-subtle)] px-2 py-0.5 rounded-[var(--radius-xs)] border border-[var(--color-line)]">
+                        <span className="font-sans tabular-nums text-[11px] text-[var(--color-ink-tertiary)]">
                           {post.target_pillar || "Thought Leadership"}
                         </span>
                       </div>
@@ -760,7 +761,8 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                         ? "Cold Outbound Outreach"
                         : "Hybrid Growth Engine"}
                     </span>
-                    <span className="font-mono text-[10px] uppercase text-[var(--color-ok-text)] bg-[var(--color-ok-bg)] px-1.5 py-0.5 rounded-[var(--radius-xs)] border border-[var(--color-ok-line)]">
+                    <span className="inline-flex items-center gap-1.5 font-sans tabular-nums text-[10.5px] uppercase tracking-wider text-[var(--color-ok-text)]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ok)]" />
                       {eng.status}
                     </span>
                   </div>
@@ -768,13 +770,13 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                   <div className="divide-y divide-[var(--color-line-subtle)] text-xs">
                     <div className="flex items-center justify-between py-1.5 text-[var(--color-ink-secondary)]">
                       <span>Monthly Retainer</span>
-                      <span className="font-mono font-medium text-[var(--color-ink)]">
+                      <span className="font-sans tabular-nums font-medium text-[var(--color-ink)]">
                         ₹{Number(eng.monthly_retainer || 0).toLocaleString("en-IN")}
                       </span>
                     </div>
                     <div className="flex items-center justify-between py-1.5 text-[var(--color-ink-secondary)]">
                       <span>Billing Anchor</span>
-                      <span className="font-mono text-[var(--color-ink)]">
+                      <span className="font-sans tabular-nums text-[var(--color-ink)]">
                         Day {eng.billing_anchor_day} of month
                       </span>
                     </div>
@@ -787,11 +789,11 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                 <div className="flex items-center gap-2">
                   <Share2 className="h-4 w-4 text-[var(--color-accent)]" />
                   <span className="text-xs font-semibold text-[var(--color-ink)]">
-                    Review Portal Gateway
+                    Founder Desk Gateway
                   </span>
                 </div>
                 <p className="text-[11.5px] text-[var(--color-ink-secondary)] leading-relaxed">
-                  Send private zero-login links directly to {client.founder_name} on WhatsApp for 1-click approvals.
+                  Send private zero-login links directly to {client.founder_name} on WhatsApp for 1-click approvals or voice notes.
                 </p>
                 <div className="flex items-center gap-2 pt-1">
                   <button
@@ -799,7 +801,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                     className="btn btn-primary text-xs w-full justify-center"
                   >
                     <WhatsAppIcon size={14} className="text-[#25D366]" />
-                    <span>Send via WhatsApp</span>
+                    <span>Ping Founder on WhatsApp</span>
                   </button>
                 </div>
               </div>
@@ -834,7 +836,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               {/* Positioning Statement */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                  <span className="text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
                     Positioning Statement
                   </span>
                   <button
@@ -862,7 +864,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               {/* Target Audience / ICP */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                  <span className="text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
                     Target Audience / ICP
                   </span>
                   <button
@@ -890,7 +892,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               {/* Tone Archetype */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                  <span className="text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
                     Tone Archetype
                   </span>
                   <button
@@ -918,7 +920,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               {/* Voice Guidelines & Nuances */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                  <span className="text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
                     Voice Guidelines &amp; Nuances
                   </span>
                   <button
@@ -946,7 +948,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               {/* Core Content Pillars */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                  <span className="text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
                     Core Content Pillars
                   </span>
                   <button
@@ -961,7 +963,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                     {context.core_pillars.map((pillar: string) => (
                       <span
                         key={pillar}
-                        className="inline-flex items-center rounded-[var(--radius-xs)] bg-[var(--color-surface)] border border-[var(--color-line-strong)] text-[var(--color-ink)] px-2.5 py-1 text-xs font-mono font-medium"
+                        className="inline-flex items-center rounded-[var(--radius-xs)] bg-[var(--color-base)] border border-[var(--color-line)] text-[var(--color-ink)] px-2.5 py-1 text-xs font-sans font-medium"
                       >
                         {pillar}
                       </span>
@@ -984,24 +986,24 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           <div className="lg:col-span-5 space-y-4">
             <div className="space-y-1">
               <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                Words to Avoid
+                Words to Avoid (Taboo Terms)
               </h2>
               <p className="text-xs text-[var(--color-ink-secondary)]">
-                Negative guardrails. These words will never be drafted into posts.
+                Language &amp; buzzwords this founder despises. The editor automatically flags them before review.
               </p>
             </div>
 
             <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-4 space-y-3.5">
               <div className="flex flex-wrap gap-2 min-h-[48px]">
                 {(!context?.taboo_words || context.taboo_words.length === 0) ? (
-                  <span className="text-xs text-[var(--color-ink-muted)] font-mono py-1">
-                    No taboo words configured.
+                  <span className="text-xs text-[var(--color-ink-muted)] font-sans tabular-nums py-1">
+                    No avoided words configured. Every founder has opinions on buzzwords they refuse to use.
                   </span>
                 ) : (
                   context.taboo_words.map((w: string) => (
                     <span
                       key={w}
-                      className="inline-flex items-center gap-1.5 rounded-[var(--radius-xs)] bg-[var(--color-base-subtle)] border border-[var(--color-line-strong)] text-[var(--color-ink)] px-2 py-1 text-xs font-mono"
+                      className="inline-flex items-center gap-1.5 rounded-[var(--radius-xs)] bg-[var(--color-base)] border border-[var(--color-line)] text-[var(--color-ink)] px-2 py-1 text-xs font-sans"
                     >
                       <span className="line-through text-[var(--color-ink-tertiary)]">{w}</span>
                       <button
@@ -1046,10 +1048,10 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                Pass-Through Tool Expenses
+                Dedicated Client Tooling
               </h2>
               <p className="text-xs text-[var(--color-ink-secondary)]">
-                Software licenses and tools (Clay, Instantly, HeyReach, proxies) incurred on behalf of this client.
+                Specialized tooling (Clay, Instantly, HeyReach, proxies) deployed for this founder. Invoiced at zero markup.
               </p>
             </div>
             <button
@@ -1057,13 +1059,13 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               className="btn btn-primary text-xs"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>Log Expense</span>
+              <span>Add Tool Expense</span>
             </button>
           </div>
 
           {clientTools.length === 0 ? (
             <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-line)] bg-[var(--color-base-subtle)]/50 p-8 text-center space-y-2">
-              <p className="text-xs text-[var(--color-ink-tertiary)]">Zero software expenses logged.</p>
+              <p className="text-xs text-[var(--color-ink-tertiary)]">No dedicated software tools allocated to this account.</p>
               <button
                 onClick={() => setShowAddExpenseModal(true)}
                 className="btn btn-secondary text-xs"
@@ -1089,16 +1091,16 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                         <span className="font-medium text-[var(--color-ink)] block truncate">
                           {tool.description}
                         </span>
-                        <span className="text-[var(--color-ink-tertiary)] text-[11px] font-mono">
+                        <span className="text-[var(--color-ink-tertiary)] text-[11px] font-sans tabular-nums">
                           Date: {tool.incurred_date} · Tool: {tool.tool_name}
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="font-mono text-sm font-medium text-[var(--color-ink)] block tabular-nums">
+                      <span className="font-sans text-sm font-medium text-[var(--color-ink)] block tabular-nums">
                         ₹{Number(tool.amount).toLocaleString("en-IN")}
                       </span>
-                      <span className="text-[10.5px] font-mono uppercase text-[var(--color-ink-muted)]">
+                      <span className="text-[10.5px] font-sans tabular-nums uppercase text-[var(--color-ink-muted)]">
                         {tool.status}
                       </span>
                     </div>
@@ -1118,11 +1120,11 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-[var(--color-accent)]" />
                 <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                  AES-256-GCM Credential Vault
+                  Private Credential Vault
                 </h2>
               </div>
               <p className="text-xs text-[var(--color-ink-secondary)] mt-0.5">
-                Encrypted at rest. Passwords auto-mask after 30 seconds. Every reveal is audited.
+                Zero-knowledge encryption. Credentials auto-mask after 30 seconds with complete audit logging.
               </p>
             </div>
             <button
@@ -1136,7 +1138,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
 
           {credentials.length === 0 ? (
             <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-line)] bg-[var(--color-base-subtle)]/50 p-8 text-center space-y-2">
-              <p className="text-xs text-[var(--color-ink-tertiary)]">No credentials stored in this client's vault yet.</p>
+              <p className="text-xs text-[var(--color-ink-tertiary)]">No founder access credentials stored yet.</p>
               <button
                 onClick={() => setShowAddCredModal(true)}
                 className="btn btn-secondary text-xs"
@@ -1166,7 +1168,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                           <span className="font-semibold text-xs text-[var(--color-ink)] block truncate">
                             {cred.platform}
                           </span>
-                          <span className="text-[11.5px] text-[var(--color-ink-tertiary)] font-mono truncate block">
+                          <span className="text-[11.5px] text-[var(--color-ink-tertiary)] font-sans tabular-nums truncate block">
                             {cred.username_or_email}
                           </span>
                         </div>
@@ -1177,10 +1179,10 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                     {/* Password Field with Masking & 30s Auto-wipe */}
                     <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] p-2 border border-[var(--color-line)] flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <span className="text-[9.5px] font-mono text-[var(--color-ink-tertiary)] uppercase block">
+                        <span className="text-[9.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)] uppercase block">
                           {isRevealed ? `Wipes in ${countdown}s` : "Encrypted Password"}
                         </span>
-                        <span className="font-mono text-xs font-semibold text-[var(--color-ink)] tracking-wider">
+                        <span className="font-sans tabular-nums text-xs font-semibold text-[var(--color-ink)] tracking-wider">
                           {isRevealed ? revealedPasswords[cred.id] : "••••••••••••••••"}
                         </span>
                       </div>
@@ -1229,20 +1231,20 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               <div className="flex items-center gap-2">
                 <Share2 className="h-4 w-4 text-[var(--color-accent)]" />
                 <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                  Zero-Login Review Gateway
+                  Private Founder Desk Gateway
                 </h2>
               </div>
               <p className="text-xs text-[var(--color-ink-secondary)]">
-                Private, tokenized mobile review portal for {client.founder_name}.
+                Private, zero-login mobile workspace for {client.founder_name}. Keep the edges. They approve every word before it carries their name.
               </p>
             </div>
 
             <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-4 space-y-4">
               <div className="space-y-1.5">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
-                  Private Review URL
+                <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                  Private Founder Desk URL
                 </span>
-                <div className="font-mono text-xs text-[var(--color-ink)] break-all select-all bg-[var(--color-base-subtle)] p-2.5 rounded-[var(--radius-xs)] border border-[var(--color-line)]">
+                <div className="font-sans tabular-nums text-xs text-[var(--color-ink)] break-all select-all bg-[var(--color-base-subtle)] p-2.5 rounded-[var(--radius-xs)] border border-[var(--color-line)]">
                   {reviewUrl || "No review link generated yet"}
                 </div>
               </div>
@@ -1253,7 +1255,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                   className="btn btn-secondary text-xs flex-1 justify-center"
                 >
                   <Copy className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-                  <span>Copy Link</span>
+                  <span>Copy Desk Link</span>
                 </button>
                 {reviewUrl && (
                   <Link
@@ -1261,7 +1263,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                     target="_blank"
                     className="btn btn-secondary text-xs flex-1 justify-center inline-flex items-center gap-1.5"
                   >
-                    <span>Open Tab</span>
+                    <span>Open Founder Desk</span>
                     <ExternalLink className="h-3.5 w-3.5" />
                   </Link>
                 )}
@@ -1272,22 +1274,22 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                 className="btn btn-primary text-xs w-full justify-center"
               >
                 <WhatsAppIcon size={14} className="text-[#25D366]" />
-                <span>Share via WhatsApp</span>
+                <span>Ping Founder on WhatsApp</span>
               </button>
             </div>
 
             <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-4 space-y-1.5">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
-                Review Queue
+              <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
+                Founder Approval Queue
               </span>
               <div className="font-display text-xl font-normal text-[var(--color-ink)] tabular-nums">
                 {reviewPendingCount}{" "}
                 <span className="text-xs font-normal text-[var(--color-ink-tertiary)] font-sans">
-                  posts awaiting review
+                  perspectives awaiting review
                 </span>
               </div>
               <p className="text-[11.5px] text-[var(--color-ink-secondary)] leading-relaxed">
-                When content is moved to &apos;Client Review&apos;, it immediately appears on the founder&apos;s phone.
+                When a perspective is sent for review, it appears instantly on the founder&apos;s mobile phone for 1-tap sign-off or voice notes.
               </p>
             </div>
           </div>

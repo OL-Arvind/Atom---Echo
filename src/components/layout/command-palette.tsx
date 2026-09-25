@@ -228,7 +228,7 @@ export function CommandPalette({
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-[13px]">{item.title}</span>
                         {item.badge && (
-                          <span className="text-[10.5px] font-mono text-[var(--color-ink-muted)]">
+                          <span className="text-[10.5px] font-sans tabular-nums text-[var(--color-ink-muted)]">
                             [{item.badge}]
                           </span>
                         )}
@@ -253,7 +253,7 @@ export function CommandPalette({
         </div>
 
         {/* Footer shortcuts */}
-        <div className="flex items-center justify-between border-t border-[var(--color-line)] bg-[var(--color-base-raised)] px-4 py-2 text-[10.5px] text-[var(--color-ink-tertiary)] font-mono">
+        <div className="flex items-center justify-between border-t border-[var(--color-line)] bg-[var(--color-base-raised)] px-4 py-2 text-[10.5px] text-[var(--color-ink-tertiary)] font-sans tabular-nums">
           <div className="flex items-center gap-3">
             <span>
               <kbd className="rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] px-1 py-0.5 shadow-2xs">↑</kbd>

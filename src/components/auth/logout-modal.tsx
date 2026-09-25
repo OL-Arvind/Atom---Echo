@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, X, Loader2, Sparkles } from "lucide-react";
+import { LogOut, X, Loader2 } from "lucide-react";
 import { AuthUser, clearStoredUser } from "@/lib/auth/dummy-auth";
+import { createClient } from "@/lib/supabase/client";
 
 interface LogoutModalProps {
   isOpen: boolean;
@@ -17,14 +18,19 @@ export function LogoutModal({ isOpen, onClose, user }: LogoutModalProps) {
 
   if (!isOpen) return null;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsLoggingOut(true);
-    setTimeout(() => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {
+      // Ignore client sign-out network error
+    } finally {
       clearStoredUser();
       setIsLoggingOut(false);
       onClose();
       router.push("/login");
-    }, 600);
+    }
   };
 
   return (
@@ -48,7 +54,7 @@ export function LogoutModal({ isOpen, onClose, user }: LogoutModalProps) {
 
         {/* User Card */}
         <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-3.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-base-overlay)] border border-[var(--color-line-strong)] font-mono text-xs font-semibold text-[var(--color-ink)] shrink-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-base-overlay)] border border-[var(--color-line-strong)] font-sans tabular-nums text-xs font-semibold text-[var(--color-ink)] shrink-0">
             {user.initials}
           </div>
           <div className="min-w-0 flex-1">
@@ -58,20 +64,21 @@ export function LogoutModal({ isOpen, onClose, user }: LogoutModalProps) {
             <div className="text-[11px] text-[var(--color-ink-secondary)] truncate">
               {user.email}
             </div>
-            <div className="text-[10px] font-mono text-[var(--color-ink-tertiary)] mt-0.5">
+            <div className="text-[10px] font-sans tabular-nums text-[var(--color-ink-tertiary)] mt-0.5">
               {user.role}
             </div>
           </div>
         </div>
 
-        {/* Coming Soon Notice */}
-        <div className="rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base)] p-3 space-y-1">
-          <div className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-ink)]">
-            <Sparkles className="h-3 w-3 text-[var(--color-accent)]" />
-            <span>Auth Setup · Coming Soon</span>
+        {/* Session Status */}
+        <div className="border-l-2 border-[var(--color-line-strong)] pl-3.5 py-1.5 space-y-1">
+          <div className="flex items-center gap-2 text-[10.5px] font-sans tabular-nums tracking-wider uppercase text-[var(--color-ink)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+            <span>Authenticated Operator Session</span>
           </div>
           <p className="text-[11px] text-[var(--color-ink-secondary)] leading-relaxed">
-            Real Google SSO and multi-tenant authentication will be connected in an upcoming release. You are currently in an operator preview session.
+            Credential Vault actions and editorial status transitions are attributed to{" "}
+            <span className="text-[var(--color-ink)] font-medium">{user.email}</span>.
           </p>
         </div>
 

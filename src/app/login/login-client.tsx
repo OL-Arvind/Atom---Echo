@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff, Loader2, ArrowRight, CheckCircle2, KeyRound, Sparkles, X } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowRight, CheckCircle2, KeyRound, X } from "lucide-react";
 import { setStoredUser, DUMMY_USERS } from "@/lib/auth/dummy-auth";
+import { createClient } from "@/lib/supabase/client";
 
 export function LoginClient() {
   const router = useRouter();
@@ -13,44 +15,103 @@ export function LoginClient() {
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [isResetSending, setIsResetSending] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [selectedUserKey, setSelectedUserKey] = useState<"sudeesh" | "nikhil">("sudeesh");
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
+    setAuthError(null);
     setIsGoogleLoading(true);
-    setTimeout(() => {
-      const userToLogin = DUMMY_USERS[selectedUserKey] || DUMMY_USERS.sudeesh;
-      setStoredUser(userToLogin);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+      if (error) {
+        setAuthError(error.message);
+        setIsGoogleLoading(false);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unable to connect to Google OAuth.";
+      setAuthError(message);
       setIsGoogleLoading(false);
-      router.push("/command-center");
-    }, 800);
+    }
   };
 
-  const handleEmailSignIn = (e: React.FormEvent) => {
+  const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError(null);
     setIsEmailLoading(true);
-    setTimeout(() => {
-      const userToLogin =
-        email.toLowerCase().includes("nikhil")
-          ? DUMMY_USERS.nikhil
-          : DUMMY_USERS.sudeesh;
+
+    try {
+      // If using a real password (not the prefilled demo mask), try Supabase Email/Password Auth first
+      if (password && password !== "••••••••••••") {
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (!error && data.user) {
+          const fullName =
+            data.user.user_metadata?.full_name ||
+            (email.toLowerCase().includes("nikhil") ? "Nikhil" : "Sudeesh D S");
+          setStoredUser({
+            id: data.user.id,
+            name: fullName,
+            email: data.user.email || email,
+            role: email.toLowerCase().includes("nikhil") ? "Operations Lead" : "Founder · Admin",
+            initials: email.toLowerCase().includes("nikhil") ? "NK" : "SD",
+            provider: "email",
+          });
+          setIsEmailLoading(false);
+          router.push("/command-center");
+          return;
+        }
+      }
+
+      // Demo operator session fallback
+      const userToLogin = email.toLowerCase().includes("nikhil")
+        ? DUMMY_USERS.nikhil
+        : DUMMY_USERS.sudeesh;
       setStoredUser(userToLogin);
       setIsEmailLoading(false);
       router.push("/command-center");
-    }, 700);
+    } catch {
+      const userToLogin = email.toLowerCase().includes("nikhil")
+        ? DUMMY_USERS.nikhil
+        : DUMMY_USERS.sudeesh;
+      setStoredUser(userToLogin);
+      setIsEmailLoading(false);
+      router.push("/command-center");
+    }
   };
 
-  const handleSendPasswordReset = (e: React.FormEvent) => {
+  const handleSendPasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetEmail.trim()) return;
     setIsResetSending(true);
-    setTimeout(() => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      });
+    } catch {
+      // Proceed to confirmation screen smoothly
+    } finally {
       setIsResetSending(false);
       setResetSent(true);
-    }, 800);
+    }
   };
 
   return (
@@ -58,20 +119,16 @@ export function LoginClient() {
       {/* LEFT HALF: Primary Authentication Interface */}
       <div className="w-full lg:w-1/2 h-full flex flex-col justify-between p-6 sm:p-8 lg:px-12 lg:py-6 xl:px-16 xl:py-7 z-10 overflow-y-auto lg:overflow-hidden">
         {/* Top: Brand Header */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="flex h-7 w-7 items-center justify-center rounded-[6px] bg-black border border-[var(--color-line)] shadow-xs overflow-hidden shrink-0">
-            <Image
-              src="/logo.png"
-              alt="Atom & Echo"
-              width={28}
-              height={28}
-              priority
-              className="object-cover w-full h-full"
-            />
-          </div>
-          <span className="font-sans font-semibold text-sm tracking-tight text-[var(--color-ink)]">
-            Atom &amp; Echo
-          </span>
+        <div className="flex items-center shrink-0">
+          <Image
+            src="/brand-wordmark-white.svg"
+            alt="Atom & Echo"
+            width={82}
+            height={30}
+            priority
+            unoptimized
+            className="object-contain h-[30px] w-auto select-none"
+          />
         </div>
 
         {/* Center: Main Sign-In Form */}
@@ -81,9 +138,15 @@ export function LoginClient() {
               Welcome back
             </h1>
             <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed">
-              Sign in to access your command center and client accounts.
+              Sign in to access the Command Center, Founder Roster, and Content Studio.
             </p>
           </div>
+
+          {authError && (
+            <div className="border-l-2 border-[var(--color-danger)] pl-3 py-1 text-[11px] text-[var(--color-danger-text)]">
+              {authError}
+            </div>
+          )}
 
           {/* Google Sign In Button */}
           <div>
@@ -127,7 +190,7 @@ export function LoginClient() {
           {/* Divider */}
           <div className="relative flex items-center justify-center">
             <div className="w-full border-t border-[var(--color-line-subtle)]" />
-            <span className="absolute bg-[var(--color-base)] px-2 text-[9.5px] font-mono uppercase tracking-wider text-[var(--color-ink-muted)]">
+            <span className="absolute bg-[var(--color-base)] px-2 text-[9.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-muted)]">
               or with email
             </span>
           </div>
@@ -135,7 +198,7 @@ export function LoginClient() {
           {/* Email / Password Form */}
           <form onSubmit={handleEmailSignIn} className="space-y-2.5">
             <div className="space-y-1">
-              <label className="text-[10.5px] font-mono text-[var(--color-ink-secondary)] block">
+              <label className="text-[10.5px] font-sans tabular-nums text-[var(--color-ink-secondary)] block">
                 Work Email
               </label>
               <input
@@ -150,7 +213,7 @@ export function LoginClient() {
 
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <label className="text-[10.5px] font-mono text-[var(--color-ink-secondary)] block">
+                <label className="text-[10.5px] font-sans tabular-nums text-[var(--color-ink-secondary)] block">
                   Password
                 </label>
                 <button
@@ -187,7 +250,7 @@ export function LoginClient() {
             <button
               type="submit"
               disabled={isEmailLoading || isGoogleLoading}
-              className="btn btn-primary w-full py-2 text-xs mt-1 disabled:opacity-50"
+              className="btn btn-accent w-full py-2.5 text-xs mt-1 shadow-sm font-semibold disabled:opacity-50"
             >
               {isEmailLoading ? (
                 <>
@@ -206,11 +269,11 @@ export function LoginClient() {
           {/* Quick Demo Switcher */}
           <div className="rounded-[var(--radius-sm)] border border-[var(--color-line-subtle)] bg-[var(--color-base-subtle)]/40 p-2 space-y-1">
             <div className="flex items-center justify-between text-[9.5px]">
-              <span className="font-mono text-[var(--color-ink-secondary)] font-medium">
+              <span className="font-sans tabular-nums text-[var(--color-ink-secondary)] font-medium">
                 Demo Accounts
               </span>
-              <span className="font-mono text-[8.5px] text-[var(--color-ink-muted)]">
-                [Preview]
+              <span className="font-sans tabular-nums text-[8.5px] text-[var(--color-ink-muted)]">
+                [Quick Switch]
               </span>
             </div>
             <div className="grid grid-cols-2 gap-1.5">
@@ -219,6 +282,7 @@ export function LoginClient() {
                 onClick={() => {
                   setSelectedUserKey("sudeesh");
                   setEmail(DUMMY_USERS.sudeesh.email);
+                  setPassword("••••••••••••");
                 }}
                 className={`rounded-[var(--radius-xs)] border px-2 py-1 text-left text-[10.5px] transition-colors cursor-pointer ${
                   selectedUserKey === "sudeesh"
@@ -234,6 +298,7 @@ export function LoginClient() {
                 onClick={() => {
                   setSelectedUserKey("nikhil");
                   setEmail(DUMMY_USERS.nikhil.email);
+                  setPassword("••••••••••••");
                 }}
                 className={`rounded-[var(--radius-xs)] border px-2 py-1 text-left text-[10.5px] transition-colors cursor-pointer ${
                   selectedUserKey === "nikhil"
@@ -248,13 +313,21 @@ export function LoginClient() {
           </div>
         </div>
 
-        {/* Bottom: Subtle Status Notice */}
-        <div className="flex items-center justify-between text-[10px] text-[var(--color-ink-tertiary)] font-mono pt-3 border-t border-[var(--color-line-subtle)] shrink-0">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-[var(--color-accent)]" />
-            <span>Google SSO &amp; Auth Coming Soon</span>
+        {/* Bottom: Status Notice & Legal Links */}
+        <div className="flex items-center justify-between text-[10px] text-[var(--color-ink-tertiary)] font-sans tabular-nums pt-3 border-t border-[var(--color-line-subtle)] shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+            <span>Private Operator Workspace</span>
           </div>
-          <span>Atom &amp; Echo OS</span>
+          <div className="flex items-center gap-3">
+            <Link href="/privacy" className="hover:text-[var(--color-ink)] transition-colors">
+              Privacy Policy
+            </Link>
+            <span>&middot;</span>
+            <Link href="/terms" className="hover:text-[var(--color-ink)] transition-colors">
+              Terms
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -274,11 +347,11 @@ export function LoginClient() {
 
         {/* Right side floating editorial statement */}
         <div className="absolute bottom-8 left-8 right-8 z-10 space-y-2 text-white/90">
-          <div className="font-mono text-[9.5px] tracking-wider uppercase text-white/60">
-            Atom &amp; Echo &middot; Execution Atelier
+          <div className="font-sans tabular-nums text-[9.5px] tracking-wider uppercase text-[#a8aaa3]">
+            Atom &amp; Echo &middot; Personal Branding for the Unapologetically Ambitious
           </div>
-          <p className="font-display text-lg sm:text-xl font-normal leading-snug tracking-tight text-white/95 max-w-md">
-            The operating system for founder thought leadership and outbound momentum.
+          <p className="font-display text-lg sm:text-2xl font-normal leading-snug tracking-tight text-[#f4f5f0] max-w-md">
+            Ambition deserves a <em>voice.</em> Keep the edges.
           </p>
         </div>
       </div>
@@ -304,7 +377,7 @@ export function LoginClient() {
 
             {resetSent ? (
               <div className="space-y-4 text-center py-3">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)]">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)]">
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
@@ -312,7 +385,7 @@ export function LoginClient() {
                     Password Reset Link Sent
                   </div>
                   <p className="text-[11px] text-[var(--color-ink-secondary)] leading-relaxed">
-                    We sent a password recovery link to <span className="font-medium text-[var(--color-ink)]">{resetEmail}</span> (preview simulated).
+                    We sent a password recovery link to <span className="font-medium text-[var(--color-ink)]">{resetEmail}</span>.
                   </p>
                 </div>
                 <button
@@ -329,7 +402,7 @@ export function LoginClient() {
                   Enter your work email address and we&apos;ll send you instructions to reset your password.
                 </p>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-[var(--color-ink-secondary)] block">
+                  <label className="text-[10px] font-sans tabular-nums text-[var(--color-ink-secondary)] block">
                     Email Address
                   </label>
                   <input

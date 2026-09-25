@@ -55,12 +55,12 @@ interface ReviewPortalClientProps {
 }
 
 const FEEDBACK_CHIPS = [
-  "Too casual",
-  "Change hook",
-  "Weaken claim",
+  "Make it punchier",
+  "Sharpen hook",
+  "Tone it down",
   "Update metric",
-  "Shorten post",
-  "Needs more data",
+  "Add more grit",
+  "Keep the edge",
 ];
 
 export function ReviewPortalClient({
@@ -210,7 +210,7 @@ export function ReviewPortalClient({
       );
 
       if (res.success) {
-        setRevisionFeedback("Feedback submitted! Sudeesh & the team are revising this draft.");
+        setRevisionFeedback("Notes received. Sudeesh and the editorial team are refining the draft.");
         setShowFeedbackDrawer(false);
         setSelectedChips([]);
         setCommentText("");
@@ -241,11 +241,11 @@ export function ReviewPortalClient({
           <div className="flex items-center gap-2.5">
             <AtomEchoLogo size={28} showText={false} />
             <div className="leading-tight">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
-                Founder Portal
+              <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
+                Private Founder Desk
               </span>
               <span className="text-xs font-semibold text-[var(--color-ink)]">
-                {clientName} &middot; {founderName}
+                {founderName} &middot; {clientName}
               </span>
             </div>
           </div>
@@ -286,7 +286,7 @@ export function ReviewPortalClient({
                 : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink-secondary)]"
             }`}
           >
-            Pending Review {pendingQueue.length > 0 ? `(${pendingQueue.length})` : ""}
+            Awaiting Your Sign-Off {pendingQueue.length > 0 ? `(${pendingQueue.length})` : ""}
           </button>
           <button
             onClick={() => setActiveTab("archive")}
@@ -296,7 +296,7 @@ export function ReviewPortalClient({
                 : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink-secondary)]"
             }`}
           >
-            Approved &amp; Scheduled {approvedArchive.length > 0 ? `(${approvedArchive.length})` : ""}
+            Approved &amp; Locked {approvedArchive.length > 0 ? `(${approvedArchive.length})` : ""}
           </button>
         </div>
       </header>
@@ -331,31 +331,31 @@ export function ReviewPortalClient({
           {pendingQueue.length === 0 ? (
             /* ALL CAUGHT UP CELEBRATORY SCREEN */
             <div className="mt-8 rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] p-7 text-center shadow-dialog space-y-4 animate-in">
-              <div className="mx-auto flex h-13 w-13 items-center justify-center rounded-full bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)] font-medium text-base">
+              <div className="mx-auto flex h-13 w-13 items-center justify-center rounded-2xl bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)] font-medium text-base">
                 <CheckCircle2 className="h-7 w-7 text-[var(--color-ok)]" />
               </div>
               <div className="space-y-1.5">
                 <h1 className="font-display text-xl font-normal text-[var(--color-ink)]">
-                  All Caught Up!
+                  Every Edge Approved
                 </h1>
                 <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed">
-                  Thank you, <span className="font-medium text-[var(--color-ink)]">{founderName}</span>. There are no pending posts waiting for your review.
+                  Nothing waiting for your sign-off, <span className="font-medium text-[var(--color-ink)]">{founderName}</span>. You approve every word before it carries your name.
                 </p>
               </div>
 
               <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-3.5 text-left text-xs space-y-2">
-                <span className="font-mono text-[10px] uppercase text-[var(--color-ink-tertiary)] block font-medium">
+                <span className="font-sans tabular-nums text-[10px] uppercase text-[var(--color-ink-tertiary)] block font-medium">
                   Current Status:
                 </span>
                 <div className="flex items-center justify-between text-[11.5px] text-[var(--color-ink-secondary)]">
-                  <span>Approved &amp; Scheduled posts</span>
-                  <span className="font-mono font-medium text-[var(--color-ink)]">
+                  <span>Approved &amp; Locked Perspectives</span>
+                  <span className="font-sans tabular-nums font-medium text-[var(--color-ink)]">
                     {approvedArchive.length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-[11.5px] text-[var(--color-ink-secondary)]">
-                  <span>Next publishing window</span>
-                  <span className="font-mono text-[var(--color-ok)]">Active</span>
+                  <span>Next LinkedIn Release</span>
+                  <span className="font-sans tabular-nums text-[var(--color-ok)]">Active</span>
                 </div>
               </div>
 
@@ -365,12 +365,12 @@ export function ReviewPortalClient({
                   className="btn btn-secondary w-full py-2.5 text-xs cursor-pointer"
                 >
                   <Calendar className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-                  <span>View Scheduled Posts ({approvedArchive.length})</span>
+                  <span>View Publishing Schedule ({approvedArchive.length})</span>
                 </button>
               )}
 
-              <div className="border-t border-[var(--color-line-subtle)] pt-3 text-[11px] text-[var(--color-ink-tertiary)] font-mono">
-                Atom &amp; Echo &middot; Verified Zero-Login
+              <div className="border-t border-[var(--color-line-subtle)] pt-3 text-[11px] text-[var(--color-ink-tertiary)] font-sans tabular-nums">
+                Atom &amp; Echo &middot; Personal Branding for the Unapologetically Ambitious
               </div>
             </div>
           ) : currentPost ? (
@@ -379,8 +379,8 @@ export function ReviewPortalClient({
               {/* Batch Queue Stepper Header */}
               <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-2.5 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10.5px] uppercase tracking-wider text-[var(--color-accent-text)] font-semibold">
-                    POST {currentIndex + 1} OF {pendingQueue.length}
+                  <span className="font-sans tabular-nums text-[10.5px] uppercase tracking-wider text-[var(--color-accent-text)] font-semibold">
+                    PERSPECTIVE {currentIndex + 1} OF {pendingQueue.length}
                   </span>
                   {/* Step dots */}
                   {pendingQueue.length > 1 && (
@@ -406,7 +406,7 @@ export function ReviewPortalClient({
                       onClick={handlePrev}
                       disabled={currentIndex === 0}
                       className="p-1 rounded text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] disabled:opacity-30 cursor-pointer"
-                      title="Previous post"
+                      title="Previous perspective"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
@@ -414,7 +414,7 @@ export function ReviewPortalClient({
                       onClick={handleNext}
                       disabled={currentIndex === pendingQueue.length - 1}
                       className="p-1 rounded text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] disabled:opacity-30 cursor-pointer"
-                      title="Next post"
+                      title="Next perspective"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
@@ -425,16 +425,16 @@ export function ReviewPortalClient({
               {/* Pillar & Schedule Preview */}
               <div className="flex items-center justify-between text-xs">
                 {currentPost.target_pillar ? (
-                  <span className="font-mono text-[10.5px] text-[var(--color-ink-secondary)]">
+                  <span className="font-sans tabular-nums text-[10.5px] text-[var(--color-ink-secondary)]">
                     Pillar: <span className="text-[var(--color-ink)] font-medium">{currentPost.target_pillar}</span>
                   </span>
                 ) : (
-                  <span className="font-mono text-[10px] text-[var(--color-ink-tertiary)]">Thought Leadership</span>
+                  <span className="font-sans tabular-nums text-[10px] text-[var(--color-ink-tertiary)]">Thought Leadership</span>
                 )}
 
-                <div className="flex items-center gap-1 font-mono text-[10.5px] text-[var(--color-warn-text)]">
+                <div className="flex items-center gap-1 font-sans tabular-nums text-[10.5px] text-[var(--color-warn-text)]">
                   <Clock className="h-3 w-3" />
-                  <span>Awaiting Sign-off</span>
+                  <span>Awaiting Your Sign-Off</span>
                 </div>
               </div>
 
@@ -449,7 +449,7 @@ export function ReviewPortalClient({
                   {/* LinkedIn Author Header */}
                   <div className="flex items-start justify-between p-3.5 border-b border-[var(--color-line-subtle)]">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-base-subtle)] border border-[var(--color-line)] text-xs font-semibold text-[var(--color-ink)]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-base-subtle)] border border-[var(--color-line)] text-xs font-semibold text-[var(--color-ink)]">
                         {initials}
                       </div>
                       <div>
@@ -530,7 +530,7 @@ export function ReviewPortalClient({
               {/* VIEW 2: EDITORIAL READING VIEW */}
               {viewMode === "editorial" && (
                 <div className="card p-5 space-y-4">
-                  <div className="border-b border-[var(--color-line-subtle)] pb-2 text-[11px] font-mono text-[var(--color-ink-tertiary)]">
+                  <div className="border-b border-[var(--color-line-subtle)] pb-2 text-[11px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
                     Draft Body (Markdown)
                   </div>
                   <div className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-[var(--color-ink)] font-sans">
@@ -544,19 +544,19 @@ export function ReviewPortalClient({
                 <div className="card p-4.5 shadow-dialog space-y-3.5 bg-[var(--color-base-overlay)] border border-[var(--color-line-strong)] animate-in">
                   <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-2">
                     <span className="font-display text-sm font-medium text-[var(--color-ink)]">
-                      Request Changes
+                      Refine Edge & Feedback
                     </span>
                     <button
                       onClick={() => setShowFeedbackDrawer(false)}
-                      className="text-[11px] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] cursor-pointer font-mono"
+                      className="text-[11px] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] cursor-pointer font-sans tabular-nums"
                     >
                       CLOSE
                     </button>
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-[11px] font-mono uppercase text-[var(--color-ink-tertiary)] block">
-                      Quick tone tags:
+                    <span className="text-[11px] font-sans tabular-nums uppercase text-[var(--color-ink-tertiary)] block">
+                      Quick tone direction:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {FEEDBACK_CHIPS.map((chip) => {
@@ -580,13 +580,13 @@ export function ReviewPortalClient({
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-[11px] font-mono uppercase text-[var(--color-ink-tertiary)] block">
-                      Your notes:
+                    <span className="text-[11px] font-sans tabular-nums uppercase text-[var(--color-ink-tertiary)] block">
+                      Founder Notes & Direction:
                     </span>
                     <textarea
                       value={commentText}
                       onChange={(e) => setCommentText(e.target.value)}
-                      placeholder="What would you like changed? (e.g. tone, wording, hook)..."
+                      placeholder="What would you like sharpened? (e.g. stronger angle, tone nuance, specific story details)..."
                       rows={3}
                       className="input text-xs resize-y w-full"
                     />
@@ -607,7 +607,7 @@ export function ReviewPortalClient({
                       className="btn btn-primary flex-1 py-2 text-xs disabled:opacity-50 cursor-pointer"
                     >
                       <Send className="h-3.5 w-3.5" />
-                      <span>{isPending ? "Sending..." : "Submit Feedback"}</span>
+                      <span>{isPending ? "Sending..." : "Send to Editorial Team"}</span>
                     </button>
                   </div>
                 </div>
@@ -621,10 +621,10 @@ export function ReviewPortalClient({
       {activeTab === "archive" && (
         <main className="mx-auto max-w-md px-3.5 pt-3 space-y-3.5">
           <div className="flex items-center justify-between text-xs pb-1 border-b border-[var(--color-line-subtle)]">
-            <span className="font-mono text-[10.5px] uppercase tracking-wider text-[var(--color-ink-tertiary)]">
-              Scheduled Calendar Archive
+            <span className="font-sans tabular-nums text-[10.5px] uppercase tracking-wider text-[var(--color-ink-tertiary)]">
+              Locked Publishing Calendar
             </span>
-            <span className="text-xs font-mono text-[var(--color-ok)]">
+            <span className="text-xs font-sans tabular-nums text-[var(--color-ok)]">
               {approvedArchive.length} Locked
             </span>
           </div>
@@ -632,13 +632,13 @@ export function ReviewPortalClient({
           {approvedArchive.length === 0 && publishedPosts.length === 0 ? (
             <div className="card p-6 text-center text-xs text-[var(--color-ink-secondary)] space-y-2">
               <Calendar className="h-6 w-6 mx-auto text-[var(--color-ink-tertiary)]" />
-              <p>No posts approved or scheduled yet.</p>
+              <p>No perspectives locked or scheduled yet.</p>
               {pendingQueue.length > 0 && (
                 <button
                   onClick={() => setActiveTab("queue")}
                   className="btn btn-secondary text-xs mt-2"
                 >
-                  Review Pending Posts ({pendingQueue.length})
+                  Review Pending Perspectives ({pendingQueue.length})
                 </button>
               )}
             </div>
@@ -650,11 +650,12 @@ export function ReviewPortalClient({
                   className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-4 space-y-2 shadow-sm"
                 >
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-mono text-[10.5px] text-[var(--color-ok-text)] bg-[var(--color-ok-bg)] px-2 py-0.5 rounded border border-[var(--color-ok-line)] font-medium">
-                      ✓ Scheduled
+                    <span className="inline-flex items-center gap-1.5 font-sans tabular-nums text-[10.5px] uppercase tracking-wider text-[var(--color-ok-text)] font-medium">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ok)]" />
+                      Scheduled
                     </span>
                     {item.scheduled_publish_date && (
-                      <span className="text-[10.5px] font-mono text-[var(--color-ink-secondary)] flex items-center gap-1">
+                      <span className="text-[10.5px] font-sans tabular-nums text-[var(--color-ink-secondary)] flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {formatDisplayDateTimeIST(item.scheduled_publish_date, {
                           weekday: "short",
@@ -676,7 +677,7 @@ export function ReviewPortalClient({
                   </p>
 
                   {item.target_pillar && (
-                    <div className="pt-1 text-[10px] font-mono text-[var(--color-ink-tertiary)]">
+                    <div className="pt-1 text-[10px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
                       Pillar: {item.target_pillar}
                     </div>
                   )}
@@ -689,11 +690,12 @@ export function ReviewPortalClient({
                   className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)]/60 p-4 space-y-2"
                 >
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-mono text-[10.5px] text-[var(--color-ink-tertiary)] bg-[var(--color-base-subtle)] px-2 py-0.5 rounded border border-[var(--color-line)]">
+                    <span className="inline-flex items-center gap-1.5 font-sans tabular-nums text-[10.5px] uppercase tracking-wider text-[var(--color-ink-tertiary)]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ink-muted)]" />
                       Published
                     </span>
                     {item.published_at && (
-                      <span className="text-[10px] font-mono text-[var(--color-ink-tertiary)]">
+                      <span className="text-[10px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
                         {formatDisplayDateIST(item.published_at, {
                           month: "short",
                           day: "numeric",
@@ -713,7 +715,7 @@ export function ReviewPortalClient({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs text-[var(--color-accent)] hover:underline pt-1"
                     >
-                      <span>View live on LinkedIn</span>
+                      <span>Live on LinkedIn ↗</span>
                       <ExternalLink className="h-3 w-3" />
                     </a>
                   )}
@@ -735,17 +737,17 @@ export function ReviewPortalClient({
               className="btn btn-secondary flex-1 h-11 text-xs cursor-pointer active:scale-[0.98] transition-transform"
             >
               <MessageSquare className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-              <span>Request Changes</span>
+              <span>Refine Edge / Notes</span>
             </button>
 
             <button
               type="button"
               onClick={handleApprove}
               disabled={isPending}
-              className="btn flex-[1.4] h-11 text-xs bg-[var(--color-ok)] hover:bg-[var(--color-ok)]/90 text-white font-medium border border-[var(--color-ok-line)] shadow-sm disabled:opacity-50 cursor-pointer active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5"
+              className="btn btn-accent flex-[1.4] h-11 text-xs font-semibold shadow-sm disabled:opacity-50 cursor-pointer active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
             >
               <ThumbsUp className="h-4 w-4" />
-              <span>{isPending ? "Approving..." : "Approve Post (1-Tap)"}</span>
+              <span>{isPending ? "Locking..." : "Approve for Publishing ↗"}</span>
             </button>
           </div>
         </footer>

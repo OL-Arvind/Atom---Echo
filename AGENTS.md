@@ -50,15 +50,28 @@ Before generating any component, API route, or database migration, explicitly ve
 
 ---
 
-## 4. Design & Performance Standards (The "Calm Attention Surface" Doctrine)
+## 4. Design & Performance Standards (The "Calm Attention Surface" & Emil Kowalski Craft Doctrine)
 
-All web application code built for Atom & Echo must follow BaseWorks premium design principles, calibrated for **ADHD-friendly, low-cognitive-load execution** (inspired by Linear, Amie, and Things 3):
+All web application code built for Atom & Echo must follow BaseWorks premium design principles, calibrated for **ADHD-friendly, low-cognitive-load execution** (inspired by Linear, Emil Kowalski design engineering, Amie, and Things 3):
 
 * **Single Dominant Anchor**: Every view must present exactly one clear focal point. Eliminate competing banners, multi-tiered eyebrows, and noisy visual sirens.
-* **Strict Ban on Pill / Badge Confetti**: Never wrap passive metadata into rounded colored pills (e.g. `ZERO-LOGIN PWA`, `ZERO LEAKAGE`, `Anchor Day 1`, `ID: xxx`). Use quiet, crisp secondary text. Reserve colored badges strictly for real operational emergencies/exceptions.
+* **Strict Ban on Pill / Badge Confetti**: 
+  - **NEVER** wrap passive status or metadata into rounded colored pills (e.g., `rounded-full bg-amber-50 border-amber-200 px-2 py-0.5`). 
+  - Instead, use quiet, crisp secondary text or an understated 6px inline dot indicator with uppercase sans tracking (`flex items-center gap-2 text-[10.5px] font-sans tabular-nums tracking-wider text-[var(--color-ink-secondary)]`).
+  - Reserve colored badges *strictly* for true, mission-critical operational emergencies/exceptions (e.g. `Emergency Freeze`).
+* **Strict Ban on Tinted Callout Boxes / Alert Banners**:
+  - **NEVER** create Notion-style pastel-tinted callout boxes with icons (e.g., `bg-amber-50/60 border-amber-200` with `<MessageCircle />` or cartoonish alert clipart).
+  - For user/client feedback, quotes, or notes, use an **editorial hairline inset**: a subtle left border (`border-l-2 border-[var(--color-line-strong)] pl-3.5 py-1.5`) on the quiet surface.
+* **No Multi-Tiered Eyebrow / Label Stacking**:
+  - Never stack redundant micro-headers (e.g., `"Client Feedback Note"` directly above `"1-Tap Portal Comment"` directly above `"Aravind commented:"`). State the context once, cleanly.
+* **No Decorative Icon Clutter**:
+  - Icons are currency, not wallpaper. Never stick chat bubbles, sparkles, or generic emojis next to everyday text. Use vector icons strictly for interactive actions or core navigation.
 * **Zero AI-Prompt-Speak Copywriting**: UI copy must be written in crisp, confident human language. Never print internal prompts, Jira-speak, or multi-sentence robotic apologies into titles, subtitles, or empty states.
 * **No Marketing Slop in Operational Shells**: No promo boxes or redundant explanatory paragraphs inside the sidebar or dashboard.
-* **Quiet Defaults, Loud Exceptions**: Serene monochrome base, crisp typography (Inter / Plus Jakarta Sans), subtle hairlines, generous breathing room. Color is reserved for true state signals.
+* **Quiet Defaults, Loud Exceptions & No Technical Monospace**: Serene obsidian base (`#10110f`), crisp human typography matching `atomnecho.com` (**DM Sans** for UI/body/metadata with `tabular-nums` for numbers/dates, **Manrope** for display headings, **Georgia** for italic accents — **never** use technical/code monospace fonts like `JetBrains Mono`), subtle hairlines, generous breathing room. Color is reserved for true state signals.
+* **Responsive Interactive Feedback (Emil Kowalski Standard)**:
+  - Tappable buttons must feel responsive: `transition: transform 160ms ease-out` and subtle `active:scale-[0.98]`.
+  - Fast, purposeful micro-transitions (< 200ms ease-out). Never animate from `scale(0)` (use `scale(0.95)` with opacity).
 * **Speed & Performance**: Zero layout shifts (CLS < 0.05), instant optimistic UI updates on actions, lightweight bundle sizes.
 * **Separation of Concerns**:
   * **Internal Operator UI**: Rich, clean, keyboard-accessible, desktop-first command surface.

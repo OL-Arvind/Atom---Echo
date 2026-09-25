@@ -19,14 +19,14 @@ export default async function CampaignsPage() {
     <div className="mx-auto max-w-6xl space-y-7">
       {/* Standardized Header */}
       <PageHeader
-        title="Outbound Campaigns"
-        description="Cold email and LinkedIn outreach campaigns running for your clients."
+        title="Outbound &amp; GTM"
+        description="Targeted B2B email and LinkedIn outbound engines running alongside founder brand authority."
       >
         <Link
           href="/clients"
           className="btn btn-primary text-xs"
         >
-          <span>View Clients</span>
+          <span>Client Roster</span>
         </Link>
       </PageHeader>
 
@@ -34,33 +34,33 @@ export default async function CampaignsPage() {
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card p-5 space-y-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-            Active Campaigns
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
+            Active Outbound Engines
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ink)]">
             {outreachClients.length}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Clients with active outreach</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Founders running multi-channel GTM</p>
         </div>
 
         <div className="card p-5 space-y-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ok-text)] font-medium">
-            Inbox Placement
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ok-text)] font-medium">
+            Primary Inbox Placement
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ok-text)]">
             {outreachClients.length > 0 ? "99.2%" : "—"}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Email deliverability &amp; sender health</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Dedicated domain reputation &amp; warmup</p>
         </div>
 
         <div className="card p-5 space-y-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-accent-text)] font-medium">
-            Pipeline Value
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-accent-text)] font-medium">
+            Qualified Pipeline Generated
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-accent-text)]">
             {outreachClients.length > 0 ? "₹63,00,000" : "₹0"}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Lead opportunities generated</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">High-intent founder conversations</p>
         </div>
       </div>
 
@@ -70,18 +70,18 @@ export default async function CampaignsPage() {
           <div className="flex items-center gap-2.5">
             <Layers className="h-4 w-4 text-[var(--color-accent)]" />
             <h2 className="font-display text-base font-normal text-[var(--color-ink)]">
-              Outbound Campaigns
+              Active GTM Programs
             </h2>
           </div>
-          <span className="font-mono text-xs text-[var(--color-ink-tertiary)]">
-            HeyReach &amp; Smartlead
+          <span className="font-sans tabular-nums text-xs text-[var(--color-ink-tertiary)]">
+            Clay &middot; HeyReach &middot; Smartlead
           </span>
         </div>
 
         {outreachClients.length === 0 ? (
           <div className="p-8 text-center text-xs text-[var(--color-ink-tertiary)] space-y-2">
-            <p>No outbound campaigns running yet.</p>
-            <p className="text-[var(--color-ink-muted)]">Add a client with cold outreach to start tracking campaigns.</p>
+            <p>No active outbound engines running right now.</p>
+            <p className="text-[var(--color-ink-muted)]">Assign an Outbound or Hybrid GTM retainer to a founder account to track campaigns here.</p>
           </div>
         ) : (
           <div className="divide-y divide-[var(--color-line-subtle)]">
@@ -106,7 +106,7 @@ export default async function CampaignsPage() {
                       </span>
                     </div>
                     <p className="text-xs text-[var(--color-ink-secondary)]">
-                      Monthly Retainer: <span className="font-medium text-[var(--color-ink)]">₹{Number(eng?.monthly_retainer || 80000).toLocaleString("en-IN")}/mo</span> &middot; Dedicated sender pool active
+                      Monthly Retainer: <span className="font-medium text-[var(--color-ink)]">₹{Number(eng?.monthly_retainer || 80000).toLocaleString("en-IN")}/mo</span> &middot; Dedicated sender infrastructure active
                     </p>
                   </div>
 
@@ -115,7 +115,7 @@ export default async function CampaignsPage() {
                       href={`/clients/${client.id}`}
                       className="btn btn-secondary text-xs inline-flex items-center gap-1"
                     >
-                      <span>View Client Details</span>
+                      <span>Open Founder Account</span>
                       <ExternalLink className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
                     </Link>
                   </div>

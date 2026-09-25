@@ -68,7 +68,7 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
 
         <form onSubmit={handleSubmit} noValidate className="space-y-3">
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Platform / Service *
             </label>
             <input
@@ -80,7 +80,7 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Username or Email *
             </label>
             <input
@@ -92,7 +92,7 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Password *
             </label>
             <input
@@ -100,12 +100,12 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
               type="password"
               required
               placeholder="Enter account password"
-              className="input text-xs font-mono"
+              className="input text-xs font-sans tabular-nums"
             />
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               2FA Method / Notes
             </label>
             <input
@@ -116,7 +116,7 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Notes &amp; Setup Instructions
             </label>
             <textarea

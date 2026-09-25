@@ -162,32 +162,32 @@ export function ContentStudioClient({
     return [
       {
         id: "draft",
-        title: "Drafting",
-        subtitle: "Writers in progress",
+        title: "01 Capture & Draft",
+        subtitle: "Shaping raw thinking",
         posts: clientScoped.filter((p) => p.status === "draft"),
       },
       {
         id: "internal_review",
-        title: "Internal QA",
-        subtitle: "Lead review & fact-check",
+        title: "02 Voice & QA",
+        subtitle: "Editorial polish & edges",
         posts: clientScoped.filter((p) => p.status === "internal_review"),
       },
       {
         id: "client_review",
-        title: "Client Review",
-        subtitle: "Waiting founder 1-tap",
+        title: "03 Founder Desk",
+        subtitle: "Awaiting 1-tap sign-off",
         posts: clientScoped.filter((p) => p.status === "client_review"),
       },
       {
         id: "scheduled",
-        title: "Approved & Scheduled",
-        subtitle: "Locked on Calendar",
+        title: "04 Scheduled",
+        subtitle: "Locked on timeline",
         posts: clientScoped.filter((p) => p.status === "approved" || p.status === "scheduled"),
       },
       {
         id: "published",
-        title: "Published",
-        subtitle: "Live on LinkedIn",
+        title: "05 Published",
+        subtitle: "Live thought leadership",
         posts: clientScoped.filter((p) => p.status === "published"),
       },
     ];
@@ -214,7 +214,7 @@ export function ContentStudioClient({
       {/* Standardized Header */}
       <PageHeader
         title="Content Studio"
-        description="Draft, inspect taboo buzzwords, simulate LinkedIn mobile folds, and manage personal branding posts."
+        description="Shape founder conviction and unfiltered opinions into distinctive, high-impact LinkedIn perspectives."
       >
         <div className="flex items-center gap-2">
           {/* View Mode Toggle */}
@@ -248,7 +248,7 @@ export function ContentStudioClient({
             className="btn btn-primary text-xs cursor-pointer inline-flex items-center gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>New Post</span>
+            <span>New Perspective</span>
           </button>
         </div>
       </PageHeader>
@@ -264,13 +264,13 @@ export function ContentStudioClient({
             filter === "draft" && viewMode === "list" ? "border-[var(--color-accent-dim)]" : ""
           }`}
         >
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-            Drafts &amp; Internal QA
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
+            01 Capture &amp; Voice QA
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ink)]">
             {draftCount}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Authoring &amp; fact-checking</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Extracting ideas &amp; voice polish</p>
         </div>
 
         <div
@@ -282,13 +282,13 @@ export function ContentStudioClient({
             filter === "review" && viewMode === "list" ? "border-[var(--color-warn-line)]" : ""
           }`}
         >
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-warn-text)] font-medium">
-            Waiting for Client Review
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-warn-text)] font-medium">
+            02 Awaiting Founder Review
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-warn-text)]">
             {reviewCount}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Tokenized 1-tap WhatsApp link active</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Pending 1-tap sign-off on Founder Desk</p>
         </div>
 
         <div
@@ -300,13 +300,13 @@ export function ContentStudioClient({
             filter === "scheduled" && viewMode === "list" ? "border-[var(--color-ok-line)]" : ""
           }`}
         >
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ok-text)] font-medium">
-            Approved &amp; Scheduled
+          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ok-text)] font-medium">
+            03 Locked &amp; Scheduled
           </span>
           <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ok-text)]">
             {scheduledCount}
           </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Locked on Master Calendar</p>
+          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Ready on publishing timeline</p>
         </div>
       </div>
 
@@ -338,7 +338,7 @@ export function ContentStudioClient({
             {[
               { id: "all", label: `All (${initialPosts.length})` },
               { id: "draft", label: `Drafts (${draftCount})` },
-              { id: "review", label: `Client Review (${reviewCount})` },
+              { id: "review", label: `Founder Review (${reviewCount})` },
               { id: "scheduled", label: `Scheduled (${scheduledCount})` },
             ].map((tab) => (
               <button
@@ -355,11 +355,11 @@ export function ContentStudioClient({
             ))}
           </div>
         ) : (
-          <div className="text-xs font-mono text-[var(--color-ink-tertiary)] flex items-center gap-2">
-            <span>Finite State Machine Pipeline</span>
+          <div className="text-xs font-sans tabular-nums text-[var(--color-ink-tertiary)] flex items-center gap-2">
+            <span>Editorial Flow · Idea to Publishing</span>
             <span>·</span>
             <Link href="/calendar" className="hover:text-[var(--color-ink)] underline flex items-center gap-1">
-              <span>View Calendar Projection</span>
+              <span>Publishing Schedule</span>
               <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
@@ -383,8 +383,8 @@ export function ContentStudioClient({
                   <div>
                     <h3 className="font-semibold text-xs text-[var(--color-ink)] flex items-center gap-1.5">
                       <span>{col.title}</span>
-                      <span className="font-mono text-[10px] text-[var(--color-ink-tertiary)] px-1.5 py-0.2 rounded bg-[var(--color-base-subtle)] border border-[var(--color-line)]">
-                        {col.posts.length}
+                      <span className="font-sans text-[11px] text-[var(--color-ink-tertiary)] font-normal tabular-nums">
+                        ({col.posts.length})
                       </span>
                     </h3>
                     <p className="text-[10.5px] text-[var(--color-ink-tertiary)] mt-0.5">
@@ -420,7 +420,7 @@ export function ContentStudioClient({
                               </span>
                             </div>
                             {post.target_pillar && (
-                              <span className="font-mono text-[9px] uppercase px-1 rounded bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] border border-[var(--color-line)]">
+                              <span className="font-sans tabular-nums text-[10px] uppercase tracking-wider text-[var(--color-ink-tertiary)]">
                                 {post.target_pillar.split(" ")[0]}
                               </span>
                             )}
@@ -436,7 +436,7 @@ export function ContentStudioClient({
 
                           {/* Taboo Warning if detected */}
                           {flagged.length > 0 && (
-                            <div className="flex items-center gap-1 text-[10px] font-mono text-[var(--color-danger-text)] bg-[var(--color-danger-bg)] px-1.5 py-0.5 rounded border border-[var(--color-danger-line)]">
+                            <div className="flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums text-[var(--color-danger-text)] border-l-2 border-[var(--color-danger-line)] pl-2 py-0.5">
                               <ShieldAlert className="h-3 w-3 shrink-0" />
                               <span className="truncate">Taboo: {flagged.join(", ")}</span>
                             </div>
@@ -444,12 +444,12 @@ export function ContentStudioClient({
 
                           {/* Published or Scheduled Date */}
                           {post.status === "published" && post.published_at ? (
-                            <div className="flex items-center gap-1 text-[10.5px] font-mono text-[var(--color-ok-text)]">
+                            <div className="flex items-center gap-1 text-[10.5px] font-sans tabular-nums text-[var(--color-ok-text)]">
                               <CheckCircle2 className="h-3 w-3 shrink-0" />
                               <span>Published {formatDisplayDateIST(post.published_at)}</span>
                             </div>
                           ) : post.scheduled_publish_date ? (
-                            <div className="flex items-center gap-1 text-[10.5px] font-mono text-[var(--color-ink-tertiary)]">
+                            <div className="flex items-center gap-1 text-[10.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
                               <Calendar className="h-3 w-3 text-[var(--color-accent)] shrink-0" />
                               <span>{formatDisplayDateIST(post.scheduled_publish_date)}</span>
                             </div>
@@ -465,31 +465,31 @@ export function ContentStudioClient({
                               <ChevronRight className="h-3 w-3" />
                             </Link>
 
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                               {post.status === "draft" && (
                                 <button
                                   onClick={() => handleStatusTransition(post.id, "internal_review")}
-                                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-line)] text-[var(--color-ink-secondary)] cursor-pointer"
-                                  title="Move to Internal QA"
+                                  className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] text-[var(--color-ink)] transition-colors cursor-pointer"
+                                  title="Move to Internal Voice QA"
                                 >
-                                  Submit QA &rarr;
+                                  Ready for QA &rarr;
                                 </button>
                               )}
 
                               {post.status === "internal_review" && (
                                 <button
                                   onClick={() => handleStatusTransition(post.id, "client_review")}
-                                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-warn-bg)] hover:bg-[var(--color-warn-bg)]/80 border border-[var(--color-warn-line)] text-[var(--color-warn-text)] cursor-pointer"
-                                  title="Send to Founder Client Review"
+                                  className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-warn-line)] bg-[var(--color-warn-bg)] hover:bg-[var(--color-warn-bg)]/80 text-[var(--color-warn-text)] transition-colors cursor-pointer"
+                                  title="Send to Founder Desk for Review"
                                 >
-                                  To Client &rarr;
+                                  Send to Founder &rarr;
                                 </button>
                               )}
 
                               {post.status === "client_review" && (
                                 <button
                                   onClick={() => openWhatsAppPing(post)}
-                                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-line)] text-[var(--color-ink)] cursor-pointer flex items-center gap-1"
+                                  className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] text-[var(--color-ink)] transition-colors cursor-pointer inline-flex items-center gap-1"
                                   title="Ping on WhatsApp"
                                 >
                                   <WhatsAppIcon size={12} className="text-[#25D366]" />
@@ -500,21 +500,21 @@ export function ContentStudioClient({
                               {post.status === "approved" && (
                                 <button
                                   onClick={() => handleStatusTransition(post.id, "scheduled")}
-                                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-ok-bg)] hover:bg-[var(--color-ok-bg)]/80 border border-[var(--color-ok-line)] text-[var(--color-ok-text)] cursor-pointer"
-                                  title="Confirm Scheduled Slot"
+                                  className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-accent-dim)] bg-[var(--color-accent-dim)]/10 hover:bg-[var(--color-accent-dim)]/20 text-[var(--color-accent-text)] transition-colors cursor-pointer"
+                                  title="Confirm Scheduled Slot on Timeline"
                                 >
-                                  Schedule &rarr;
+                                  Lock Schedule &rarr;
                                 </button>
                               )}
 
                               {post.status === "scheduled" && (
                                 <button
                                   onClick={() => setPublishingPost(post)}
-                                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-ok-bg)] hover:bg-[var(--color-ok-bg)]/80 border border-[var(--color-ok-line)] text-[var(--color-ok-text)] cursor-pointer inline-flex items-center gap-1 font-medium"
+                                  className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-ok-line)] bg-[var(--color-ok-bg)] hover:bg-[var(--color-ok-bg)]/80 text-[var(--color-ok-text)] transition-colors cursor-pointer inline-flex items-center gap-1 font-medium"
                                   title="Mark as Published on LinkedIn"
                                 >
                                   <CheckCircle2 className="h-2.5 w-2.5" />
-                                  <span>Publish &rarr;</span>
+                                  <span>Live on LinkedIn &rarr;</span>
                                 </button>
                               )}
 
@@ -524,7 +524,7 @@ export function ContentStudioClient({
                                     href={post.linkedin_post_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-ok-bg)] hover:bg-[var(--color-ok-bg)]/80 border border-[var(--color-ok-line)] text-[var(--color-ok-text)] inline-flex items-center gap-1"
+                                    className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] text-[var(--color-ink)] inline-flex items-center gap-1 transition-colors"
                                     title="View live LinkedIn post"
                                   >
                                     <span>Live</span>
@@ -533,7 +533,7 @@ export function ContentStudioClient({
                                 ) : (
                                   <button
                                     onClick={() => setPublishingPost(post)}
-                                    className="text-[10px] font-mono px-1 py-0.5 rounded bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-line)] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] cursor-pointer"
+                                    className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors cursor-pointer"
                                     title="Add live LinkedIn link"
                                   >
                                     + URL
@@ -558,21 +558,21 @@ export function ContentStudioClient({
         <div className="space-y-3.5">
           {filteredPosts.length === 0 ? (
             <div className="card p-12 text-center space-y-3">
-              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] border border-[var(--color-line)]">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] border border-[var(--color-line)]">
                 <Feather className="h-5 w-5" />
               </div>
               <p className="font-display text-base font-normal text-[var(--color-ink)]">
-                No posts found
+                No perspectives found
               </p>
               <p className="text-xs text-[var(--color-ink-tertiary)]">
-                Create a post to start drafting and scheduling.
+                Draft a perspective to capture founder conviction and shape it for LinkedIn.
               </p>
               <button
                 onClick={() => setShowNewModal(true)}
                 className="btn btn-primary text-xs inline-flex mt-2"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>Create Post</span>
+                <span>Draft Perspective</span>
               </button>
             </div>
           ) : (
@@ -603,17 +603,18 @@ export function ContentStudioClient({
                         >
                           {post.title}
                         </Link>
-                        <span
-                          className={`font-mono text-[10px] uppercase px-2 py-0.5 rounded border ${
-                            isReview
-                              ? "bg-[var(--color-warn-bg)] text-[var(--color-warn-text)] border-[var(--color-warn-line)]"
-                              : isApproved || isScheduled
-                              ? "bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border-[var(--color-ok-line)]"
-                              : isPaused
-                              ? "bg-[var(--color-danger-bg)] text-[var(--color-danger-text)] border-[var(--color-danger-line)]"
-                              : "bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] border border-[var(--color-line)]"
-                          }`}
-                        >
+                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-secondary)]">
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              isReview
+                                ? "bg-[var(--color-warn)]"
+                                : isApproved || isScheduled
+                                ? "bg-[var(--color-ok)]"
+                                : isPaused
+                                ? "bg-[var(--color-danger)]"
+                                : "bg-[var(--color-ink-muted)]"
+                            }`}
+                          />
                           {post.status?.replace("_", " ")}
                         </span>
                       </div>
@@ -638,7 +639,7 @@ export function ContentStudioClient({
                         {post.scheduled_publish_date && (
                           <>
                             <span className="text-[var(--color-ink-tertiary)]">·</span>
-                            <span className="font-mono text-[11px] text-[var(--color-accent-text)]">
+                            <span className="font-sans tabular-nums text-[11px] text-[var(--color-accent-text)]">
                               Scheduled: {formatDisplayDateTimeIST(post.scheduled_publish_date, true)}
                             </span>
                           </>

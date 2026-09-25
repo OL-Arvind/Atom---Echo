@@ -142,7 +142,7 @@ export function BrandLogo({
     return (
       <div
         style={{ width: size, height: size }}
-        className={`flex items-center justify-center rounded-[var(--radius-xs)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] text-[10.5px] font-mono font-medium text-[var(--color-ink-secondary)] shrink-0 select-none ${className}`}
+        className={`flex items-center justify-center rounded-[var(--radius-xs)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] text-[10.5px] font-sans tabular-nums font-medium text-[var(--color-ink-secondary)] shrink-0 select-none ${className}`}
       >
         {initial}
       </div>
@@ -159,7 +159,7 @@ export function BrandLogo({
       width={size}
       height={size}
       onError={() => setHasError(true)}
-      className={`object-contain shrink-0 bg-white ${className}`}
+      className={`object-contain shrink-0 bg-[var(--color-base-overlay)] ${className}`}
       unoptimized
     />
   );

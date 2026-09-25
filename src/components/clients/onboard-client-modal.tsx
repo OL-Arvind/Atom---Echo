@@ -76,7 +76,7 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-mono uppercase tracking-wider">
+                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
                     Company / Brand Name *
                   </label>
                   <div className="relative">
@@ -91,7 +91,7 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-mono uppercase tracking-wider">
+                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
                     Founder Full Name *
                   </label>
                   <div className="relative">
@@ -108,7 +108,7 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-mono uppercase tracking-wider">
+                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
                     Founder Title
                   </label>
                   <input
@@ -120,7 +120,7 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-mono uppercase tracking-wider">
+                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
                     Founder Email
                   </label>
                   <div className="relative">
@@ -137,7 +137,7 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-mono uppercase tracking-wider">
+                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
                     WhatsApp Phone
                   </label>
                   <div className="relative">
@@ -145,13 +145,13 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
                     <input
                       name="founder_phone"
                       placeholder="+91 98765 00000"
-                      className="w-full h-9 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] pl-9 pr-3 text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent-dim)] focus:outline-none transition-all font-mono"
+                      className="w-full h-9 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] pl-9 pr-3 text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent-dim)] focus:outline-none transition-all font-sans tabular-nums"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-mono uppercase tracking-wider">
+                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
                     Retainer (₹ / Month)
                   </label>
                   <input
@@ -159,13 +159,13 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
                     type="number"
                     placeholder="e.g. 75000"
                     step={5000}
-                    className="w-full h-9 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] px-3 text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent-dim)] focus:outline-none transition-all font-mono"
+                    className="w-full h-9 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] px-3 text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent-dim)] focus:outline-none transition-all font-sans tabular-nums"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-mono uppercase tracking-wider">
+                <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
                   Website URL
                 </label>
                 <div className="relative">
@@ -182,7 +182,7 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-mono uppercase tracking-wider">
+                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
                     Service Line
                   </label>
                   <CustomSelect
@@ -197,7 +197,7 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-mono uppercase tracking-wider">
+                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
                     Billing Day of Month
                   </label>
                   <div className="relative">
@@ -208,7 +208,7 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
                       min={1}
                       max={31}
                       defaultValue={1}
-                      className="w-full h-9 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] pl-9 pr-3 text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent-dim)] focus:outline-none transition-all font-mono"
+                      className="w-full h-9 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] pl-9 pr-3 text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent-dim)] focus:outline-none transition-all font-sans tabular-nums"
                     />
                   </div>
                 </div>

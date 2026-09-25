@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encryptPassword, decryptPassword } from "@/lib/security/encryption";
 import { addCredentialSchema, formatZodError } from "@/lib/validations";
+import { requireOperatorSession } from "@/lib/auth/session";
 
 async function getClientContextHeaders() {
   try {
@@ -20,6 +21,7 @@ async function getClientContextHeaders() {
 
 export async function revealCredentialAction(credentialId: string) {
   try {
+    const operator = await requireOperatorSession();
     const supabase = createAdminClient();
     const { ip, userAgent } = await getClientContextHeaders();
 
@@ -34,18 +36,14 @@ export async function revealCredentialAction(credentialId: string) {
       return { success: false, error: "Credential not found." };
     }
 
-    // 2. Fetch admin user for audit attribution
-    const { data: user } = await supabase.from("users").select("id").limit(1).maybeSingle();
-
-    if (user) {
-      await supabase.from("credential_audit_logs").insert({
-        credential_id: cred.id,
-        user_id: user.id,
-        action: "unmask_password",
-        ip_address: ip,
-        user_agent: userAgent,
-      });
-    }
+    // 2. Attribute audit log to the authenticated operator
+    await supabase.from("credential_audit_logs").insert({
+      credential_id: cred.id,
+      user_id: operator.id,
+      action: "unmask_password",
+      ip_address: ip,
+      user_agent: userAgent,
+    });
 
     // 3. Decrypt AES-256-GCM payload
     const plaintext = decryptPassword(cred.encrypted_password);
@@ -53,13 +51,15 @@ export async function revealCredentialAction(credentialId: string) {
     revalidatePath("/operations");
     revalidatePath(`/clients/${cred.client_id}`);
     return { success: true, plaintext };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to reveal credential.";
+    return { success: false, error: message };
   }
 }
 
 export async function copyCredentialAction(credentialId: string) {
   try {
+    const operator = await requireOperatorSession();
     const supabase = createAdminClient();
     const { ip, userAgent } = await getClientContextHeaders();
 
@@ -73,30 +73,28 @@ export async function copyCredentialAction(credentialId: string) {
       return { success: false, error: "Credential not found." };
     }
 
-    const { data: user } = await supabase.from("users").select("id").limit(1).maybeSingle();
-
-    if (user) {
-      await supabase.from("credential_audit_logs").insert({
-        credential_id: cred.id,
-        user_id: user.id,
-        action: "copy_password",
-        ip_address: ip,
-        user_agent: userAgent,
-      });
-    }
+    await supabase.from("credential_audit_logs").insert({
+      credential_id: cred.id,
+      user_id: operator.id,
+      action: "copy_password",
+      ip_address: ip,
+      user_agent: userAgent,
+    });
 
     const plaintext = decryptPassword(cred.encrypted_password);
 
     revalidatePath("/operations");
     revalidatePath(`/clients/${cred.client_id}`);
     return { success: true, plaintext };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to copy credential.";
+    return { success: false, error: message };
   }
 }
 
 export async function addCredentialAction(formData: FormData) {
   try {
+    const operator = await requireOperatorSession();
     const rawInput = {
       client_id: formData.get("client_id"),
       platform: formData.get("platform"),
@@ -123,28 +121,6 @@ export async function addCredentialAction(formData: FormData) {
     const supabase = createAdminClient();
     const { ip, userAgent } = await getClientContextHeaders();
 
-    let { data: user } = await supabase.from("users").select("id").limit(1).maybeSingle();
-    if (!user) {
-      const { data: org } = await supabase.from("organizations").select("id").limit(1).maybeSingle();
-      if (org) {
-        const { data: newUser } = await supabase
-          .from("users")
-          .insert({
-            organization_id: org.id,
-            email: "sudeesh@atomandecho.com",
-            full_name: "Sudeesh D S",
-            role: "admin",
-          })
-          .select("id")
-          .single();
-        user = newUser;
-      }
-    }
-
-    if (!user) {
-      return { success: false, error: "Unable to associate credential with an active operator." };
-    }
-
     // Encrypt password using AES-256-GCM before database insertion
     const encrypted = encryptPassword(password);
 
@@ -157,7 +133,7 @@ export async function addCredentialAction(formData: FormData) {
         encrypted_password: encrypted,
         two_factor_method: twoFactor || null,
         notes: notes || null,
-        last_updated_by: user.id,
+        last_updated_by: operator.id,
       })
       .select()
       .single();
@@ -166,10 +142,10 @@ export async function addCredentialAction(formData: FormData) {
       return { success: false, error: error.message };
     }
 
-    // Produce initial audit log for secret creation
+    // Produce initial audit log for secret creation attributed to active operator
     await supabase.from("credential_audit_logs").insert({
       credential_id: data.id,
-      user_id: user.id,
+      user_id: operator.id,
       action: "update_secret",
       ip_address: ip,
       user_agent: userAgent,
@@ -178,7 +154,8 @@ export async function addCredentialAction(formData: FormData) {
     revalidatePath(`/clients/${clientId}`);
     revalidatePath("/operations");
     return { success: true, credential: data };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to store credential.";
+    return { success: false, error: message };
   }
 }

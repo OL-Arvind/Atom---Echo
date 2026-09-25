@@ -83,10 +83,10 @@ export function NewContentModal({ engagements, isOpen, onClose }: NewContentModa
             </div>
             <div>
               <h2 className="font-display text-lg font-normal text-[var(--color-ink)]">
-                Create New Post
+                Draft New Perspective
               </h2>
               <p className="text-[11px] text-[var(--color-ink-secondary)]">
-                Draft a LinkedIn post matching the founder&apos;s voice and avoided words.
+                Shape a founder conviction into a sharp, authentic LinkedIn perspective.
               </p>
             </div>
           </div>
@@ -107,7 +107,7 @@ export function NewContentModal({ engagements, isOpen, onClose }: NewContentModa
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+              <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
                 Client *
               </label>
               <CustomSelect
@@ -125,7 +125,7 @@ export function NewContentModal({ engagements, isOpen, onClose }: NewContentModa
             </div>
 
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+              <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
                 Content Topic / Pillar
               </label>
               <input
@@ -138,24 +138,24 @@ export function NewContentModal({ engagements, isOpen, onClose }: NewContentModa
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
-              Post Title / Topic Hook *
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+              Hook / Working Title *
             </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              placeholder="e.g. Why most B2B outbound fails in month 2"
+              placeholder="e.g. Why safe opinions are killing your enterprise pipeline"
               className="input text-xs font-medium"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)]">
-                Post Copy *
+              <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)]">
+                Perspective Draft *
               </label>
-              <span className="text-[11px] font-mono text-[var(--color-ink-muted)]">
+              <span className="text-[11px] font-sans tabular-nums text-[var(--color-ink-muted)]">
                 {bodyMarkdown.length} characters
               </span>
             </div>
@@ -165,28 +165,28 @@ export function NewContentModal({ engagements, isOpen, onClose }: NewContentModa
               onChange={(e) => setBodyMarkdown(e.target.value)}
               required
               rows={8}
-              placeholder="Write the post content here..."
+              placeholder="Capture the founder's unfiltered conviction, perspective, or story here..."
               className="w-full rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-3 text-xs leading-relaxed text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent-dim)] focus:outline-none transition-all font-sans resize-y"
             />
 
             {/* Live Words to Avoid Warning */}
             {detectedTabooWords.length > 0 && (
-              <div className="mt-2 rounded-[var(--radius-sm)] border border-[var(--color-warn-line)] bg-[var(--color-warn-bg)] p-3 flex items-start gap-2.5 text-xs text-[var(--color-warn-text)]">
+              <div className="mt-2 border-l-2 border-[var(--color-warn-line)] pl-3 py-1.5 flex items-start gap-2.5 text-xs text-[var(--color-warn-text)] bg-[var(--color-base-subtle)]/40 rounded-r-[var(--radius-xs)]">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <span className="font-medium block">Words to Avoid Detected:</span>
-                  <div className="flex flex-wrap gap-1.5">
+                  <span className="font-medium block">Words to Avoid (Founder Context):</span>
+                  <div className="flex flex-wrap gap-2">
                     {detectedTabooWords.map((w) => (
                       <span
                         key={w}
-                        className="rounded-[var(--radius-xs)] bg-[var(--color-base)] border border-[var(--color-warn-line)] px-2 py-0.5 font-mono text-[11px] font-bold text-[var(--color-warn-text)]"
+                        className="font-sans tabular-nums text-[11px] font-semibold text-[var(--color-warn-text)] border-b border-[var(--color-warn-line)] pb-0.5"
                       >
                         &ldquo;{w}&rdquo;
                       </span>
                     ))}
                   </div>
                   <p className="text-[11px] text-[var(--color-warn-text)]/80 pt-0.5">
-                    Consider replacing these terms before sharing with the client.
+                    Consider refining these terms before sending to the founder desk.
                   </p>
                 </div>
               </div>
@@ -195,16 +195,16 @@ export function NewContentModal({ engagements, isOpen, onClose }: NewContentModa
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+              <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
                 Status
               </label>
               <CustomSelect
                 options={[
                   { value: "draft", label: "Draft", statusDotColor: "bg-[var(--color-ink-muted)]" },
-                  { value: "internal_review", label: "Internal Review", statusDotColor: "bg-[var(--color-warn)]" },
-                  { value: "client_review", label: "Ready for Client Review", statusDotColor: "bg-[var(--color-accent)]" },
-                  { value: "scheduled", label: "Approved / Scheduled", statusDotColor: "bg-[var(--color-ok)]" },
-                  { value: "published", label: "Published Live", statusDotColor: "bg-[var(--color-ok)]" },
+                  { value: "internal_review", label: "Internal Voice QA", statusDotColor: "bg-[var(--color-warn)]" },
+                  { value: "client_review", label: "Ready for Founder Review", statusDotColor: "bg-[var(--color-accent)]" },
+                  { value: "scheduled", label: "Approved & Scheduled", statusDotColor: "bg-[var(--color-ok)]" },
+                  { value: "published", label: "Live on LinkedIn", statusDotColor: "bg-[var(--color-ok)]" },
                 ]}
                 value={status}
                 onChange={setStatus}
@@ -212,13 +212,13 @@ export function NewContentModal({ engagements, isOpen, onClose }: NewContentModa
             </div>
 
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+              <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
                 Scheduled Date (Optional)
               </label>
               <CustomDatePicker
                 value={scheduledDate}
                 onChange={setScheduledDate}
-                placeholder="Pick publication date"
+                placeholder="Select release date"
                 allowClear
               />
             </div>
@@ -237,7 +237,7 @@ export function NewContentModal({ engagements, isOpen, onClose }: NewContentModa
               disabled={isPending || !title.trim() || !bodyMarkdown.trim()}
               className="btn btn-primary text-xs disabled:opacity-50"
             >
-              <span>{isPending ? "Saving..." : "Save Post"}</span>
+              <span>{isPending ? "Saving..." : "Save Perspective"}</span>
             </button>
           </div>
         </form>

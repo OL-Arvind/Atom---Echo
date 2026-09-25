@@ -197,3 +197,45 @@ export interface ContentFeedback {
   created_at: string;
 }
 
+export interface CommandCenterAlert {
+  id: string;
+  urgency: "critical" | "urgent" | "warning" | "info";
+  title: string;
+  reason: string;
+  waiting_on: string;
+  entity_id: string;
+  entity_type:
+    | "content_feedback"
+    | "client_request"
+    | "content_item"
+    | "billing"
+    | "tool_renewal"
+    | "invoice_draft";
+  next_action: string;
+  client_id?: string;
+  client_name?: string;
+  founder_name?: string;
+  founder_phone?: string;
+  founder_email?: string;
+  review_token?: string;
+  post_id?: string;
+  post_title?: string;
+  post_status?: string;
+  body_markdown?: string;
+  target_pillar?: string;
+  feedback_id?: string;
+  comment?: string;
+  feedback_created_at?: string;
+  category?: RequestCategory;
+  tool_name?: string;
+  cost_amount?: number;
+  currency?: string;
+  next_renewal_date?: string;
+  default_pass_through?: boolean;
+  invoice_number?: string;
+  total_amount?: number;
+  subtotal_amount?: number;
+  due_date?: string;
+  line_items?: InvoiceLineItem[];
+}
+

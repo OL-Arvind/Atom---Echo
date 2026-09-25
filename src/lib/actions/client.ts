@@ -10,9 +10,11 @@ import {
   updateClientContextSchema,
   formatZodError,
 } from "@/lib/validations";
+import { requireOperatorSession } from "@/lib/auth/session";
 
 export async function createClientAction(formData: FormData) {
   try {
+    await requireOperatorSession();
     const rawInput = {
       name: formData.get("name"),
       founder_name: formData.get("founder_name"),

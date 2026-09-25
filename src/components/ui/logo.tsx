@@ -4,41 +4,47 @@ interface AtomEchoLogoProps {
   size?: number;
   className?: string;
   showText?: boolean;
+  variant?: "icon" | "wordmark";
+  theme?: "dark" | "light";
 }
 
 export function AtomEchoLogo({
-  size = 30,
+  size = 28,
   className = "",
   showText = true,
+  variant = "icon",
+  theme = "dark",
 }: AtomEchoLogoProps) {
-  return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <div
-        className="relative overflow-hidden rounded-[6px] bg-black border border-[var(--color-line)] shadow-xs flex items-center justify-center shrink-0"
-        style={{ width: size, height: size }}
-      >
+  if (variant === "wordmark" || showText) {
+    const src = theme === "light" ? "/brand-wordmark-dark.svg" : "/brand-wordmark-white.svg";
+    return (
+      <div className={`inline-flex items-center shrink-0 ${className}`}>
         <Image
-          src="/logo.png"
-          alt="Atom & Echo Logo"
-          width={size}
+          src={src}
+          alt="Atom & Echo"
+          width={Math.round(size * 2.73)}
           height={size}
           priority
-          className="object-cover w-full h-full"
+          unoptimized
+          className="h-auto object-contain select-none"
+          style={{ maxHeight: size }}
         />
       </div>
-      {showText && (
-        <div className="flex flex-col leading-none">
-          <div className="flex items-center gap-1.5 text-xs font-semibold tracking-tight text-[var(--color-ink)]">
-            <span className="tracking-wide">ATOM &amp; ECHO</span>
-            <span className="rounded bg-[var(--color-base-subtle)] border border-[var(--color-line)] px-1 py-0.5 text-[9px] font-mono font-medium text-[var(--color-ink-secondary)] uppercase">
-              OS
-            </span>
-          </div>
-          <span className="mt-1 text-[10.5px] font-medium text-[var(--color-ink-tertiary)] tracking-tight">
-            Agency Operating System
-          </span>
-        </div>
-      )}
+    );
+  }
+
+  const symbolSrc = theme === "light" ? "/icon-symbol-dark.png" : "/icon-symbol-white.png";
+  return (
+    <div className={`inline-flex items-center justify-center shrink-0 ${className}`}>
+      <Image
+        src={symbolSrc}
+        alt="Atom & Echo"
+        width={size}
+        height={size}
+        priority
+        className="object-contain select-none"
+        style={{ width: size, height: size }}
+      />
     </div>
   );
 }

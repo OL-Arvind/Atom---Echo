@@ -261,7 +261,7 @@ export function SidebarTooltip({
                 style={{
                   position: "relative",
                   zIndex: 1,
-                  fontFamily: "var(--font-mono)",
+                  fontFamily: "var(--font-sans tabular-nums)",
                   fontSize: "9.5px",
                   fontWeight: 500,
                   color: "rgba(255, 255, 255, 0.45)",

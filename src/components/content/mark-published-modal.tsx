@@ -101,7 +101,7 @@ export function MarkPublishedModal({
           <div className="flex items-center gap-1.5 text-xs">
             <BrandLogo nameOrDomain={clientName} size={14} className="rounded-[2px]" />
             <span className="font-medium text-[var(--color-ink)]">{clientName}</span>
-            <span className="text-[var(--color-ink-tertiary)] font-mono text-[11px]">
+            <span className="text-[var(--color-ink-tertiary)] font-sans tabular-nums text-[11px]">
               ({founderName})
             </span>
           </div>
@@ -109,7 +109,7 @@ export function MarkPublishedModal({
             &ldquo;{post.title}&rdquo;
           </p>
           {post.scheduled_publish_date && (
-            <p className="text-[11px] font-mono text-[var(--color-ink-tertiary)]">
+            <p className="text-[11px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
               Scheduled slot: {formatDisplayDateTimeIST(post.scheduled_publish_date, true)}
             </p>
           )}
@@ -118,7 +118,7 @@ export function MarkPublishedModal({
         <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
           {/* Live LinkedIn URL */}
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Live LinkedIn Post URL (Optional)
             </label>
             <div className="relative">
@@ -128,7 +128,7 @@ export function MarkPublishedModal({
                 value={linkedinUrl}
                 onChange={(e) => setLinkedinUrl(e.target.value)}
                 placeholder="https://www.linkedin.com/posts/..."
-                className="w-full rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] px-3 py-2 text-xs text-[var(--color-ink)] font-mono placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent)] focus:outline-none"
+                className="w-full rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] px-3 py-2 text-xs text-[var(--color-ink)] font-sans tabular-nums placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent)] focus:outline-none"
               />
             </div>
             <p className="text-[11px] text-[var(--color-ink-tertiary)] mt-1">
@@ -138,14 +138,14 @@ export function MarkPublishedModal({
 
           {/* Published Timestamp */}
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Published Timestamp
             </label>
             <input
               type="datetime-local"
               value={publishedAt}
               onChange={(e) => setPublishedAt(e.target.value)}
-              className="w-full rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] px-3 py-2 text-xs text-[var(--color-ink)] font-mono focus:border-[var(--color-accent)] focus:outline-none"
+              className="w-full rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] px-3 py-2 text-xs text-[var(--color-ink)] font-sans tabular-nums focus:border-[var(--color-accent)] focus:outline-none"
             />
           </div>
 

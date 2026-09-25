@@ -13,6 +13,7 @@ import {
   publishContentSchema,
   formatZodError,
 } from "@/lib/validations";
+import { requireOperatorSession } from "@/lib/auth/session";
 
 /**
  * 1-Tap Client Approval (AC-2):
