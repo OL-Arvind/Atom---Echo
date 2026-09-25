@@ -150,6 +150,8 @@
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 6px;
   padding: 6px 12px;
   border-radius: 6px;
@@ -163,6 +165,7 @@
   border: 1px solid transparent;
   line-height: 1.2;
 }
+.btn:active:not(:disabled) { transform: scale(0.98); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .btn-primary {
@@ -200,6 +203,18 @@
 .btn-secondary:hover:not(:disabled) {
   background: var(--color-base-muted);
   border-color: var(--color-line-strong);
+}
+
+.btn-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-line);
+  font-weight: 500;
+}
+.btn-danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.2);
+  border-color: var(--color-danger);
+  color: #fecaca;
 }
 
 .btn-ghost {

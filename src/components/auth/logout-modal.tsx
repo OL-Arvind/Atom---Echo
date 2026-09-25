@@ -70,18 +70,6 @@ export function LogoutModal({ isOpen, onClose, user }: LogoutModalProps) {
           </div>
         </div>
 
-        {/* Session Status */}
-        <div className="border-l-2 border-[var(--color-line-strong)] pl-3.5 py-1.5 space-y-1">
-          <div className="flex items-center gap-2 text-[10.5px] font-sans tabular-nums tracking-wider uppercase text-[var(--color-ink)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
-            <span>Authenticated Operator Session</span>
-          </div>
-          <p className="text-[11px] text-[var(--color-ink-secondary)] leading-relaxed">
-            Credential Vault actions and editorial status transitions are attributed to{" "}
-            <span className="text-[var(--color-ink)] font-medium">{user.email}</span>.
-          </p>
-        </div>
-
         {/* Modal Actions */}
         <div className="flex items-center gap-2.5 pt-1">
           <button

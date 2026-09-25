@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useSidebar } from "./sidebar-context";
 import { LogoutModal } from "@/components/auth/logout-modal";
-import { getStoredUser, syncSupabaseSessionUser, DEFAULT_USER, AuthUser } from "@/lib/auth/dummy-auth";
+import { getStoredUser, syncSupabaseSessionUser, AuthUser } from "@/lib/auth/dummy-auth";
 import { SidebarTooltip } from "@/components/ui/sidebar-tooltip";
 
 const NAV_ITEMS = [
@@ -36,20 +36,31 @@ const SECTIONS: Record<string, string> = {
   system: "Operations",
 };
 
+const EMPTY_USER: AuthUser = {
+  id: "",
+  name: "Operator",
+  email: "",
+  role: "Authenticated Session",
+  initials: "AE",
+  provider: "google",
+};
+
 export function Sidebar() {
   const pathname = usePathname();
   const { isCollapsed, toggleSidebar } = useSidebar();
-  const [user, setUser] = useState<AuthUser>(DEFAULT_USER);
+  const [user, setUser] = useState<AuthUser>(EMPTY_USER);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const grouped = ["ops", "revenue", "system"];
 
   useEffect(() => {
-    setUser(getStoredUser() || DEFAULT_USER);
+    const stored = getStoredUser();
+    if (stored) setUser(stored);
     syncSupabaseSessionUser().then((synced) => {
       if (synced) setUser(synced);
     });
     const handleAuth = () => {
-      setUser(getStoredUser() || DEFAULT_USER);
+      const updated = getStoredUser();
+      if (updated) setUser(updated);
     };
     window.addEventListener("ae_auth_change", handleAuth);
     return () => window.removeEventListener("ae_auth_change", handleAuth);

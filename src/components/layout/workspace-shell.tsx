@@ -5,16 +5,19 @@ import { useRouter } from "next/navigation";
 import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { Sidebar } from "./sidebar";
 import { TopNav } from "./top-nav";
-import { isUserLoggedIn } from "@/lib/auth/dummy-auth";
+import { HeaderProvider } from "./header-context";
+import { isUserLoggedIn, syncSupabaseSessionUser } from "@/lib/auth/dummy-auth";
 
 function WorkspaceContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isCollapsed } = useSidebar();
 
   useEffect(() => {
-    if (!isUserLoggedIn()) {
-      router.push("/login");
-    }
+    syncSupabaseSessionUser().then((user) => {
+      if (!user) {
+        router.push("/login");
+      }
+    });
     const handleAuth = () => {
       if (!isUserLoggedIn()) {
         router.push("/login");
@@ -23,6 +26,7 @@ function WorkspaceContent({ children }: { children: React.ReactNode }) {
     window.addEventListener("ae_auth_change", handleAuth);
     return () => window.removeEventListener("ae_auth_change", handleAuth);
   }, [router]);
+
   return (
     <div
       className={`min-h-screen flex flex-col transition-[padding-left] duration-200 ease-in-out ${
@@ -34,8 +38,6 @@ function WorkspaceContent({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-import { HeaderProvider } from "./header-context";
 
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   return (

@@ -114,8 +114,15 @@ export function CommandPalette({
       title: "Log Out",
       subtitle: "Sign out of your operator session and return to the sign in screen",
       icon: LogOut,
-      action: () => {
+      action: async () => {
         onClose();
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+          await supabase.auth.signOut();
+        } catch {
+          // Ignore network error on signout
+        }
         clearStoredUser();
         router.push("/login");
       },

@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -7,7 +6,7 @@ export interface OperatorSession {
   email: string;
   name: string;
   role: "admin" | "lead_operator" | "operator";
-  provider: "google" | "email" | "demo";
+  provider: "google" | "email";
 }
 
 /**
@@ -80,14 +79,11 @@ export async function resolveOrCreateOperatorRecord(
     .select("id, email, full_name, role")
     .single();
 
-  return (created as any) || null;
+  return (created as { id: string; email: string; full_name: string; role: "admin" | "lead_operator" | "operator" }) || null;
 }
 
 /**
- * Reads the active operator session from:
- * 1. Real Supabase Auth session (Google OAuth or Email/Password)
- * 2. Local preview/demo cookie (`ae_session` / `ae_operator_email`)
- * 3. Server-side CLI/Verification fallback when invoked outside browser request context
+ * Reads the active operator session strictly from Supabase Auth.
  */
 export async function getServerOperatorSession(): Promise<OperatorSession | null> {
   try {
@@ -113,56 +109,14 @@ export async function getServerOperatorSession(): Promise<OperatorSession | null
       }
     }
   } catch {
-    // Next.js cookies() may throw if invoked outside a request context (e.g. CLI verification scripts)
-  }
-
-  try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("ae_session")?.value;
-    const operatorEmailCookie = cookieStore.get("ae_operator_email")?.value;
-
-    if (sessionCookie === "active") {
-      const email = operatorEmailCookie
-        ? decodeURIComponent(operatorEmailCookie)
-        : "sudeesh@atomandecho.com";
-      const name = email.toLowerCase().includes("nikhil") ? "Nikhil" : "Sudeesh D S";
-      const dbUser = await resolveOrCreateOperatorRecord(email, name);
-      if (dbUser) {
-        return {
-          id: dbUser.id,
-          email: dbUser.email,
-          name: dbUser.full_name,
-          role: dbUser.role,
-          provider: "demo",
-        };
-      }
-    } else if (sessionCookie === "logged_out") {
-      return null;
-    }
-  } catch {
-    // Outside HTTP request context
-  }
-
-  // Fallback for automated server-side / cron / local default preview before explicit logout
-  const defaultOperator = await resolveOrCreateOperatorRecord(
-    "sudeesh@atomandecho.com",
-    "Sudeesh D S"
-  );
-  if (defaultOperator) {
-    return {
-      id: defaultOperator.id,
-      email: defaultOperator.email,
-      name: defaultOperator.full_name,
-      role: defaultOperator.role,
-      provider: "demo",
-    };
+    // Request context unavailable
   }
 
   return null;
 }
 
 /**
- * Enforces that an active operator session exists before executing sensitive Server Actions.
+ * Enforces that an active Supabase operator session exists before executing sensitive Server Actions.
  */
 export async function requireOperatorSession(): Promise<OperatorSession> {
   const session = await getServerOperatorSession();

@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Loader2, ArrowRight, CheckCircle2, KeyRound, X } from "lucide-react";
-import { setStoredUser, DUMMY_USERS } from "@/lib/auth/dummy-auth";
+import { setStoredUser, getInitials } from "@/lib/auth/dummy-auth";
 import { createClient } from "@/lib/supabase/client";
 
 export function LoginClient() {
   const router = useRouter();
-  const [email, setEmail] = useState("sudeesh@atomandecho.com");
-  const [password, setPassword] = useState("••••••••••••");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
@@ -20,7 +20,6 @@ export function LoginClient() {
   const [resetEmail, setResetEmail] = useState("");
   const [isResetSending, setIsResetSending] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-  const [selectedUserKey, setSelectedUserKey] = useState<"sudeesh" | "nikhil">("sudeesh");
 
   const handleGoogleSignIn = async () => {
     setAuthError(null);
@@ -54,46 +53,38 @@ export function LoginClient() {
     setIsEmailLoading(true);
 
     try {
-      // If using a real password (not the prefilled demo mask), try Supabase Email/Password Auth first
-      if (password && password !== "••••••••••••") {
-        const supabase = createClient();
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-        if (!error && data.user) {
-          const fullName =
-            data.user.user_metadata?.full_name ||
-            (email.toLowerCase().includes("nikhil") ? "Nikhil" : "Sudeesh D S");
-          setStoredUser({
-            id: data.user.id,
-            name: fullName,
-            email: data.user.email || email,
-            role: email.toLowerCase().includes("nikhil") ? "Operations Lead" : "Founder · Admin",
-            initials: email.toLowerCase().includes("nikhil") ? "NK" : "SD",
-            provider: "email",
-          });
-          setIsEmailLoading(false);
-          router.push("/command-center");
-          return;
-        }
+      if (error || !data.user) {
+        setAuthError(error?.message || "Invalid email or password.");
+        setIsEmailLoading(false);
+        return;
       }
 
-      // Demo operator session fallback
-      const userToLogin = email.toLowerCase().includes("nikhil")
-        ? DUMMY_USERS.nikhil
-        : DUMMY_USERS.sudeesh;
-      setStoredUser(userToLogin);
+      const fullName =
+        data.user.user_metadata?.full_name ||
+        data.user.user_metadata?.name ||
+        (data.user.email || email).split("@")[0];
+      const userEmail = data.user.email || email.trim();
+
+      setStoredUser({
+        id: data.user.id,
+        name: fullName,
+        email: userEmail,
+        role: userEmail.toLowerCase().includes("nikhil") ? "Operations Lead" : "Founder · Admin",
+        initials: getInitials(fullName),
+        provider: "email",
+      });
       setIsEmailLoading(false);
       router.push("/command-center");
-    } catch {
-      const userToLogin = email.toLowerCase().includes("nikhil")
-        ? DUMMY_USERS.nikhil
-        : DUMMY_USERS.sudeesh;
-      setStoredUser(userToLogin);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Authentication failed.";
+      setAuthError(message);
       setIsEmailLoading(false);
-      router.push("/command-center");
     }
   };
 
@@ -107,7 +98,7 @@ export function LoginClient() {
         redirectTo: `${window.location.origin}/auth/callback`,
       });
     } catch {
-      // Proceed to confirmation screen smoothly
+      // Proceed to confirmation screen
     } finally {
       setIsResetSending(false);
       setResetSent(true);
@@ -123,8 +114,8 @@ export function LoginClient() {
           <Image
             src="/brand-wordmark-white.svg"
             alt="Atom & Echo"
-            width={82}
-            height={30}
+            width={88}
+            height={32}
             priority
             unoptimized
             className="object-contain h-[30px] w-auto select-none"
@@ -132,7 +123,7 @@ export function LoginClient() {
         </div>
 
         {/* Center: Main Sign-In Form */}
-        <div className="w-full max-w-[350px] mx-auto my-auto py-2 space-y-4">
+        <div className="w-full max-w-[350px] mx-auto my-auto py-2 space-y-5">
           <div className="space-y-1">
             <h1 className="font-display text-2xl sm:text-[26px] font-normal tracking-tight text-[var(--color-ink)] leading-tight">
               Welcome back
@@ -154,7 +145,7 @@ export function LoginClient() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isGoogleLoading || isEmailLoading}
-              className="flex w-full items-center justify-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] px-3.5 py-2 text-xs font-medium text-[var(--color-ink)] shadow-2xs hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-ink-muted)] transition-all cursor-pointer disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] px-3.5 py-2.5 text-xs font-medium text-[var(--color-ink)] shadow-2xs hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-ink-muted)] transition-all cursor-pointer disabled:opacity-50"
             >
               {isGoogleLoading ? (
                 <>
@@ -196,7 +187,7 @@ export function LoginClient() {
           </div>
 
           {/* Email / Password Form */}
-          <form onSubmit={handleEmailSignIn} className="space-y-2.5">
+          <form onSubmit={handleEmailSignIn} className="space-y-3">
             <div className="space-y-1">
               <label className="text-[10.5px] font-sans tabular-nums text-[var(--color-ink-secondary)] block">
                 Work Email
@@ -265,52 +256,6 @@ export function LoginClient() {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Switcher */}
-          <div className="rounded-[var(--radius-sm)] border border-[var(--color-line-subtle)] bg-[var(--color-base-subtle)]/40 p-2 space-y-1">
-            <div className="flex items-center justify-between text-[9.5px]">
-              <span className="font-sans tabular-nums text-[var(--color-ink-secondary)] font-medium">
-                Demo Accounts
-              </span>
-              <span className="font-sans tabular-nums text-[8.5px] text-[var(--color-ink-muted)]">
-                [Quick Switch]
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedUserKey("sudeesh");
-                  setEmail(DUMMY_USERS.sudeesh.email);
-                  setPassword("••••••••••••");
-                }}
-                className={`rounded-[var(--radius-xs)] border px-2 py-1 text-left text-[10.5px] transition-colors cursor-pointer ${
-                  selectedUserKey === "sudeesh"
-                    ? "border-[var(--color-accent-line)] bg-[var(--color-accent-bg)] text-[var(--color-accent-text)] font-medium"
-                    : "border-[var(--color-line)] bg-[var(--color-base)] text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)]"
-                }`}
-              >
-                <div className="font-medium truncate leading-tight">Sudeesh D S</div>
-                <div className="text-[8.5px] opacity-75 truncate leading-tight">Founder · Admin</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedUserKey("nikhil");
-                  setEmail(DUMMY_USERS.nikhil.email);
-                  setPassword("••••••••••••");
-                }}
-                className={`rounded-[var(--radius-xs)] border px-2 py-1 text-left text-[10.5px] transition-colors cursor-pointer ${
-                  selectedUserKey === "nikhil"
-                    ? "border-[var(--color-accent-line)] bg-[var(--color-accent-bg)] text-[var(--color-accent-text)] font-medium"
-                    : "border-[var(--color-line)] bg-[var(--color-base)] text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)]"
-                }`}
-              >
-                <div className="font-medium truncate leading-tight">Nikhil</div>
-                <div className="text-[8.5px] opacity-75 truncate leading-tight">Operations Lead</div>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Bottom: Status Notice & Legal Links */}

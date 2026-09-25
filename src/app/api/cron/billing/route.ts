@@ -17,9 +17,8 @@ export async function GET(request: Request) {
     const hasValidCronSecret = Boolean(cronSecret && authHeader === `Bearer ${cronSecret}`);
 
     if (!hasValidCronSecret) {
-      // Allow authenticated operator sessions if triggered manually from workspace
       const operatorSession = await getServerOperatorSession();
-      if (!operatorSession || (process.env.NODE_ENV === "production" && !cronSecret && operatorSession.provider === "demo")) {
+      if (!operatorSession) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
