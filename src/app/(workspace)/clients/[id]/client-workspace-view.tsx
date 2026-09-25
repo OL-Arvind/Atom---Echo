@@ -12,11 +12,8 @@ import {
   CheckCircle2,
   ExternalLink,
   Copy,
-  Eye,
-  EyeOff,
   Plus,
   Trash2,
-  MessageCircle,
   Lock,
   Share2,
   ShieldAlert,
@@ -41,11 +38,20 @@ import {
 import { AddCredentialModal } from "@/components/clients/add-credential-modal";
 import { LogExpenseModal } from "@/components/clients/log-expense-modal";
 import { EditVoiceModal } from "@/components/clients/edit-voice-modal";
+import { ClientCredentialsTab } from "@/components/clients/client-credentials-tab";
 import { BrandLogo } from "@/components/ui/brand-logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import type {
+  ClientWithRelations,
+  Engagement,
+  ContentItem,
+  ToolExpense,
+  ClientRequest,
+} from "@/types/domain";
 
 interface ClientWorkspaceViewProps {
-  client: any;
+  client: ClientWithRelations;
 }
 
 export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
@@ -78,7 +84,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
     : null;
 
   const totalRetainer = (client.engagements || []).reduce(
-    (acc: number, e: any) => acc + Number(e.monthly_retainer || 0),
+    (acc: number, e: Engagement) => acc + Number(e.monthly_retainer || 0),
     0
   );
 
@@ -86,14 +92,14 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
   const billingAnchorDay = primaryEngagement?.billing_anchor_day || 5;
 
   const unbilledToolTotal = clientTools
-    .filter((t: any) => t.status !== "invoiced" && t.status !== "paid")
-    .reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
+    .filter((t: ToolExpense) => t.status !== "invoiced" && t.status !== "reimbursed")
+    .reduce((acc: number, t: ToolExpense) => acc + Number(t.amount || 0), 0);
 
   // Check if an emergency hold is active
   const hasEmergencyHold =
     client.status?.toLowerCase() === "paused" ||
     (client.client_requests || []).some(
-      (r: any) => r.category === "emergency_hold" && (r.status === "submitted" || r.status === "in_progress")
+      (r: ClientRequest) => r.category === "emergency_hold" && (r.status === "submitted" || r.status === "in_progress")
     );
 
   const founderInitials = (client.founder_name || client.name)
@@ -280,7 +286,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
     });
   };
 
-  const reviewPendingCount = clientPosts.filter((p: any) => p.status === "client_review").length;
+  const reviewPendingCount = clientPosts.filter((p: ContentItem) => p.status === "client_review").length;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
@@ -452,13 +458,16 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <BrandLogo
-              nameOrDomain={client.website || client.founder_email || client.name}
+              nameOrDomain={client.website_url || client.founder_email || client.name}
               size={48}
               className="h-12 w-12 rounded-[var(--radius-md)] border border-[var(--color-line)] p-1 bg-[var(--color-base-overlay)] shadow-xs"
               fallback={
-                <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-base-subtle)] text-[var(--color-accent)] text-base font-semibold shrink-0 tracking-wide border border-[var(--color-line)]">
-                  {founderInitials}
-                </div>
+                <UserAvatar
+                  seed={client.founder_name || client.name}
+                  size={48}
+                  className="rounded-[var(--radius-md)]"
+                  alt={client.founder_name || client.name}
+                />
               }
             />
 
@@ -1076,7 +1085,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           ) : (
             <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] overflow-hidden">
               <div className="divide-y divide-[var(--color-line-subtle)]">
-                {clientTools.map((tool: any) => (
+                {clientTools.map((tool: ToolExpense) => (
                   <div
                     key={tool.id}
                     className="p-3.5 flex items-center justify-between text-xs hover:bg-[var(--color-surface-hover)] transition-colors"
@@ -1114,113 +1123,14 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
 
       {/* TAB 4: CREDENTIAL VAULT */}
       {activeTab === "vault" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-[var(--color-accent)]" />
-                <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                  Private Credential Vault
-                </h2>
-              </div>
-              <p className="text-xs text-[var(--color-ink-secondary)] mt-0.5">
-                Zero-knowledge encryption. Credentials auto-mask after 30 seconds with complete audit logging.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowAddCredModal(true)}
-              className="btn btn-primary text-xs"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Add Login</span>
-            </button>
-          </div>
-
-          {credentials.length === 0 ? (
-            <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-line)] bg-[var(--color-base-subtle)]/50 p-8 text-center space-y-2">
-              <p className="text-xs text-[var(--color-ink-tertiary)]">No founder access credentials stored yet.</p>
-              <button
-                onClick={() => setShowAddCredModal(true)}
-                className="btn btn-secondary text-xs"
-              >
-                Add Login
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {credentials.map((cred: any) => {
-                const isRevealed = !!revealedPasswords[cred.id];
-                const countdown = countdownTimers[cred.id] ?? 0;
-
-                return (
-                  <div
-                    key={cred.id}
-                    className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-4 space-y-3"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <BrandLogo
-                          nameOrDomain={cred.platform}
-                          size={28}
-                          className="rounded-md border border-[var(--color-line)] p-0.5 shadow-xs"
-                        />
-                        <div className="min-w-0">
-                          <span className="font-semibold text-xs text-[var(--color-ink)] block truncate">
-                            {cred.platform}
-                          </span>
-                          <span className="text-[11.5px] text-[var(--color-ink-tertiary)] font-sans tabular-nums truncate block">
-                            {cred.username_or_email}
-                          </span>
-                        </div>
-                      </div>
-                      <Lock className="h-3.5 w-3.5 text-[var(--color-ink-muted)]" />
-                    </div>
-
-                    {/* Password Field with Masking & 30s Auto-wipe */}
-                    <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] p-2 border border-[var(--color-line)] flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <span className="text-[9.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)] uppercase block">
-                          {isRevealed ? `Wipes in ${countdown}s` : "Encrypted Password"}
-                        </span>
-                        <span className="font-sans tabular-nums text-xs font-semibold text-[var(--color-ink)] tracking-wider">
-                          {isRevealed ? revealedPasswords[cred.id] : "••••••••••••••••"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleRevealPassword(cred.id)}
-                          className="btn btn-secondary text-xs p-1.5"
-                          title={isRevealed ? "Hide" : "Reveal (30s)"}
-                        >
-                          {isRevealed ? (
-                            <EyeOff className="h-3.5 w-3.5 text-[var(--color-accent)]" />
-                          ) : (
-                            <Eye className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleCopyPassword(cred.id)}
-                          className="btn btn-secondary text-xs p-1.5"
-                          title="Copy password"
-                        >
-                          <Copy className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {cred.two_factor_method && (
-                      <div className="text-[11px] text-[var(--color-ink-secondary)]">
-                        <span className="font-medium text-[var(--color-ink)]">2FA:</span>{" "}
-                        {cred.two_factor_method}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <ClientCredentialsTab
+          credentials={credentials}
+          revealedPasswords={revealedPasswords}
+          countdownTimers={countdownTimers}
+          onRevealPassword={handleRevealPassword}
+          onCopyPassword={handleCopyPassword}
+          onOpenAddCredModal={() => setShowAddCredModal(true)}
+        />
       )}
 
       {/* TAB 5: CLIENT REVIEW PORTAL */}

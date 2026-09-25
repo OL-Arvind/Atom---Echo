@@ -30,6 +30,7 @@ import {
 } from "@/lib/actions/content";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   toDatetimeLocalIST,
   parseDatetimeLocalIST,
@@ -575,9 +576,12 @@ export function ContentEditorClient({
               <div className="rounded-xl border border-[var(--color-line-strong)] bg-[#1b1f23] p-4 text-[#f3f4f6] shadow-xl space-y-3 font-sans">
                 {/* Author Info */}
                 <div className="flex items-center gap-2.5">
-                  <div className="h-10 w-10 rounded-full bg-[#374151] flex items-center justify-center text-sm font-bold text-white shrink-0 border border-white/10">
-                    {client?.founder_name?.charAt(0) || "F"}
-                  </div>
+                  <UserAvatar
+                    seed={client?.founder_name || client?.name || "Founder"}
+                    size={40}
+                    className="rounded-full"
+                    alt={client?.founder_name || "Founder"}
+                  />
                   <div className="min-w-0 flex-1 leading-snug">
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold text-xs text-white truncate">

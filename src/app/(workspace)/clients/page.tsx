@@ -11,22 +11,24 @@ import { getClientsFromDb } from "@/lib/data/supabase-queries";
 import { OnboardClientModal } from "@/components/clients/onboard-client-modal";
 import { PageHeader } from "@/components/layout/page-header";
 import { BrandLogo } from "@/components/ui/brand-logo";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import type { ClientWithEngagements, Engagement } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClientsDirectoryPage() {
-  const clients = await getClientsFromDb();
+  const clients = (await getClientsFromDb()) as unknown as ClientWithEngagements[];
 
   const totalClients = clients.length;
-  const activeClients = clients.filter((c: any) => c.status === "active");
+  const activeClients = clients.filter((c: ClientWithEngagements) => c.status === "active");
   const totalEngagements = clients.reduce(
-    (acc: number, c: any) => acc + (c.engagements || []).length,
+    (acc: number, c: ClientWithEngagements) => acc + (c.engagements || []).length,
     0
   );
-  const totalContractedMrr = clients.reduce((acc: number, c: any) => {
+  const totalContractedMrr = clients.reduce((acc: number, c: ClientWithEngagements) => {
     const clientEngs = c.engagements || [];
     const clientTotal = clientEngs.reduce(
-      (eAcc: number, e: any) => eAcc + Number(e.monthly_retainer || 0),
+      (eAcc: number, e: Engagement) => eAcc + Number(e.monthly_retainer || 0),
       0
     );
     return acc + clientTotal;
@@ -105,11 +107,11 @@ export default async function ClientsDirectoryPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {clients.map((client: any) => {
+          {clients.map((client: ClientWithEngagements) => {
             const isActive = client.status?.toLowerCase() === "active";
             const engagements = client.engagements || [];
             const clientMrr = engagements.reduce(
-              (acc: number, e: any) => acc + Number(e.monthly_retainer || 0),
+              (acc: number, e: Engagement) => acc + Number(e.monthly_retainer || 0),
               0
             );
             const anchorDay = engagements[0]?.billing_anchor_day || 1;
@@ -120,15 +122,15 @@ export default async function ClientsDirectoryPage() {
               .slice(0, 2)
               .toUpperCase();
 
-            const allPosts = engagements.flatMap((e: any) => e.content_items || []);
+            const allPosts = engagements.flatMap((e) => e.content_items || []);
             const scheduledPosts = allPosts.filter(
-              (p: any) => p.status === "scheduled" || p.status === "approved"
+              (p) => p.status === "scheduled" || p.status === "approved"
             ).length;
             const reviewPosts = allPosts.filter(
-              (p: any) => p.status === "client_review"
+              (p) => p.status === "client_review"
             ).length;
             const draftPosts = allPosts.filter(
-              (p: any) => p.status === "draft" || p.status === "internal_review"
+              (p) => p.status === "draft" || p.status === "internal_review"
             ).length;
 
             return (
@@ -145,9 +147,12 @@ export default async function ClientsDirectoryPage() {
                         size={40}
                         className="h-10 w-10 rounded-[var(--radius-sm)] border border-[var(--color-line)] p-0.5 shadow-xs"
                         fallback={
-                          <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] text-xs font-semibold text-[var(--color-accent)] shrink-0">
-                            {initials}
-                          </div>
+                          <UserAvatar
+                            seed={client.founder_name || client.name}
+                            size={40}
+                            className="rounded-[var(--radius-sm)]"
+                            alt={client.founder_name || client.name}
+                          />
                         }
                       />
                       <div>

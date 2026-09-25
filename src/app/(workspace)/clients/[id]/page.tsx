@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { getClientByIdFromDb } from "@/lib/data/supabase-queries";
 import { ClientWorkspaceView } from "./client-workspace-view";
 
+import { ClientWithRelations } from "@/types/domain";
+
 export const dynamic = "force-dynamic";
 
 export default async function ClientWorkspacePage({
@@ -16,5 +18,5 @@ export default async function ClientWorkspacePage({
     notFound();
   }
 
-  return <ClientWorkspaceView client={client} />;
+  return <ClientWorkspaceView client={client as unknown as ClientWithRelations} />;
 }

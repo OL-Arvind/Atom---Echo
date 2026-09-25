@@ -44,7 +44,7 @@ export interface Client {
 
 export interface Engagement {
   id: string;
-  client_id: string;
+  client_id?: string;
   service_type: ServiceType;
   status: EngagementStatus;
   monthly_retainer: number;
@@ -122,7 +122,7 @@ export interface ToolExpense {
 
 export interface InvoiceLineItem {
   id: string;
-  invoice_id: string;
+  invoice_id?: string;
   tool_expense_id?: string | null;
   description: string;
   quantity: number;
@@ -237,5 +237,75 @@ export interface CommandCenterAlert {
   subtotal_amount?: number;
   due_date?: string;
   line_items?: InvoiceLineItem[];
+}
+
+export interface CommandCenterScheduledPost {
+  id: string;
+  title: string;
+  status: string;
+  target_pillar?: string | null;
+  scheduled_publish_date?: string | null;
+  body_markdown?: string | null;
+  engagements?: unknown;
+}
+
+export interface CommandCenterExpenseItem {
+  id: string;
+  description: string;
+  amount: number;
+  currency?: string;
+  incurred_date?: string;
+  status?: string;
+  client?: string;
+  engagements?: unknown;
+}
+
+export interface ClientCredential {
+  id: string;
+  client_id: string;
+  platform: string;
+  username_or_email: string;
+  two_factor_method?: string | null;
+  notes?: string | null;
+  created_at?: string;
+}
+
+export interface ClientWithEngagements extends Client {
+  website?: string;
+  engagements: Array<
+    Engagement & {
+      content_items?: Array<{
+        id: string;
+        status: ContentStatus;
+        scheduled_publish_date?: string;
+      }>;
+    }
+  >;
+}
+
+export interface ClientWithRelations extends Client {
+  website?: string;
+  content_items?: ContentItem[];
+  tool_expenses?: ToolExpense[];
+  client_requests?: ClientRequest[];
+  credentials?: ClientCredential[];
+  review_tokens?: Array<{
+    id: string;
+    token_hash: string;
+    expires_at: string;
+    revoked: boolean;
+    last_accessed_at?: string;
+  }>;
+}
+
+export interface CommandCenterReviewPost {
+  id: string;
+  title: string;
+  status: string;
+  target_pillar?: string | null;
+  body_markdown?: string | null;
+  scheduled_publish_date?: string | null;
+  created_at?: string;
+  engagements?: unknown;
 }
 

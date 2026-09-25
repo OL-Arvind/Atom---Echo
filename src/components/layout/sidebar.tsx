@@ -19,6 +19,7 @@ import { useSidebar } from "./sidebar-context";
 import { LogoutModal } from "@/components/auth/logout-modal";
 import { getStoredUser, syncSupabaseSessionUser, AuthUser } from "@/lib/auth/dummy-auth";
 import { SidebarTooltip } from "@/components/ui/sidebar-tooltip";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 const NAV_ITEMS = [
   { name: "Command Center", href: "/command-center", icon: Crosshair, section: "ops" },
@@ -402,32 +403,19 @@ export function Sidebar() {
                 }}
                 aria-label={`${user.name} account settings`}
                 style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "6px",
-                  background: "var(--color-base-overlay)",
-                  border: "1px solid var(--color-line-strong)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: "var(--font-sans tabular-nums)",
-                  fontSize: "10.5px",
-                  fontWeight: 600,
-                  color: "var(--color-ink-secondary)",
-                  letterSpacing: "0.02em",
+                  background: "transparent",
+                  border: "none",
+                  padding: 0,
                   cursor: "pointer",
-                  transition: "all 0.12s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--color-accent)";
-                  e.currentTarget.style.color = "var(--color-ink)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "var(--color-line-strong)";
-                  e.currentTarget.style.color = "var(--color-ink-secondary)";
                 }}
               >
-                {user.initials}
+                <UserAvatar
+                  seed={user.email || user.name}
+                  src={user.avatarUrl}
+                  size={32}
+                  className="rounded-[6px] hover:border-[var(--color-accent)] transition-colors"
+                  alt={user.name}
+                />
               </button>
             </SidebarTooltip>
           </div>
@@ -510,26 +498,13 @@ export function Sidebar() {
                 e.currentTarget.style.borderColor = "var(--color-line)";
               }}
             >
-              <div
-                style={{
-                  width: "28px",
-                  height: "28px",
-                  borderRadius: "6px",
-                  background: "var(--color-base-overlay)",
-                  border: "1px solid var(--color-line-strong)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  fontFamily: "var(--font-sans tabular-nums)",
-                  fontSize: "10px",
-                  fontWeight: 500,
-                  color: "var(--color-ink-secondary)",
-                  letterSpacing: "0.02em",
-                }}
-              >
-                {user.initials}
-              </div>
+              <UserAvatar
+                seed={user.email || user.name}
+                src={user.avatarUrl}
+                size={28}
+                className="rounded-[6px]"
+                alt={user.name}
+              />
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div
                   style={{

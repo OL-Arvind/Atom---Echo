@@ -53,9 +53,14 @@ export async function createClientReviewToken(
       expiresAt: data.expires_at,
       id: data.id,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Unexpected error creating review token:", err);
-    return { success: false, token: "", expiresAt: "", error: err.message };
+    return {
+      success: false,
+      token: "",
+      expiresAt: "",
+      error: err instanceof Error ? err.message : "Unexpected error creating token",
+    };
   }
 }
 
@@ -186,8 +191,11 @@ export async function revokeClientReviewToken(
     }
 
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to revoke token",
+    };
   }
 }
 

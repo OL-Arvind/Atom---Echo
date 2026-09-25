@@ -2,16 +2,17 @@ import { Layers, Plus, TrendingUp, CheckCircle2, Globe, ExternalLink } from "luc
 import Link from "next/link";
 import { getClientsFromDb } from "@/lib/data/supabase-queries";
 import { PageHeader } from "@/components/layout/page-header";
+import type { ClientWithEngagements, Engagement } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
 export default async function CampaignsPage() {
-  const clients = await getClientsFromDb();
+  const clients = (await getClientsFromDb()) as unknown as ClientWithEngagements[];
 
   // Filter clients with cold outreach service
-  const outreachClients = clients.filter((c: any) =>
+  const outreachClients = clients.filter((c: ClientWithEngagements) =>
     (c.engagements || []).some(
-      (e: any) => e.service_type === "cold_outreach" || e.service_type === "hybrid_growth"
+      (e: Engagement) => e.service_type === "cold_outreach" || e.service_type === "hybrid_growth"
     )
   );
 
@@ -85,9 +86,9 @@ export default async function CampaignsPage() {
           </div>
         ) : (
           <div className="divide-y divide-[var(--color-line-subtle)]">
-            {outreachClients.map((client: any) => {
+            {outreachClients.map((client: ClientWithEngagements) => {
               const eng = (client.engagements || []).find(
-                (e: any) => e.service_type === "cold_outreach" || e.service_type === "hybrid_growth"
+                (e: Engagement) => e.service_type === "cold_outreach" || e.service_type === "hybrid_growth"
               );
 
               return (

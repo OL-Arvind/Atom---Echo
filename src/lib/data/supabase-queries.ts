@@ -20,6 +20,7 @@ export async function getClientsFromDb() {
         created_at,
         engagements (
           id,
+          client_id,
           service_type,
           status,
           monthly_retainer,
@@ -68,6 +69,7 @@ export async function getClientByIdFromDb(id: string) {
           created_at,
           engagements (
             id,
+            client_id,
             service_type,
             status,
             monthly_retainer,

@@ -27,6 +27,7 @@ import {
   requestContentChangesByClientAction,
 } from "@/lib/actions/content";
 import { AtomEchoLogo } from "@/components/ui/logo";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { formatDisplayDateTimeIST, formatDisplayDateIST } from "@/lib/date-utils";
 
 export interface ReviewPostItem {
@@ -449,9 +450,12 @@ export function ReviewPortalClient({
                   {/* LinkedIn Author Header */}
                   <div className="flex items-start justify-between p-3.5 border-b border-[var(--color-line-subtle)]">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-base-subtle)] border border-[var(--color-line)] text-xs font-semibold text-[var(--color-ink)]">
-                        {initials}
-                      </div>
+                      <UserAvatar
+                        seed={founderName || clientName || "Founder"}
+                        size={40}
+                        className="rounded-lg"
+                        alt={founderName}
+                      />
                       <div>
                         <div className="flex items-center gap-1">
                           <span className="text-xs font-semibold text-[var(--color-ink)]">{founderName}</span>

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, X, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { AuthUser, clearStoredUser } from "@/lib/auth/dummy-auth";
 import { createClient } from "@/lib/supabase/client";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface LogoutModalProps {
   isOpen: boolean;
@@ -54,9 +55,13 @@ export function LogoutModal({ isOpen, onClose, user }: LogoutModalProps) {
 
         {/* User Card */}
         <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-3.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-base-overlay)] border border-[var(--color-line-strong)] font-sans tabular-nums text-xs font-semibold text-[var(--color-ink)] shrink-0">
-            {user.initials}
-          </div>
+          <UserAvatar
+            seed={user.email || user.name}
+            src={user.avatarUrl}
+            size={40}
+            className="rounded-[var(--radius-sm)]"
+            alt={user.name}
+          />
           <div className="min-w-0 flex-1">
             <div className="font-medium text-xs text-[var(--color-ink)] truncate">
               {user.name}
