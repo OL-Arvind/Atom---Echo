@@ -311,6 +311,23 @@ CREATE TABLE content_feedback (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 3.10b Content Revisions (Version history & brainstorming snapshots per post)
+CREATE TABLE content_revisions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    content_item_id UUID NOT NULL REFERENCES content_items(id) ON DELETE CASCADE,
+    version_number INTEGER NOT NULL CHECK (version_number >= 1),
+    title TEXT NOT NULL,
+    body_markdown TEXT NOT NULL,
+    target_pillar TEXT,
+    stage content_status NOT NULL DEFAULT 'draft',
+    trigger_type TEXT NOT NULL DEFAULT 'manual_checkpoint',
+    change_summary TEXT,
+    feedback_note TEXT,
+    author_name TEXT NOT NULL DEFAULT 'Editorial Team',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (content_item_id, version_number)
+);
+
 -- 3.11 Credentials (Encrypted Vault)
 CREATE TABLE credentials (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

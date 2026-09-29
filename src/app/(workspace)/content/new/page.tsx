@@ -8,6 +8,7 @@ interface NewContentStudioPageProps {
     clientId?: string;
     meetingId?: string;
     prompt?: string;
+    from?: string;
   }>;
 }
 
@@ -26,6 +27,7 @@ export default async function NewContentStudioPage({
       initialClientId={params.clientId}
       initialMeetingId={params.meetingId}
       initialPrompt={params.prompt}
+      initialFrom={params.from}
     />
   );
 }

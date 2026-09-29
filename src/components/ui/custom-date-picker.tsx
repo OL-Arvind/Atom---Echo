@@ -6,155 +6,21 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
-  Clock,
   X,
-  Check,
 } from "lucide-react";
+import type { CustomDatePickerProps } from "./date-picker/types";
+import { MONTH_NAMES } from "./date-picker/types";
+import {
+  pad2,
+  toIsoDate,
+  parseValueParts,
+  formatTriggerLabel,
+} from "./date-picker/utils";
+import { DatePickerPresets } from "./date-picker/presets";
+import { CalendarGrid } from "./date-picker/calendar-grid";
+import { TimeSelector } from "./date-picker/time-selector";
 
-export interface CustomDatePickerProps {
-  name?: string;
-  /**
-   * Supports either "YYYY-MM-DD" (when showTime=false)
-   * or "YYYY-MM-DDTHH:mm" (when showTime=true)
-   */
-  value?: string;
-  defaultValue?: string;
-  onChange?: (date: string) => void;
-  placeholder?: string;
-  required?: boolean;
-  disabled?: boolean;
-  minDate?: string;
-  maxDate?: string;
-  className?: string;
-  allowClear?: boolean;
-  /** Enable time picker (outputs YYYY-MM-DDTHH:mm) */
-  showTime?: boolean;
-  /** Visual trigger style: standard input or compact composer pill */
-  variant?: "default" | "pill";
-  /** Contextual quick presets: "future" (Today, Tomorrow, +1w) or "past" (Now/Today, Yesterday, 2d ago) */
-  presetMode?: "future" | "past";
-}
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-const WEEKDAY_NAMES = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-
-function pad2(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
-function toIsoDate(year: number, month1Based: number, day: number): string {
-  return `${year}-${pad2(month1Based)}-${pad2(day)}`;
-}
-
-function parseValueParts(
-  raw: string,
-  showTime: boolean
-): {
-  datePart: string; // YYYY-MM-DD
-  hours: number; // 0-23
-  minutes: number; // 0-59
-} {
-  const now = new Date();
-  if (!raw) {
-    return {
-      datePart: "",
-      hours: now.getHours(),
-      minutes: now.getMinutes(),
-    };
-  }
-
-  // Handle YYYY-MM-DDTHH:mm or ISO string
-  if (raw.includes("T")) {
-    const [dPart, tPart] = raw.split("T");
-    const [hh, mm] = (tPart || "").split(":").map((v) => parseInt(v, 10));
-    return {
-      datePart: dPart || "",
-      hours: !isNaN(hh) ? hh : now.getHours(),
-      minutes: !isNaN(mm) ? mm : now.getMinutes(),
-    };
-  }
-
-  return {
-    datePart: raw.slice(0, 10),
-    hours: showTime ? now.getHours() : 9,
-    minutes: showTime ? now.getMinutes() : 0,
-  };
-}
-
-function formatTriggerLabel(
-  raw: string,
-  showTime: boolean,
-  variant: "default" | "pill"
-): string {
-  if (!raw) return "";
-  try {
-    const { datePart, hours, minutes } = parseValueParts(raw, showTime);
-    if (!datePart) return "";
-    const [year, month, day] = datePart.split("-").map(Number);
-    if (!year || !month || !day) return raw;
-
-    const d = new Date(year, month - 1, day, hours, minutes);
-    const now = new Date();
-    const isToday =
-      d.getFullYear() === now.getFullYear() &&
-      d.getMonth() === now.getMonth() &&
-      d.getDate() === now.getDate();
-
-    const yesterday = new Date();
-    yesterday.setDate(now.getDate() - 1);
-    const isYesterday =
-      d.getFullYear() === yesterday.getFullYear() &&
-      d.getMonth() === yesterday.getMonth() &&
-      d.getDate() === yesterday.getDate();
-
-    const tomorrow = new Date();
-    tomorrow.setDate(now.getDate() + 1);
-    const isTomorrow =
-      d.getFullYear() === tomorrow.getFullYear() &&
-      d.getMonth() === tomorrow.getMonth() &&
-      d.getDate() === tomorrow.getDate();
-
-    const dateLabel =
-      variant === "pill" && isToday
-        ? "Today"
-        : variant === "pill" && isYesterday
-        ? "Yesterday"
-        : variant === "pill" && isTomorrow
-        ? "Tomorrow"
-        : d.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            ...(d.getFullYear() !== now.getFullYear() || variant === "default"
-              ? { year: "numeric" }
-              : {}),
-          });
-
-    if (!showTime) return dateLabel;
-
-    const timeLabel = d.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-
-    return `${dateLabel}, ${timeLabel}`;
-  } catch {
-    return raw;
-  }
-}
+export type { CustomDatePickerProps };
 
 export function CustomDatePicker({
   name,
@@ -337,12 +203,6 @@ export function CustomDatePicker({
     }
   };
 
-  // Calendar math (Monday-based weeks: 0 = Mon, 6 = Sun)
-  const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
-  const startOffset = (firstDayOfMonth + 6) % 7;
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
-
   const today = new Date();
   const todayIso = toIsoDate(
     today.getFullYear(),
@@ -364,26 +224,6 @@ export function CustomDatePicker({
     if (!showTime) {
       setIsOpen(false);
     }
-  };
-
-  // 12-hour display helpers for the time picker
-  const isPM = hours >= 12;
-  const displayHour12 = hours % 12 === 0 ? 12 : hours % 12;
-
-  const stepHour = (delta: number) => {
-    const next = (hours + delta + 24) % 24;
-    handleTimeChange(next, minutes);
-  };
-
-  const stepMinute = (delta: number) => {
-    const snapped = Math.round(minutes / 5) * 5;
-    const next = (snapped + delta + 60) % 60;
-    handleTimeChange(hours, next);
-  };
-
-  const toggleAmPm = () => {
-    const next = isPM ? hours - 12 : hours + 12;
-    handleTimeChange(next, minutes);
   };
 
   const displayLabel = formatTriggerLabel(currentValue, showTime, variant);
@@ -509,238 +349,31 @@ export function CustomDatePicker({
             </div>
 
             {/* 2. Contextual Quick Presets */}
-            <div className="flex items-center gap-1 py-2 border-b border-[var(--color-line-subtle)]">
-              {presetMode === "past" ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => applyDayOffset(0, true)}
-                    className="flex-1 py-1 text-[11px] font-sans rounded-[5px] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-colors cursor-pointer"
-                  >
-                    {showTime ? "Right Now" : "Today"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyDayOffset(-1)}
-                    className="flex-1 py-1 text-[11px] font-sans rounded-[5px] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-colors cursor-pointer"
-                  >
-                    Yesterday
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyDayOffset(-2)}
-                    className="flex-1 py-1 text-[11px] font-sans rounded-[5px] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-colors cursor-pointer"
-                  >
-                    2d Ago
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => applyDayOffset(0)}
-                    className="flex-1 py-1 text-[11px] font-sans rounded-[5px] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-colors cursor-pointer"
-                  >
-                    Today
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyDayOffset(1)}
-                    className="flex-1 py-1 text-[11px] font-sans rounded-[5px] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-colors cursor-pointer"
-                  >
-                    Tomorrow
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyDayOffset(7)}
-                    className="flex-1 py-1 text-[11px] font-sans rounded-[5px] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-colors cursor-pointer"
-                  >
-                    +1 Week
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyDayOffset(30)}
-                    className="flex-1 py-1 text-[11px] font-sans rounded-[5px] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-colors cursor-pointer"
-                  >
-                    +30d
-                  </button>
-                </>
-              )}
-            </div>
+            <DatePickerPresets
+              presetMode={presetMode}
+              showTime={showTime}
+              onApplyOffset={applyDayOffset}
+            />
 
-            {/* 3. Weekday Header */}
-            <div className="grid grid-cols-7 gap-1 pt-2 pb-1 text-center">
-              {WEEKDAY_NAMES.map((d) => (
-                <span
-                  key={d}
-                  className="text-[10px] font-sans tabular-nums font-medium text-[var(--color-ink-muted)] uppercase tracking-wider"
-                >
-                  {d}
-                </span>
-              ))}
-            </div>
-
-            {/* 4. Days Grid */}
-            <div className="grid grid-cols-7 gap-1 text-center">
-              {/* Previous month filler days */}
-              {Array.from({ length: startOffset }).map((_, i) => {
-                const dayNum = daysInPrevMonth - startOffset + i + 1;
-                const prevMonthIdx = viewMonth === 0 ? 11 : viewMonth - 1;
-                const prevYearVal = viewMonth === 0 ? viewYear - 1 : viewYear;
-                const iso = toIsoDate(prevYearVal, prevMonthIdx + 1, dayNum);
-
-                return (
-                  <button
-                    type="button"
-                    key={`prev-${i}`}
-                    onClick={() => handleSelectDate(iso)}
-                    className="h-8 w-8 mx-auto text-[11px] font-sans tabular-nums text-[var(--color-ink-muted)]/40 rounded-[6px] hover:bg-[var(--color-base-subtle)] hover:text-[var(--color-ink-secondary)] transition-colors flex items-center justify-center cursor-pointer"
-                  >
-                    {dayNum}
-                  </button>
-                );
-              })}
-
-              {/* Current month days */}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const dayNum = i + 1;
-                const iso = toIsoDate(viewYear, viewMonth + 1, dayNum);
-                const isSelected = selectedDate === iso;
-                const isToday = todayIso === iso;
-                const isDisabled =
-                  Boolean(minDate && iso < minDate) ||
-                  Boolean(maxDate && iso > maxDate);
-
-                return (
-                  <button
-                    type="button"
-                    key={`curr-${dayNum}`}
-                    disabled={isDisabled}
-                    onClick={() => handleSelectDate(iso)}
-                    className={`h-8 w-8 mx-auto text-[11.5px] font-sans tabular-nums rounded-[6px] transition-all flex items-center justify-center relative ${
-                      isDisabled
-                        ? "opacity-25 cursor-not-allowed text-[var(--color-ink-muted)]"
-                        : "cursor-pointer active:scale-95"
-                    } ${
-                      isSelected
-                        ? "bg-[var(--color-ink)] text-[var(--color-base)] font-semibold shadow-2xs"
-                        : isToday
-                        ? "border border-[var(--color-line-strong)] bg-[var(--color-base-subtle)] text-[var(--color-ink)] font-semibold"
-                        : "text-[var(--color-ink)] hover:bg-[var(--color-base-subtle)]"
-                    }`}
-                  >
-                    {dayNum}
-                  </button>
-                );
-              })}
-            </div>
+            {/* 3 & 4. Weekday Header and Days Grid */}
+            <CalendarGrid
+              viewYear={viewYear}
+              viewMonth={viewMonth}
+              selectedDate={selectedDate}
+              todayIso={todayIso}
+              minDate={minDate}
+              maxDate={maxDate}
+              onSelectDate={handleSelectDate}
+            />
 
             {/* 5. Optional Time Selector */}
             {showTime && (
-              <div className="mt-3 pt-2.5 border-t border-[var(--color-line-subtle)] space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-ink-tertiary)]">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>Time</span>
-                  </div>
-
-                  {/* Tactile Hour : Minute + AM/PM Control */}
-                  <div className="flex items-center gap-1">
-                    <div className="inline-flex items-center rounded-[6px] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-0.5 font-sans tabular-nums text-xs">
-                      <button
-                        type="button"
-                        onClick={() => stepHour(-1)}
-                        className="px-1.5 py-0.5 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] cursor-pointer"
-                        title="Previous hour"
-                      >
-                        −
-                      </button>
-                      <span className="w-6 text-center font-semibold text-[var(--color-ink)]">
-                        {pad2(displayHour12)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => stepHour(1)}
-                        className="px-1.5 py-0.5 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] cursor-pointer"
-                        title="Next hour"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <span className="text-xs font-bold text-[var(--color-ink-muted)]">
-                      :
-                    </span>
-
-                    <div className="inline-flex items-center rounded-[6px] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-0.5 font-sans tabular-nums text-xs">
-                      <button
-                        type="button"
-                        onClick={() => stepMinute(-5)}
-                        className="px-1.5 py-0.5 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] cursor-pointer"
-                        title="−5 minutes"
-                      >
-                        −
-                      </button>
-                      <span className="w-6 text-center font-semibold text-[var(--color-ink)]">
-                        {pad2(minutes)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => stepMinute(5)}
-                        className="px-1.5 py-0.5 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] cursor-pointer"
-                        title="+5 minutes"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={toggleAmPm}
-                      className="h-7 px-2 rounded-[6px] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] text-[11px] font-sans font-semibold text-[var(--color-ink)] transition-colors cursor-pointer"
-                    >
-                      {isPM ? "PM" : "AM"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Quick Time Slots + Done Button */}
-                <div className="flex items-center justify-between gap-1 pt-0.5">
-                  <div className="flex items-center gap-1">
-                    {[
-                      { label: "9 AM", h: 9, m: 0 },
-                      { label: "12 PM", h: 12, m: 0 },
-                      { label: "3 PM", h: 15, m: 0 },
-                      { label: "6 PM", h: 18, m: 0 },
-                    ].map((slot) => {
-                      const isActiveSlot = hours === slot.h && minutes === slot.m;
-                      return (
-                        <button
-                          key={slot.label}
-                          type="button"
-                          onClick={() => handleTimeChange(slot.h, slot.m)}
-                          className={`px-2 py-0.5 rounded-[4px] text-[10.5px] font-sans tabular-nums transition-colors cursor-pointer ${
-                            isActiveSlot
-                              ? "bg-[var(--color-ink)] text-[var(--color-base)] font-medium"
-                              : "bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-                          }`}
-                        >
-                          {slot.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsOpen(false)}
-                    className="btn btn-primary text-[11px] py-1 px-2.5 h-6 inline-flex items-center gap-1"
-                  >
-                    <Check className="h-3 w-3" />
-                    <span>Done</span>
-                  </button>
-                </div>
-              </div>
+              <TimeSelector
+                hours={hours}
+                minutes={minutes}
+                onTimeChange={handleTimeChange}
+                onClose={() => setIsOpen(false)}
+              />
             )}
           </div>,
           document.body

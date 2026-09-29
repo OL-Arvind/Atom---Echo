@@ -6,12 +6,10 @@ import {
   MessageSquare,
   Repeat2,
   Send,
-  MoreHorizontal,
   Globe,
   Monitor,
   Smartphone,
   ArrowUpRight,
-  ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -209,7 +207,7 @@ export function LinkedInFeedCard({
 
               <span className="text-[var(--color-line-strong)]">|</span>
               <span className="tabular-nums text-[var(--color-ink-tertiary)]">
-                {fold.charCount} chars &middot; {fold.wordCount} words
+                {fold.wordCount} words &middot; {fold.charCount} chars &middot; {readingTimeMin} min read
               </span>
             </div>
           )}
@@ -219,11 +217,11 @@ export function LinkedInFeedCard({
       {/* The Actual Simulated LinkedIn Feed Card */}
       <div
         className={`transition-all duration-200 card overflow-hidden ${
-          isMobile ? "max-w-[390px] mx-auto" : "max-w-2xl w-full"
+          isMobile ? "max-w-[390px] mx-auto" : "w-full"
         }`}
       >
         {/* Post Author Header */}
-        <div className="px-4 py-2.5 flex items-start justify-between gap-3 border-b border-[var(--color-line-subtle)]">
+        <div className="px-4 py-3 flex items-start justify-between gap-3 border-b border-[var(--color-line-subtle)]">
           <div className="flex items-start gap-2.5 min-w-0">
             {linkedinUrl ? (
               <a
@@ -249,7 +247,7 @@ export function LinkedInFeedCard({
                     </span>
                     <ArrowUpRight className="h-3 w-3 text-[var(--color-ink-muted)] opacity-60 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <p className="text-[11.5px] text-[var(--color-ink-secondary)] truncate max-w-xs mt-0.5">
+                  <p className="text-[11.5px] text-[var(--color-ink-secondary)] truncate max-w-md mt-0.5">
                     {authorTitle || "Founder & Executive Leader"}
                   </p>
                   <p className="text-[10.5px] text-[var(--color-ink-muted)] flex items-center gap-1 mt-1 font-sans">
@@ -276,7 +274,7 @@ export function LinkedInFeedCard({
                       &middot; 1st
                     </span>
                   </div>
-                  <p className="text-[11.5px] text-[var(--color-ink-secondary)] truncate max-w-xs mt-0.5">
+                  <p className="text-[11.5px] text-[var(--color-ink-secondary)] truncate max-w-md mt-0.5">
                     {authorTitle || "Founder & Executive Leader"}
                   </p>
                   <p className="text-[10.5px] text-[var(--color-ink-muted)] flex items-center gap-1 mt-1 font-sans">
@@ -289,25 +287,18 @@ export function LinkedInFeedCard({
             )}
           </div>
 
-          {/* Right Action / Status Badge */}
-          <div className="flex items-center gap-2 shrink-0">
-            {statusLabel && (
+          {/* Right Status Indicator */}
+          {statusLabel && (
+            <div className="flex items-center gap-2 shrink-0 pt-0.5">
               <span className="text-[10px] uppercase font-sans tracking-wider text-[var(--color-ink-muted)] font-medium">
                 {statusLabel}
               </span>
-            )}
-            <button
-              type="button"
-              className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-1 rounded-md hover:bg-[var(--color-base-subtle)] transition-colors cursor-pointer"
-              title="Post settings"
-            >
-              <MoreHorizontal size={15} />
-            </button>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Post Text Body with Precise 3-Line Cutoff */}
-        <div className="px-4 py-3 sm:py-3.5 text-[14px] leading-relaxed text-[var(--color-ink)] font-sans">
+        <div className="px-4 py-3.5 sm:px-5 sm:py-4 text-[14px] leading-relaxed text-[var(--color-ink)] font-sans">
           {bodyMarkdown ? (
             <div>
               {fold.isOverFold && !isExpanded ? (
@@ -345,30 +336,6 @@ export function LinkedInFeedCard({
               No draft content written yet.
             </p>
           )}
-        </div>
-
-        {/* Realistic Social Reaction Stats */}
-        <div className="px-4 py-1.5 border-t border-[var(--color-line-subtle)] flex items-center justify-between text-[11px] text-[var(--color-ink-muted)] font-sans tabular-nums">
-          <div className="flex items-center gap-1.5">
-            <span className="flex items-center -space-x-1">
-              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-600 text-white text-[8px]">
-                👍
-              </span>
-              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-emerald-600 text-white text-[8px]">
-                💡
-              </span>
-              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-red-600 text-white text-[8px]">
-                ❤️
-              </span>
-            </span>
-            <span className="pl-0.5 text-[var(--color-ink-secondary)] font-medium text-[10.5px]">18</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-[10.5px]">
-            <span>3 comments</span>
-            <span>&middot;</span>
-            <span>1 repost</span>
-          </div>
         </div>
 
         {/* Action Bar: Like, Comment, Repost, Send (Only when showActionButtons is true) */}

@@ -17,7 +17,7 @@ export default async function CampaignsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl space-y-7">
+    <div className="w-full space-y-6">
       {/* Standardized Header */}
       <PageHeader
         title="Outbound &amp; GTM"

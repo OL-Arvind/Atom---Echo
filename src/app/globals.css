@@ -285,12 +285,18 @@
   font-family: var(--font-sans);
   letter-spacing: -0.01em;
   cursor: pointer;
-  transition: all 0.15s var(--ease-out-expo);
+  transition:
+    transform 160ms var(--ease-out-expo),
+    background-color 150ms var(--ease-out-expo),
+    border-color 150ms var(--ease-out-expo),
+    color 150ms var(--ease-out-expo),
+    opacity 150ms var(--ease-out-expo),
+    box-shadow 150ms var(--ease-out-expo);
   white-space: nowrap;
   border: 1px solid transparent;
   line-height: 1.2;
 }
-.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:active:not(:disabled) { transform: scale(0.97); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .btn-primary {
@@ -299,22 +305,12 @@
   font-weight: 600;
   border-color: var(--color-ink);
 }
-.btn-primary:hover:not(:disabled) {
-  opacity: 0.90;
-  transform: translateY(-1px);
-}
 
 .btn-accent {
   background: var(--color-accent-lime);
   color: #10110f;
   font-weight: 600;
   border-color: var(--color-accent-lime);
-}
-.btn-accent:hover:not(:disabled) {
-  background: #bfff70;
-  border-color: #bfff70;
-  transform: translateY(-1px);
-  box-shadow: 0 0 14px rgba(211, 255, 90, 0.25);
 }
 
 .btn-secondary {
@@ -323,19 +319,32 @@
   border-color: var(--color-line);
   box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
-.btn-secondary:hover:not(:disabled) {
-  background: var(--color-base-muted);
-  border-color: var(--color-line-strong);
-}
 
 .btn-ghost {
   background: transparent;
   color: var(--color-ink-secondary);
   border-color: transparent;
 }
-.btn-ghost:hover:not(:disabled) {
-  background: var(--color-base-subtle);
-  color: var(--color-ink);
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover:not(:disabled) {
+    opacity: 0.90;
+    transform: translateY(-1px);
+  }
+  .btn-accent:hover:not(:disabled) {
+    background: #bfff70;
+    border-color: #bfff70;
+    transform: translateY(-1px);
+    box-shadow: 0 0 14px rgba(211, 255, 90, 0.25);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--color-base-muted);
+    border-color: var(--color-line-strong);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--color-base-subtle);
+    color: var(--color-ink);
+  }
 }
 
 .btn-pill {
@@ -424,24 +433,13 @@
 }
 
 /* ─── APP-LEVEL FOCUS & INPUT NORMALIZATION ─── */
-/* Eliminate harsh browser-default black focus rectangles across the app */
-input,
-textarea,
-select,
-button {
+/* Suppress focus ring for pointer clicks while preserving :focus-visible for keyboard navigation */
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+button:focus:not(:focus-visible),
+[contenteditable="true"]:focus {
   outline: none;
-}
-
-input:focus,
-input:focus-visible,
-textarea:focus,
-textarea:focus-visible,
-select:focus,
-select:focus-visible,
-[contenteditable="true"]:focus,
-[contenteditable="true"]:focus-visible {
-  outline: none !important;
-  box-shadow: none;
 }
 
 /* Subtle, deliberate focus ring on .input class elements */

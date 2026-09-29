@@ -28,20 +28,25 @@ function WorkspaceContent({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const pathname = usePathname();
-  const isFullBleed = pathname.startsWith("/command-center");
+  const isCommandCenter = pathname.startsWith("/command-center");
+  const isFlushMasthead =
+    (pathname.startsWith("/clients/") && pathname !== "/clients") ||
+    pathname.startsWith("/content");
 
   return (
     <div
-      className={`transition-[padding-left] duration-200 ease-in-out ${
+      className={`transition-[padding-left] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         isCollapsed ? "pl-[64px]" : "pl-[220px]"
-      } ${isFullBleed ? "h-[100dvh] flex flex-col overflow-hidden" : "min-h-screen flex flex-col"}`}
+      } ${isCommandCenter ? "h-[100dvh] flex flex-col overflow-hidden" : "min-h-screen flex flex-col"}`}
     >
       <TopNav />
       <main
         className={`flex-1 bg-[var(--color-base)] ${
-          isFullBleed
+          isCommandCenter
             ? "p-0 flex flex-col overflow-hidden min-h-0"
-            : "px-4 py-3.5 md:px-5 md:py-4 lg:px-6 lg:py-4"
+            : isFlushMasthead
+            ? "p-0 flex flex-col"
+            : "px-5 py-5 lg:px-7 lg:py-6"
         }`}
       >
         {children}

@@ -230,6 +230,33 @@ export interface ContentFeedback {
   created_at: string;
 }
 
+export type ContentRevisionTrigger =
+  | "initial_draft"
+  | "manual_checkpoint"
+  | "sent_to_qa"
+  | "qa_returned"
+  | "sent_to_founder"
+  | "founder_returned"
+  | "approved"
+  | "published"
+  | "restored"
+  | "restored_version";
+
+export interface ContentRevision {
+  id: string;
+  content_item_id: string;
+  version_number: number;
+  title: string;
+  body_markdown: string;
+  target_pillar?: string | null;
+  stage: ContentStatus;
+  trigger_type: ContentRevisionTrigger;
+  change_summary?: string | null;
+  feedback_note?: string | null;
+  author_name: string;
+  created_at: string;
+}
+
 export interface CommandCenterAlert {
   id: string;
   urgency: "critical" | "urgent" | "warning" | "info";
@@ -257,6 +284,9 @@ export interface CommandCenterAlert {
   post_title?: string;
   post_status?: string;
   body_markdown?: string;
+  previous_body_markdown?: string | null;
+  previous_version_number?: number | null;
+  current_version_number?: number | null;
   target_pillar?: string;
   feedback_id?: string;
   comment?: string;

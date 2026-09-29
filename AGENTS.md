@@ -24,11 +24,18 @@ Before touching, modifying, or creating any code in this repository, you MUST fo
 > **The user should not be maintaining the operating system. The operating system must maintain itself from the work the user is already doing.**
 
 * **FORBIDDEN**: Creating forms where an operator has to update 5 separate status fields, copy dates across tables, and manually create reminder tasks.
+* **FORBIDDEN ("Fake Dismiss" Anti-Pattern)**: Never add a local-state-only "Dismiss (`X`)" or "Mark as Resolved" button to an operational queue that hides items in React `useState` without mutating the database. An item in the Command Center is a live projection of unresolved domain state—it may only leave the queue when a real server action transitions its underlying database state (`content_items.status`, `content_feedback.is_resolved`, `invoices.status`, `tool_expenses.status`, `client_requests.status`, `tool_subscriptions.next_renewal_date`).
 * **MANDATORY**: Prefer `EVENT → STATE MACHINE TRANSITION → DOWNSTREAM AUTOMATION`. When an event occurs (e.g. client approves a post in the mobile portal), the system automatically updates the content state, confirms calendar scheduling, generates publishing tasks, logs an audit trail, and notifies the team.
+* **MANDATORY (Zero-Friction Content & Revision Loop)**:
+  - Advancing a post forward (`internal_review`, `client_review`, `approved`, `scheduled`, `published`) must automatically mark open `content_feedback` notes on that post as `is_resolved = true` (`autoResolvePostFeedback`).
+  - Dispatching a post to `client_review` must automatically ensure an active 1-tap `review_token` exists and copy the full `${origin}/review/${token}` URL to the operator's clipboard.
+  - Active revision notes must be pinned at the top of the writing canvas in `/content/[id]`, and prior founder revision notes (`last_client_feedback`) must be displayed as an editorial hairline inset in `/review/[token]` to prevent founder amnesia on re-review.
 
 ### LAW 2: Never Recreate a Notion Clone
 * Do **NOT** create a sidebar with 15 database tables (Clients, Posts, Invoices, Tasks, Passwords) where users navigate raw rows and columns.
 * Build an **attention surface**. The Command Center answers: *"What requires attention right now, why, who is waiting, and what happens next?"*
+* **No Modal Close (`X`) Buttons on Persistent Split-View Inspectors**: In a Master-Detail Split View (e.g. Command Center Left Queue + Right Inspector), the right pane is a permanent inspector for the selected queue item, NOT a popup modal. Never place a top-right `X` dismiss button on a persistent inspector header.
+* **Direct-to-Studio Creation (No Modal Roadblocks for Deep Authoring)**: Creating a LinkedIn perspective must route directly to the full split-screen Studio (`/content/new?clientId=...&meetingId=...`) with the founder's Story Vault, Voice Guardrails, and Meeting Takeaways immediately accessible—never behind a pop-up modal roadblock or redundant "Working Title" input field (auto-derive the title from the opening hook line).
 * The Calendar is a **temporal projection** of operational data (content dates, campaign dates, meetings, renewals), NOT an input database where users type entries.
 
 ### LAW 3: Single Source of Truth
@@ -55,6 +62,13 @@ Before generating any component, API route, or database migration, explicitly ve
 All web application code built for Atom & Echo must follow BaseWorks premium design principles, calibrated for **ADHD-friendly, low-cognitive-load execution** (inspired by Linear, Emil Kowalski design engineering, Amie, and Things 3):
 
 * **Single Dominant Anchor**: Every view must present exactly one clear focal point. Eliminate competing banners, multi-tiered eyebrows, and noisy visual sirens.
+* **Flush Edge-to-Edge Mastheads & Strict Ban on "Box-in-a-Box" Nesting**:
+  - **Flush Architectural Mastheads**: Primary workspace, dossier, and studio routes (`/clients/[id]`, `/content`, `/content/[id]`) must register in `isFlushMasthead` inside `src/components/layout/workspace-shell.tsx` so their top masthead (`border-b border-[var(--color-line)] bg-[var(--color-surface)]`) sits flush from the left sidebar to the right viewport edge without 4-corner outer padding. Apply `px-5 py-6 lg:px-7 lg:py-6` only to the scrollable body canvas below the masthead.
+  - **Integrated Hairline Ledgers & Filter/Tab Bars**: Never float standalone `MetricRibbon` boxes or segmented pill tab bars above bordered cards. Integrate vitals (`grid divide-x divide-[var(--color-line-subtle)]`) and filter/tab bars (`border-t` or `border-b border-[var(--color-line-subtle)]`) directly into the masthead or card header.
+  - **De-Boxed Authoring & Dossier Sheets**: Never place a bordered `<textarea>` or nested bordered sub-cards inside an already-bordered container. Use a single outer container (`rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)]`) divided internally by full-bleed hairlines (`divide-y divide-[var(--color-line-subtle)]`), with borderless inputs (`bg-transparent border-0 focus:ring-0`).
+* **Strict Separation of Company Brand Logos (`BrandLogo`) vs. Human Avatars (`UserAvatar`)**:
+  - **NEVER** restrict `resolveBrandDomain` in `src/components/ui/brand-logo.tsx` to a hardcoded SaaS allowlist, and **NEVER** replace company brand logos with `UserAvatar` human face illustrations.
+  - Always pass the client's full domain context (`client?.website_url || client?.founder_email || client?.name`) to `<BrandLogo />` so Brandfetch resolves real company logos (`ril.com`, `debtworks.co.in`, `baseworks.in`, etc.). Reserve `<UserAvatar />` strictly for human people/founders.
 * **Strict Ban on Pill / Badge Confetti**: 
   - **NEVER** wrap passive status or metadata into rounded colored pills (e.g., `rounded-full bg-amber-50 border-amber-200 px-2 py-0.5`). 
   - Instead, use quiet, crisp secondary text or an understated 6px inline dot indicator with uppercase sans tracking (`flex items-center gap-2 text-[10.5px] font-sans tabular-nums tracking-wider text-[var(--color-ink-secondary)]`).
@@ -88,6 +102,13 @@ If you discover a conflict between requirements:
 * **DO NOT** guess or silently invent requirements.
 * Follow the rank in [`00_PROJECT/SOURCE_OF_TRUTH.md`](file:///d:/BaseWorks/Atom%20&%20Echo/00_PROJECT/SOURCE_OF_TRUTH.md).
 * If the conflict involves scope or architecture, check [`00_PROJECT/DECISIONS.md`](file:///d:/BaseWorks/Atom%20&%20Echo/00_PROJECT/DECISIONS.md) or alert the user.
+
+---
+
+## 6. Workspace Tooling & Verification Invariants
+
+* **TypeScript Check on Windows (`&` in Workspace Path)**: Because `d:\BaseWorks\Atom & Echo` contains an ampersand (`&`), `npx tsc` fails in Windows shells due to unescaped path splitting inside `npx.cmd`. Always run TypeScript verification via:
+  `node "./node_modules/typescript/bin/tsc" --noEmit`
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -124,6 +124,53 @@ export async function deleteToolSubscriptionAction(id: string) {
 }
 
 /**
+ * Confirm & advance a tool subscription's next_renewal_date by 1 billing cycle
+ */
+export async function advanceToolSubscriptionRenewalAction(id: string) {
+  try {
+    await requireOperatorSession();
+    const supabase = createAdminClient();
+
+    const { data: tool, error: fetchErr } = await supabase
+      .from("tool_subscriptions")
+      .select("id, tool_name, billing_cycle, next_renewal_date")
+      .eq("id", id)
+      .single();
+
+    if (fetchErr || !tool) {
+      return { success: false, error: fetchErr?.message || "Tool subscription not found." };
+    }
+
+    const baseDate = tool.next_renewal_date ? new Date(tool.next_renewal_date) : new Date();
+    if (tool.billing_cycle === "annual" || tool.billing_cycle === "yearly") {
+      baseDate.setFullYear(baseDate.getFullYear() + 1);
+    } else if (tool.billing_cycle === "quarterly") {
+      baseDate.setMonth(baseDate.getMonth() + 3);
+    } else {
+      baseDate.setMonth(baseDate.getMonth() + 1);
+    }
+    const nextDateIso = baseDate.toISOString().split("T")[0];
+
+    const { error: updateErr } = await supabase
+      .from("tool_subscriptions")
+      .update({ next_renewal_date: nextDateIso })
+      .eq("id", id);
+
+    if (updateErr) {
+      return { success: false, error: updateErr.message };
+    }
+
+    revalidate("/billing");
+    revalidate("/command-center");
+    revalidate("/calendar");
+    return { success: true, nextRenewalDate: nextDateIso, toolName: tool.tool_name };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to advance tool renewal date.";
+    return { success: false, error: message };
+  }
+}
+
+/**
  * Transition invoice lifecycle: draft -> approved -> sent -> paid (or cancelled)
  */
 export async function updateInvoiceStatusAction(invoiceId: string, status: InvoiceStatus) {

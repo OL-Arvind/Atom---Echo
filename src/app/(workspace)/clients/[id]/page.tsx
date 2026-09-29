@@ -8,15 +8,22 @@ export const dynamic = "force-dynamic";
 
 export default async function ClientWorkspacePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, sp] = await Promise.all([params, searchParams]);
   const client = await getClientByIdFromDb(id);
 
   if (!client) {
     notFound();
   }
 
-  return <ClientWorkspaceView client={client as unknown as ClientWithRelations} />;
+  return (
+    <ClientWorkspaceView
+      client={client as unknown as ClientWithRelations}
+      initialTab={sp.tab}
+    />
+  );
 }

@@ -3,21 +3,12 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Filter,
   FileText,
-  CreditCard,
-  Wrench,
-  Clock,
-  ExternalLink,
-  X,
-  CheckCircle2,
   CalendarDays,
   List,
-  Sparkles,
-  ArrowRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -25,30 +16,17 @@ import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import {
   getTodayDateStringIST,
   toDateStringIST,
-  formatDisplayDateIST,
-  formatDisplayDateTimeIST,
 } from "@/lib/date-utils";
+import type { CalendarView, CalendarEvent, CalendarDaySlot } from "@/components/calendar/types";
+import { CalendarMonthGrid } from "@/components/calendar/calendar-month-grid";
+import { CalendarAgendaView } from "@/components/calendar/calendar-agenda-view";
+import { CalendarEventDrawer } from "@/components/calendar/calendar-event-drawer";
 
 interface CalendarClientProps {
   initialContentPosts: any[];
   engagements: any[];
   toolSubscriptions: any[];
   clients: any[];
-}
-
-type CalendarView = "month" | "week" | "agenda";
-
-interface CalendarEvent {
-  id: string;
-  type: "content" | "billing" | "tool";
-  title: string;
-  subtitle?: string;
-  date: Date;
-  dateString: string; // YYYY-MM-DD
-  status?: string;
-  clientName: string;
-  clientId?: string;
-  rawItem: any;
 }
 
 export function CalendarClient({
@@ -174,7 +152,7 @@ export function CalendarClient({
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const daysInPrevMonth = new Date(year, month, 0).getDate();
 
-    const days: { date: Date; dateString: string; isCurrentMonth: boolean; isToday: boolean }[] = [];
+    const days: CalendarDaySlot[] = [];
     const todayStr = getTodayDateStringIST();
 
     // Previous month filler days
@@ -241,7 +219,7 @@ export function CalendarClient({
   );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-7">
+    <div className="w-full space-y-6">
       {/* Standardized Header */}
       <PageHeader
         title="Publishing Schedule"
@@ -376,307 +354,26 @@ export function CalendarClient({
 
       {/* VIEW: MONTH CALENDAR GRID */}
       {view === "month" && (
-        <div className="card overflow-hidden border border-[var(--color-line)]">
-          {/* Day Headers (Mon - Sun) */}
-          <div className="grid grid-cols-7 border-b border-[var(--color-line)] bg-[var(--color-base-raised)] text-center text-[11px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] py-2.5">
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
-            <div>Sun</div>
-          </div>
-
-          {/* Days Grid */}
-          <div className="grid grid-cols-7 divide-x divide-y divide-[var(--color-line-subtle)] bg-[var(--color-base)]">
-            {calendarDays.map((day, idx) => {
-              const events = eventsByDate[day.dateString] || [];
-              const hasEvents = events.length > 0;
-
-              return (
-                <div
-                  key={day.dateString + idx}
-                  className={`min-h-[115px] p-2 flex flex-col justify-between transition-colors ${
-                    !day.isCurrentMonth
-                      ? "bg-[var(--color-base-subtle)]/30 text-[var(--color-ink-muted)]"
-                      : "hover:bg-[var(--color-surface-hover)]/30"
-                  } ${day.isToday ? "bg-[var(--color-accent-dim)]/5" : ""}`}
-                >
-                  {/* Date Number Header */}
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`inline-flex items-center justify-center font-sans tabular-nums text-xs rounded-[4px] h-5 w-5 ${
-                        day.isToday
-                          ? "bg-[var(--color-accent)] text-black font-bold"
-                          : day.isCurrentMonth
-                          ? "text-[var(--color-ink)]"
-                          : "text-[var(--color-ink-tertiary)]"
-                      }`}
-                    >
-                      {day.date.getDate()}
-                    </span>
-                    {hasEvents && (
-                      <span className="text-[10px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
-                        {events.length}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Operational Chips */}
-                  <div className="mt-1.5 space-y-1 overflow-hidden">
-                    {events.slice(0, 3).map((ev) => {
-                      const isContent = ev.type === "content";
-                      const isBilling = ev.type === "billing";
-                      const isTool = ev.type === "tool";
-
-                      return (
-                        <button
-                          key={ev.id}
-                          onClick={() => setSelectedEvent(ev)}
-                          className="w-full text-left truncate px-2 py-1 text-[11px] font-sans transition-all flex items-center gap-1.5 cursor-pointer rounded-[var(--radius-xs)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] border-l-2 group"
-                          style={{
-                            borderLeftColor: isContent
-                              ? "var(--color-accent)"
-                              : isBilling
-                              ? "var(--color-ok)"
-                              : "var(--color-warn)",
-                          }}
-                          title={`${ev.title} (${ev.clientName})`}
-                        >
-                          <span className="truncate text-[var(--color-ink-secondary)] group-hover:text-[var(--color-ink)] font-normal">
-                            {ev.title}
-                          </span>
-                        </button>
-                      );
-                    })}
-
-                    {events.length > 3 && (
-                      <span className="block text-[10px] font-sans tabular-nums text-[var(--color-ink-tertiary)] pl-1">
-                        +{events.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <CalendarMonthGrid
+          calendarDays={calendarDays}
+          eventsByDate={eventsByDate}
+          onSelectEvent={setSelectedEvent}
+        />
       )}
 
       {/* VIEW: CHRONOLOGICAL AGENDA */}
       {view === "agenda" && (
-        <div className="card p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-3">
-            <h3 className="font-display text-base font-normal text-[var(--color-ink)]">
-              Timeline Schedule
-            </h3>
-            <span className="font-sans tabular-nums text-xs text-[var(--color-ink-tertiary)]">
-              {filteredEvents.length} scheduled milestones
-            </span>
-          </div>
-
-          {filteredEvents.length === 0 ? (
-            <div className="p-8 text-center text-xs text-[var(--color-ink-tertiary)] space-y-2">
-              <CalendarIcon className="h-8 w-8 mx-auto text-[var(--color-ink-muted)] opacity-60" />
-              <p>No publishing releases or retainer milestones scheduled for this period.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-[var(--color-line-subtle)]">
-              {filteredEvents
-                .sort((a, b) => a.date.getTime() - b.date.getTime())
-                .map((ev) => (
-                  <div
-                    key={ev.id}
-                    onClick={() => setSelectedEvent(ev)}
-                    className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[var(--color-surface-hover)] px-2 rounded-[var(--radius-sm)] transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="rounded border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-2 text-center min-w-[50px]">
-                        <span className="text-[10px] font-sans tabular-nums uppercase text-[var(--color-ink-tertiary)] block">
-                          {ev.date.toLocaleString("en-US", { month: "short" })}
-                        </span>
-                        <span className="font-display text-lg font-bold text-[var(--color-ink)] block leading-tight">
-                          {ev.date.getDate()}
-                        </span>
-                      </div>
-
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-xs text-[var(--color-ink)]">
-                            {ev.title}
-                          </span>
-                          <span className="inline-flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)]">
-                            <span
-                              className={`h-1.5 w-1.5 rounded-full ${
-                                ev.type === "content"
-                                  ? "bg-[var(--color-accent)]"
-                                  : ev.type === "billing"
-                                  ? "bg-[var(--color-ok)]"
-                                  : "bg-[var(--color-warn)]"
-                              }`}
-                            />
-                            {ev.type === "billing" ? "Retainer" : ev.type === "content" ? "Release" : "Tool"}
-                          </span>
-                        </div>
-                        <p className="text-xs text-[var(--color-ink-secondary)]">
-                          {ev.clientName} {ev.subtitle ? `· ${ev.subtitle}` : ""}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0 text-xs text-[var(--color-ink-tertiary)] font-sans tabular-nums">
-                      <span>{ev.date.toLocaleDateString("en-IN")}</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
+        <CalendarAgendaView
+          events={filteredEvents}
+          onSelectEvent={setSelectedEvent}
+        />
       )}
 
       {/* SLIDE-OVER EVENT DETAIL DRAWER */}
-      {selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/50 backdrop-blur-xs animate-in fade-in">
-          <div className="h-full w-full max-w-md bg-[var(--color-base-raised)] border-l border-[var(--color-line)] p-6 shadow-2xl flex flex-col justify-between overflow-y-auto">
-            <div className="space-y-5">
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-4">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-[var(--color-accent)]" />
-                  <span className="font-sans tabular-nums text-xs uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-                    Schedule Detail · {selectedEvent.type === "content" ? "Perspective Release" : selectedEvent.type === "billing" ? "Retainer Cycle" : "Tool Subscription"}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className="rounded p-1 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] hover:bg-[var(--color-base-subtle)] transition-colors cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Event Title & Client */}
-              <div className="space-y-1.5">
-                <h3 className="font-display text-xl font-normal text-[var(--color-ink)]">
-                  {selectedEvent.title}
-                </h3>
-                <p className="text-xs text-[var(--color-ink-secondary)]">
-                  Founder Account: <strong className="text-[var(--color-ink)] font-medium">{selectedEvent.clientName}</strong>
-                </p>
-                <div className="flex items-center gap-2 text-xs font-sans tabular-nums text-[var(--color-ink-tertiary)] pt-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>
-                    Scheduled: {formatDisplayDateTimeIST(selectedEvent.date, true)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Body Content if Post */}
-              {selectedEvent.type === "content" && selectedEvent.rawItem && (
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[var(--color-ink-tertiary)]">Status:</span>
-                    <span className="font-sans tabular-nums uppercase font-semibold text-[var(--color-accent-text)]">
-                      {selectedEvent.rawItem.status}
-                    </span>
-                  </div>
-                  {selectedEvent.rawItem.target_pillar && (
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-[var(--color-ink-tertiary)]">Target Pillar:</span>
-                      <span className="text-[var(--color-ink)] font-medium">
-                        {selectedEvent.rawItem.target_pillar}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5 pt-2">
-                    <span className="font-sans tabular-nums text-[10px] uppercase text-[var(--color-ink-tertiary)] block font-medium">
-                      Perspective Preview:
-                    </span>
-                    <div className="rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base)] p-3.5 text-xs text-[var(--color-ink-secondary)] font-sans max-h-60 overflow-y-auto whitespace-pre-wrap leading-relaxed">
-                      {selectedEvent.rawItem.body_markdown || "No draft available."}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Billing Item Details */}
-              {selectedEvent.type === "billing" && (
-                <div className="space-y-3 pt-2">
-                  <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] p-4 border border-[var(--color-line)] space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-[var(--color-ink-tertiary)]">Monthly Retainer:</span>
-                      <span className="font-sans tabular-nums font-bold text-[var(--color-ink)]">
-                        ₹{Number(selectedEvent.rawItem.monthly_retainer || 0).toLocaleString("en-IN")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[var(--color-ink-tertiary)]">Anchor Day:</span>
-                      <span className="font-sans tabular-nums text-[var(--color-accent-text)]">
-                        Day {selectedEvent.rawItem.billing_anchor_day} of each month
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[var(--color-ink-tertiary)]">Engagement Tier:</span>
-                      <span className="font-medium text-[var(--color-ink)]">
-                        {selectedEvent.rawItem.service_type?.replace(/_/g, " ")}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-[11.5px] text-[var(--color-ink-tertiary)]">
-                    Retainer invoices are generated automatically 7 days prior to the anchor day, bundling dedicated client software pass-throughs.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Action Footer */}
-            <div className="border-t border-[var(--color-line-subtle)] pt-4 flex items-center justify-between gap-3">
-              <button
-                onClick={() => setSelectedEvent(null)}
-                className="btn btn-secondary text-xs flex-1"
-              >
-                Close
-              </button>
-
-              {selectedEvent.type === "content" && (
-                <>
-                  {selectedEvent.rawItem.linkedin_post_url && (
-                    <a
-                      href={selectedEvent.rawItem.linkedin_post_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-secondary text-xs flex-1 inline-flex items-center justify-center gap-1.5 text-[var(--color-ok-text)]"
-                    >
-                      <span>View on LinkedIn</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
-                  <Link
-                    href={`/content/${selectedEvent.rawItem.id}`}
-                    className="btn btn-primary text-xs flex-1 inline-flex items-center justify-center gap-1.5"
-                  >
-                    <span>Refine in Studio</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </Link>
-                </>
-              )}
-
-              {selectedEvent.type === "billing" && (
-                <Link
-                  href="/billing"
-                  className="btn btn-primary text-xs flex-1 inline-flex items-center justify-center gap-1.5"
-                >
-                  <span>View Retainers &amp; Billing</span>
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <CalendarEventDrawer
+        selectedEvent={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+      />
     </div>
   );
 }

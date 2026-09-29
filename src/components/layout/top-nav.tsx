@@ -103,7 +103,7 @@ function getRouteMetadata(pathname: string): RouteMeta {
 
 export function TopNav() {
   const pathname = usePathname() || "/command-center";
-  const { customTitle, customBreadcrumbs } = useHeader();
+  const { customTitle, customBreadcrumbs, activeNavSection } = useHeader();
   const [isCommandOpen, setIsCommandOpen] = useState(false);
 
   useEffect(() => {
@@ -117,7 +117,7 @@ export function TopNav() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const routeMeta = getRouteMetadata(pathname);
+  const routeMeta = getRouteMetadata(activeNavSection || pathname);
   const Icon = routeMeta.icon;
 
   const breadcrumbs = customBreadcrumbs || (

@@ -1,23 +1,15 @@
 "use client";
 
 import { useState, useMemo, useTransition, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Plus,
-  Trash2,
-  ArrowUpRight,
-  Copy,
-  Check,
-  FileText,
-  Link2,
-  Receipt,
-  X,
-} from "lucide-react";
+import { Plus, FileText } from "lucide-react";
 import type { ClientDocument, DocumentCategory, Invoice } from "@/types/domain";
 import { deleteClientDocumentAction } from "@/lib/actions/documents";
 import { AddDocumentModal } from "./add-document-modal";
 import { SegmentedFilter, FilterSearchInput } from "@/components/ui/segmented-filter";
+import { DocumentRowItem } from "./documents/document-row-item";
+import { InvoiceRowItem } from "./documents/invoice-row-item";
+import { DeleteDocumentDialog } from "./documents/delete-document-dialog";
 
 interface ClientDocumentsTabProps {
   clientId: string;
@@ -29,71 +21,6 @@ interface ClientDocumentsTabProps {
 }
 
 type FilterOption = "all" | DocumentCategory | "invoice";
-
-function formatBytes(bytes?: number | null): string | null {
-  if (!bytes || bytes <= 0) return null;
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-}
-
-function formatShortDate(iso?: string | null): string {
-  if (!iso) return "";
-  try {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
-
-function getCategoryMeta(cat: DocumentCategory): { label: string; dotColor: string } {
-  switch (cat) {
-    case "agreement":
-      return { label: "Agreement", dotColor: "bg-emerald-400" };
-    case "roadmap":
-      return { label: "Roadmap", dotColor: "bg-blue-400" };
-    case "proposal":
-      return { label: "Proposal", dotColor: "bg-purple-400" };
-    case "quotation":
-      return { label: "Quotation", dotColor: "bg-amber-400" };
-    case "asset":
-      return { label: "Brand Asset", dotColor: "bg-cyan-400" };
-    default:
-      return { label: "Document", dotColor: "bg-gray-400" };
-  }
-}
-
-function getPlatformDisplay(platform?: string | null, docType?: string): string {
-  if (docType === "file") {
-    if (platform === "pdf") return "PDF";
-    if (platform === "doc") return "Word Doc";
-    if (platform === "sheet") return "Spreadsheet";
-    return "Uploaded File";
-  }
-  switch (platform) {
-    case "google_drive":
-      return "Google Docs";
-    case "notion":
-      return "Notion";
-    case "figma":
-      return "Figma";
-    case "pitch":
-      return "Deck";
-    case "loom":
-      return "Loom";
-    case "pdf":
-      return "PDF";
-    default:
-      return "Cloud Link";
-  }
-}
 
 export function ClientDocumentsTab({
   clientId,
@@ -249,54 +176,13 @@ export function ClientDocumentsTab({
       />
 
       {/* Delete Confirmation Modal */}
-      {docToDelete && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-[2px] p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setDocToDelete(null);
-          }}
-        >
-          <div className="w-full max-w-sm rounded-[14px] border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-5 shadow-dialog space-y-4 animate-in">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-[var(--color-ink)]">
-                Remove Document?
-              </h3>
-              <button
-                type="button"
-                onClick={() => setDocToDelete(null)}
-                className="text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed">
-              Remove{" "}
-              <strong className="font-medium text-[var(--color-ink)]">
-                {docToDelete.title}
-              </strong>{" "}
-              from {clientName}?
-            </p>
-            <div className="flex items-center justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setDocToDelete(null)}
-                disabled={isDeleting}
-                className="btn btn-ghost text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteDoc}
-                disabled={isDeleting}
-                className="btn btn-primary text-xs"
-              >
-                {isDeleting ? "Removing..." : "Remove"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteDocumentDialog
+        doc={docToDelete}
+        clientName={clientName}
+        isDeleting={isDeleting}
+        onClose={() => setDocToDelete(null)}
+        onConfirm={confirmDeleteDoc}
+      />
 
       {/* ─── 1. HEADER ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -395,220 +281,27 @@ export function ClientDocumentsTab({
       ) : (
         <div className="rounded-[12px] border border-[var(--color-line)] bg-[var(--color-surface)] divide-y divide-[var(--color-line-subtle)] overflow-hidden">
           {/* 1. Client Documents */}
-          {filteredDocuments.map((doc) => {
-            const meta = getCategoryMeta(doc.category);
-            const platformName = getPlatformDisplay(
-              doc.external_platform,
-              doc.document_type
-            );
-            const sizeLabel = formatBytes(doc.file_size_bytes);
-            const isCopied = copiedId === doc.id;
-
-            return (
-              <div
-                key={doc.id}
-                className="group px-4 py-3.5 flex items-center justify-between gap-4 hover:bg-[var(--color-surface-hover)] transition-colors"
-              >
-                <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
-                  {/* Clean Icon Tile */}
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] border border-[var(--color-line)] bg-[var(--color-base-subtle)] text-[var(--color-ink-secondary)] group-hover:border-[var(--color-line-strong)] group-hover:text-[var(--color-ink)] transition-colors mt-0.5 sm:mt-0"
-                  >
-                    {doc.document_type === "file" ? (
-                      <FileText className="h-4 w-4" />
-                    ) : (
-                      <Link2 className="h-4 w-4" />
-                    )}
-                  </a>
-
-                  {/* Title + Scannable Sub-line */}
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <a
-                        href={doc.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[13.5px] font-semibold tracking-tight text-[var(--color-ink)] hover:underline truncate"
-                      >
-                        {doc.title}
-                      </a>
-
-                      {doc.version && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-sans tabular-nums text-[var(--color-ink-secondary)]">
-                          <span className="text-[var(--color-ink-muted)]">·</span>
-                          <span className="font-medium text-[var(--color-ink)]">
-                            {doc.version}
-                          </span>
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
-                      <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-secondary)]">
-                        <span className={`h-1.5 w-1.5 rounded-full ${meta.dotColor}`} />
-                        <span>{meta.label}</span>
-                      </span>
-                      <span>·</span>
-                      <span>{platformName}</span>
-                      {sizeLabel && (
-                        <>
-                          <span>·</span>
-                          <span>{sizeLabel}</span>
-                        </>
-                      )}
-                      <span>·</span>
-                      <span>{formatShortDate(doc.created_at)}</span>
-                      {doc.notes && (
-                        <>
-                          <span>·</span>
-                          <span className="text-[var(--color-ink-secondary)] truncate max-w-[320px]">
-                            {doc.notes}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Action Cluster */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleCopyUrl(doc.id, doc.file_url, doc.title)}
-                    className="btn btn-ghost text-xs p-1.5 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-                    title="Copy document link"
-                  >
-                    {isCopied ? (
-                      <Check className="h-3.5 w-3.5 text-[var(--color-ok-text)]" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                  </button>
-
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-secondary text-[11.5px] py-1 px-2.5 inline-flex items-center gap-1"
-                  >
-                    <span>Open</span>
-                    <ArrowUpRight className="h-3 w-3 text-[var(--color-ink-tertiary)]" />
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={() => setDocToDelete(doc)}
-                    className="rounded-[var(--radius-xs)] p-1.5 text-[var(--color-ink-muted)] hover:text-[var(--color-danger-text)] opacity-60 group-hover:opacity-100 transition-all cursor-pointer"
-                    title="Remove document"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          {filteredDocuments.map((doc) => (
+            <DocumentRowItem
+              key={doc.id}
+              doc={doc}
+              isCopied={copiedId === doc.id}
+              onCopyUrl={() => handleCopyUrl(doc.id, doc.file_url, doc.title)}
+              onDelete={() => setDocToDelete(doc)}
+            />
+          ))}
 
           {/* 2. Projected Invoices */}
-          {filteredInvoices.map((inv) => {
-            const statusDot =
-              inv.status === "paid"
-                ? "bg-emerald-400"
-                : inv.status === "overdue"
-                ? "bg-red-400"
-                : inv.status === "sent"
-                ? "bg-blue-400"
-                : "bg-amber-400";
-
-            const statusLabel =
-              inv.status.charAt(0).toUpperCase() + inv.status.slice(1);
-            const invoiceUrl = `/billing/invoices/${inv.id}`;
-            const isCopied = copiedId === inv.id;
-            const summaryText =
-              inv.line_items && inv.line_items.length > 0
-                ? inv.line_items.map((li) => li.description).join(" + ")
-                : null;
-
-            return (
-              <div
-                key={inv.id}
-                className="group px-4 py-3.5 flex items-center justify-between gap-4 hover:bg-[var(--color-surface-hover)] transition-colors"
-              >
-                <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
-                  <Link
-                    href={invoiceUrl}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] border border-[var(--color-line)] bg-[var(--color-base-subtle)] text-[var(--color-ink-secondary)] group-hover:border-[var(--color-line-strong)] group-hover:text-[var(--color-ink)] transition-colors mt-0.5 sm:mt-0"
-                  >
-                    <Receipt className="h-4 w-4" />
-                  </Link>
-
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    <div className="flex flex-wrap items-center gap-2 font-sans tabular-nums">
-                      <Link
-                        href={invoiceUrl}
-                        className="text-[13.5px] font-semibold tracking-tight text-[var(--color-ink)] hover:underline"
-                      >
-                        Invoice {inv.invoice_number}
-                      </Link>
-                      <span className="text-xs font-medium text-[var(--color-ink-secondary)]">
-                        ₹{Number(inv.total_amount || 0).toLocaleString("en-IN")}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
-                      <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-secondary)]">
-                        <span className={`h-1.5 w-1.5 rounded-full ${statusDot}`} />
-                        <span>{statusLabel}</span>
-                      </span>
-                      <span>·</span>
-                      <span>Issued {formatShortDate(inv.issue_date)}</span>
-                      {inv.due_date && (
-                        <>
-                          <span>·</span>
-                          <span>Due {formatShortDate(inv.due_date)}</span>
-                        </>
-                      )}
-                      {summaryText && (
-                        <>
-                          <span>·</span>
-                          <span className="text-[var(--color-ink-secondary)] truncate max-w-[280px]">
-                            {summaryText}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleCopyUrl(inv.id, invoiceUrl, inv.invoice_number)
-                    }
-                    className="btn btn-ghost text-xs p-1.5 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-                    title="Copy invoice link"
-                  >
-                    {isCopied ? (
-                      <Check className="h-3.5 w-3.5 text-[var(--color-ok-text)]" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                  </button>
-
-                  <Link
-                    href={invoiceUrl}
-                    className="btn btn-secondary text-[11.5px] py-1 px-2.5 inline-flex items-center gap-1"
-                  >
-                    <span>Invoice</span>
-                    <ArrowUpRight className="h-3 w-3 text-[var(--color-ink-tertiary)]" />
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+          {filteredInvoices.map((inv) => (
+            <InvoiceRowItem
+              key={inv.id}
+              inv={inv}
+              isCopied={copiedId === inv.id}
+              onCopyUrl={() =>
+                handleCopyUrl(inv.id, `/billing/invoices/${inv.id}`, inv.invoice_number)
+              }
+            />
+          ))}
         </div>
       )}
     </div>
