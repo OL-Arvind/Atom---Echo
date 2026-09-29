@@ -208,37 +208,40 @@ export function BillingClient({
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex border-b border-[var(--color-line)] gap-6 text-xs font-medium">
+      {/* Standardized Page-Level Tabs */}
+      <div className="flex border-b border-[var(--color-line)] gap-7 overflow-x-auto overflow-y-hidden no-scrollbar">
         <button
           onClick={() => setActiveTab("invoices")}
-          className={`pb-3 px-1 border-b-2 transition-colors cursor-pointer ${
+          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
             activeTab === "invoices"
-              ? "border-[var(--color-accent)] text-[var(--color-ink)] font-semibold"
+              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
               : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Invoices ({initialInvoices.length})
+          <Receipt className="h-3.5 w-3.5" />
+          <span>Invoices ({initialInvoices.length})</span>
         </button>
         <button
           onClick={() => setActiveTab("expenses")}
-          className={`pb-3 px-1 border-b-2 transition-colors cursor-pointer ${
+          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
             activeTab === "expenses"
-              ? "border-[var(--color-accent)] text-[var(--color-ink)] font-semibold"
+              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
               : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Dedicated Client Tooling ({initialExpenses.length})
+          <CreditCard className="h-3.5 w-3.5" />
+          <span>Dedicated Client Tooling ({initialExpenses.length})</span>
         </button>
         <button
           onClick={() => setActiveTab("catalog")}
-          className={`pb-3 px-1 border-b-2 transition-colors cursor-pointer ${
+          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
             activeTab === "catalog"
-              ? "border-[var(--color-accent)] text-[var(--color-ink)] font-semibold"
+              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
               : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Software Catalog ({toolSubscriptions.length})
+          <Wrench className="h-3.5 w-3.5" />
+          <span>Software Catalog ({toolSubscriptions.length})</span>
         </button>
       </div>
 
@@ -411,7 +414,7 @@ export function BillingClient({
                     <BrandLogo
                       nameOrDomain={exp.tool_name || exp.description}
                       size={28}
-                      className="rounded-[var(--radius-xs)] border border-[var(--color-line)] shrink-0"
+                      className="rounded-md object-contain shrink-0"
                     />
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2.5">
@@ -508,7 +511,7 @@ export function BillingClient({
                       <BrandLogo
                         nameOrDomain={tool.tool_name}
                         size={32}
-                        className="rounded-[var(--radius-xs)] border border-[var(--color-line)] shrink-0"
+                        className="rounded-md object-contain shrink-0"
                       />
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">

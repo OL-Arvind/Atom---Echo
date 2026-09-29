@@ -15,7 +15,8 @@ export interface OperatorSession {
  */
 export async function resolveOrCreateOperatorRecord(
   email: string,
-  fullName: string
+  fullName: string,
+  userId?: string
 ): Promise<{ id: string; email: string; full_name: string; role: "admin" | "lead_operator" | "operator" } | null> {
   const admin = createAdminClient();
   const normalizedEmail = email.trim().toLowerCase();
@@ -33,6 +34,28 @@ export async function resolveOrCreateOperatorRecord(
       full_name: string;
       role: "admin" | "lead_operator" | "operator";
     };
+  }
+
+  // Resolve auth.users ID if not explicitly provided
+  let targetUserId = userId;
+  if (!targetUserId) {
+    try {
+      const { data: authList } = await admin.auth.admin.listUsers();
+      const match = authList?.users?.find(
+        (u) => u.email?.trim().toLowerCase() === normalizedEmail
+      );
+      if (match) {
+        targetUserId = match.id;
+      }
+    } catch (e) {
+      console.warn("Could not query auth.users:", e);
+    }
+  }
+
+  // If no auth user exists and we are provisioning, cannot violate users.id FK
+  if (!targetUserId) {
+    console.warn(`Cannot provision public.users record for ${normalizedEmail}: no matching auth.users record.`);
+    return null;
   }
 
   // Ensure default organization exists
@@ -68,9 +91,10 @@ export async function resolveOrCreateOperatorRecord(
 
   const inferredRole = normalizedEmail.includes("nikhil") ? "lead_operator" : "admin";
 
-  const { data: created } = await admin
+  const { data: created, error: insertErr } = await admin
     .from("users")
     .insert({
+      id: targetUserId,
       organization_id: org.id,
       email: normalizedEmail,
       full_name: fullName || normalizedEmail.split("@")[0],
@@ -79,37 +103,53 @@ export async function resolveOrCreateOperatorRecord(
     .select("id, email, full_name, role")
     .single();
 
+  if (insertErr) {
+    console.error("Failed to insert user into public.users:", insertErr);
+    return null;
+  }
+
   return (created as { id: string; email: string; full_name: string; role: "admin" | "lead_operator" | "operator" }) || null;
 }
 
 /**
  * Reads the active operator session strictly from Supabase Auth.
+ * Cryptographically validates the auth token and guarantees the presence
+ * of a corresponding `public.users` database entity.
  */
 export async function getServerOperatorSession(): Promise<OperatorSession | null> {
   try {
     const supabase = await createServerSupabaseClient();
     const {
       data: { user: authUser },
+      error: authError,
     } = await supabase.auth.getUser();
 
-    if (authUser && authUser.email) {
-      const fullName =
-        authUser.user_metadata?.full_name ||
-        authUser.user_metadata?.name ||
-        authUser.email.split("@")[0];
-      const dbUser = await resolveOrCreateOperatorRecord(authUser.email, fullName);
-      if (dbUser) {
-        return {
-          id: dbUser.id,
-          email: dbUser.email,
-          name: dbUser.full_name,
-          role: dbUser.role,
-          provider: authUser.app_metadata?.provider === "google" ? "google" : "email",
-        };
-      }
+    if (authError || !authUser || !authUser.email) {
+      return null;
     }
-  } catch {
-    // Request context unavailable
+
+    const fullName =
+      authUser.user_metadata?.full_name ||
+      authUser.user_metadata?.name ||
+      authUser.email.split("@")[0];
+
+    const dbUser = await resolveOrCreateOperatorRecord(
+      authUser.email,
+      fullName,
+      authUser.id
+    );
+
+    if (dbUser) {
+      return {
+        id: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.full_name,
+        role: dbUser.role,
+        provider: authUser.app_metadata?.provider === "google" ? "google" : "email",
+      };
+    }
+  } catch (err) {
+    console.error("Error verifying operator session:", err);
   }
 
   return null;

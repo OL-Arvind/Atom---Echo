@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { X, CheckCircle2, ExternalLink, Globe } from "lucide-react";
+import { X, Copy, Check, ExternalLink } from "lucide-react";
 import { publishContentPostAction } from "@/lib/actions/content";
 import { BrandLogo } from "@/components/ui/brand-logo";
+import { CustomDatePicker } from "@/components/ui/custom-date-picker";
 import {
   toDatetimeLocalIST,
   parseDatetimeLocalIST,
@@ -14,12 +15,14 @@ interface MarkPublishedModalProps {
   post: {
     id: string;
     title: string;
+    body_markdown?: string | null;
     scheduled_publish_date?: string | null;
     linkedin_post_url?: string | null;
     engagements?: {
       clients?: {
         name?: string;
         founder_name?: string;
+        linkedin_url?: string;
       };
     };
   } | null;
@@ -38,11 +41,24 @@ export function MarkPublishedModal({
   const [error, setError] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState(post?.linkedin_post_url || "");
   const [publishedAt, setPublishedAt] = useState(() => toDatetimeLocalIST());
+  const [copiedBody, setCopiedBody] = useState(false);
 
   if (!isOpen || !post) return null;
 
   const clientName = post.engagements?.clients?.name || "Client";
   const founderName = post.engagements?.clients?.founder_name || "Founder";
+  const founderLinkedinUrl = post.engagements?.clients?.linkedin_url || "https://www.linkedin.com/feed/";
+
+  const handleCopyBody = async () => {
+    if (!post.body_markdown) return;
+    try {
+      await navigator.clipboard.writeText(post.body_markdown);
+      setCopiedBody(true);
+      setTimeout(() => setCopiedBody(false), 2000);
+    } catch {
+      // Ignore clipboard error
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,18 +85,13 @@ export function MarkPublishedModal({
       <div className="modal-card max-w-md w-full space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)]">
-              <CheckCircle2 className="h-4 w-4" />
-            </div>
-            <div>
-              <h3 className="font-medium text-sm text-[var(--color-ink)]">
-                Mark as Published
-              </h3>
-              <p className="text-[11px] text-[var(--color-ink-tertiary)]">
-                Confirm post is live on LinkedIn
-              </p>
-            </div>
+          <div>
+            <h3 className="font-medium text-sm text-[var(--color-ink)]">
+              Confirm LinkedIn Publication
+            </h3>
+            <p className="text-[11px] text-[var(--color-ink-tertiary)]">
+              Copy final perspective text, publish on LinkedIn, and log the live URL.
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -91,27 +102,59 @@ export function MarkPublishedModal({
         </div>
 
         {error && (
-          <div className="rounded-[var(--radius-sm)] border border-[var(--color-danger-line)] bg-[var(--color-danger-bg)] p-2.5 text-xs text-[var(--color-danger-text)]">
+          <div className="border-l-2 border-[var(--color-danger)] pl-3 py-1 text-xs text-[var(--color-danger-text)]">
             {error}
           </div>
         )}
 
-        {/* Post Context Summary */}
-        <div className="rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-3 space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs">
-            <BrandLogo nameOrDomain={clientName} size={14} className="rounded-[2px]" />
-            <span className="font-medium text-[var(--color-ink)]">{clientName}</span>
-            <span className="text-[var(--color-ink-tertiary)] font-sans tabular-nums text-[11px]">
-              ({founderName})
-            </span>
+        {/* Post Context Summary + 1-Click Copy Helper */}
+        <div className="rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-3 space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-xs min-w-0">
+              <BrandLogo nameOrDomain={clientName} size={14} className="rounded-[2px] shrink-0" />
+              <span className="font-medium text-[var(--color-ink)] truncate">{clientName}</span>
+              <span className="text-[var(--color-ink-tertiary)] font-sans tabular-nums text-[11px] shrink-0">
+                ({founderName})
+              </span>
+            </div>
+            {post.scheduled_publish_date && (
+              <span className="text-[10.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)] shrink-0">
+                {formatDisplayDateTimeIST(post.scheduled_publish_date, true)}
+              </span>
+            )}
           </div>
           <p className="text-xs font-medium text-[var(--color-ink)] line-clamp-2">
             &ldquo;{post.title}&rdquo;
           </p>
-          {post.scheduled_publish_date && (
-            <p className="text-[11px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
-              Scheduled slot: {formatDisplayDateTimeIST(post.scheduled_publish_date, true)}
-            </p>
+          {post.body_markdown && (
+            <div className="flex items-center gap-2 pt-1 border-t border-[var(--color-line-subtle)]">
+              <button
+                type="button"
+                onClick={handleCopyBody}
+                className="btn btn-secondary text-[11px] py-1 px-2.5 flex-1 cursor-pointer"
+              >
+                {copiedBody ? (
+                  <>
+                    <Check className="h-3 w-3 text-[var(--color-ok)]" />
+                    <span>Copied Post Copy</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3 w-3 text-[var(--color-ink-tertiary)]" />
+                    <span>Copy Post Text</span>
+                  </>
+                )}
+              </button>
+              <a
+                href={founderLinkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-ghost text-[11px] py-1 px-2.5 inline-flex items-center gap-1 border border-[var(--color-line)]"
+              >
+                <span>Open LinkedIn</span>
+                <ExternalLink className="h-3 w-3 opacity-60" />
+              </a>
+            </div>
           )}
         </div>
 
@@ -141,11 +184,12 @@ export function MarkPublishedModal({
             <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
               Published Timestamp
             </label>
-            <input
-              type="datetime-local"
+            <CustomDatePicker
               value={publishedAt}
-              onChange={(e) => setPublishedAt(e.target.value)}
-              className="w-full rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] px-3 py-2 text-xs text-[var(--color-ink)] font-sans tabular-nums focus:border-[var(--color-accent)] focus:outline-none"
+              onChange={setPublishedAt}
+              showTime
+              presetMode="past"
+              placeholder="Select published timestamp"
             />
           </div>
 

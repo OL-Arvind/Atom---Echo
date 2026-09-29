@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Plus, X, Building2, User, Mail, Phone, Calendar, Sparkles, Globe } from "lucide-react";
 import { createClientAction } from "@/lib/actions/client";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { LinkedInIcon } from "@/components/ui/linkedin-icon";
 
 export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -164,19 +165,39 @@ export function OnboardClientModal({ buttonText = "New Account" }: { buttonText?
                 </div>
               </div>
 
-              <div>
-                <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
-                  Website URL
-                </label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[var(--color-ink-muted)]" />
-                  <input
-                    name="website_url"
-                    type="text"
-                    inputMode="url"
-                    placeholder="e.g. baseworks.in or https://baseworks.in"
-                    className="w-full h-9 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] pl-9 pr-3 text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent-dim)] focus:outline-none transition-all"
-                  />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
+                    LinkedIn Profile URL
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-2.5 flex items-center justify-center text-[var(--color-ink-muted)]">
+                      <LinkedInIcon size={16} />
+                    </div>
+                    <input
+                      name="linkedin_url"
+                      type="text"
+                      inputMode="url"
+                      placeholder="e.g. linkedin.com/in/founder"
+                      className="w-full h-9 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] pl-9 pr-3 text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent-dim)] focus:outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-medium text-[var(--color-ink-tertiary)] block mb-1 font-sans tabular-nums uppercase tracking-wider">
+                    Website URL
+                  </label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[var(--color-ink-muted)]" />
+                    <input
+                      name="website_url"
+                      type="text"
+                      inputMode="url"
+                      placeholder="e.g. baseworks.in or https://baseworks.in"
+                      className="w-full h-9 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] pl-9 pr-3 text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:border-[var(--color-accent-dim)] focus:outline-none transition-all"
+                    />
+                  </div>
                 </div>
               </div>
 

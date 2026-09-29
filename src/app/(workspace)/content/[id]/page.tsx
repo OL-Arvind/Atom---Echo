@@ -23,6 +23,7 @@ export default async function ContentEditorPage({ params }: ContentEditorPagePro
       knowledgeItems={data.knowledgeItems}
       feedbackItems={data.feedbackItems}
       reviewToken={data.reviewToken}
+      latestMeetings={data.latestMeetings}
     />
   );
 }

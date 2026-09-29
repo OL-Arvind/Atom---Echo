@@ -6,29 +6,27 @@ import { useRouter } from "next/navigation";
 import {
   Feather,
   Plus,
-  Clock,
   CheckCircle2,
-  AlertTriangle,
   Copy,
+  Check,
   ExternalLink,
-  MessageCircle,
   Calendar,
-  Share2,
   ChevronRight,
   Filter,
-  Sparkles,
   LayoutGrid,
   List,
   ArrowRight,
   ShieldAlert,
 } from "lucide-react";
 import { updateContentStatusAction, sendForClientReviewAction } from "@/lib/actions/content";
-import { NewContentModal } from "@/components/content/new-content-modal";
 import { MarkPublishedModal } from "@/components/content/mark-published-modal";
 import { PageHeader } from "@/components/layout/page-header";
 import { BrandLogo } from "@/components/ui/brand-logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { MetricRibbon } from "@/components/ui/metric-ribbon";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   formatDisplayDateIST,
   formatDisplayDateTimeIST,
@@ -45,28 +43,58 @@ type ViewMode = "kanban" | "list";
 export function ContentStudioClient({
   initialPosts,
   engagements,
-  tokenMap,
+  tokenMap: initialTokenMap,
 }: ContentStudioClientProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
   const [filter, setFilter] = useState<string>("all");
   const [selectedClientId, setSelectedClientId] = useState<string>("all");
-  const [showNewModal, setShowNewModal] = useState(false);
+  const [tokenMap, setTokenMap] = useState<Record<string, string>>(initialTokenMap);
   const [publishingPost, setPublishingPost] = useState<any | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+  const newPerspectiveHref =
+    selectedClientId !== "all"
+      ? `/content/new?clientId=${selectedClientId}`
+      : "/content/new";
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleStatusTransition = (postId: string, newStatus: string) => {
+  const handleStatusTransition = (post: any, newStatus: string) => {
     startTransition(async () => {
-      const res = await updateContentStatusAction(postId, newStatus);
+      const res = await updateContentStatusAction(post.id, newStatus);
       if (res.success) {
-        showToast(`Post transitioned to '${newStatus}'`);
+        const clientId = post.engagements?.clients?.id;
+        if (newStatus === "client_review") {
+          const tok = res.reviewToken || (clientId ? tokenMap[clientId] : null);
+          if (tok) {
+            if (clientId) {
+              setTokenMap((prev) => ({ ...prev, [clientId]: tok }));
+            }
+            const shareUrl = `${window.location.origin}/review/${tok}`;
+            try {
+              await navigator.clipboard.writeText(shareUrl);
+              setCopiedId(post.id);
+              setTimeout(() => setCopiedId(null), 2500);
+              showToast("Dispatched to Founder Desk · Review link copied");
+            } catch {
+              showToast("Dispatched to Founder Desk");
+            }
+          } else {
+            showToast("Dispatched to Founder Desk");
+          }
+        } else if (newStatus === "internal_review") {
+          showToast("Moved to Voice & QA");
+        } else if (newStatus === "approved" || newStatus === "scheduled") {
+          showToast("Locked on publishing schedule");
+        } else {
+          showToast(`Moved to ${newStatus.replace("_", " ")}`);
+        }
         router.refresh();
       } else {
         showToast(`Error: ${res.error}`);
@@ -76,74 +104,97 @@ export function ContentStudioClient({
 
   const copyReviewLink = async (post: any) => {
     const clientId = post.engagements?.clients?.id;
+    const origin = window.location.origin;
     let token = clientId ? tokenMap[clientId] : null;
 
     if (!token) {
-      const res = await sendForClientReviewAction(post.id);
+      const res = await sendForClientReviewAction(post.id, origin);
       if (res.success && res.token) {
         token = res.token;
+        if (clientId) {
+          setTokenMap((prev) => ({ ...prev, [clientId]: res.token }));
+        }
       } else {
         showToast("Could not generate review link: " + (res.error || "Unknown error"));
         return;
       }
     }
 
-    const shareUrl = `${window.location.origin}/review/${token}`;
-    navigator.clipboard.writeText(shareUrl);
-    setCopiedId(post.id);
-    showToast(`Copied 7-day review link for ${post.engagements?.clients?.founder_name || "Founder"}`);
-    setTimeout(() => setCopiedId(null), 2500);
+    const shareUrl = `${origin}/review/${token}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedId(post.id);
+      showToast(
+        `Copied 7-day Founder Desk link for ${post.engagements?.clients?.founder_name || "Founder"}`
+      );
+      setTimeout(() => setCopiedId(null), 2500);
+    } catch {
+      showToast("Review link ready");
+    }
   };
 
   const openWhatsAppPing = async (post: any) => {
     const client = post.engagements?.clients;
     const clientId = client?.id;
+    const origin = window.location.origin;
     let token = clientId ? tokenMap[clientId] : null;
 
     if (!token) {
-      const res = await sendForClientReviewAction(post.id);
-      if (res.success && res.whatsappUrl) {
-        window.open(res.whatsappUrl, "_blank");
-        showToast(`Opened WhatsApp chat for ${client?.founder_name || "Founder"}`);
-        return;
+      const res = await sendForClientReviewAction(post.id, origin);
+      if (res.success && res.token) {
+        token = res.token;
+        if (clientId) {
+          setTokenMap((prev) => ({ ...prev, [clientId]: res.token }));
+        }
+        if (res.whatsappUrl) {
+          window.open(res.whatsappUrl, "_blank");
+          showToast(`Opened WhatsApp for ${client?.founder_name || "Founder"}`);
+          return;
+        }
       }
     }
 
-    const shareUrl = `${window.location.origin}/review/${token}`;
+    const shareUrl = `${origin}/review/${token}`;
     const phone = client?.founder_phone ? client.founder_phone.replace(/[^0-9]/g, "") : "";
-    if (!phone) {
-      showToast("No WhatsApp phone number configured for this founder.");
-      return;
-    }
     const message = encodeURIComponent(
-      `Hi ${client?.founder_name || "there"}, here is your latest LinkedIn post ready for review: ${shareUrl}`
+      `Hi ${client?.founder_name || "there"}, "${post.title}" is ready for your 1-tap review on your Founder Desk:\n${shareUrl}`
     );
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-    showToast(`Opened WhatsApp chat for ${client?.founder_name || "Founder"}`);
+    const whatsappUrl = phone
+      ? `https://wa.me/${phone}?text=${message}`
+      : `https://wa.me/?text=${message}`;
+    window.open(whatsappUrl, "_blank");
+    showToast(`Opened WhatsApp for ${client?.founder_name || "Founder"}`);
   };
 
   // Client list for filtering
   const clientOptions = useMemo(() => {
-    const seen = new Set();
+    const seen = new Set<string>();
     const list: { id: string; name: string }[] = [];
     engagements.forEach((e) => {
-      if (e.clients && !seen.has(e.clients.id)) {
-        seen.add(e.clients.id);
-        list.push({ id: e.clients.id, name: e.clients.name });
+      const cId = e.clients?.id || e.clientId;
+      const cName = e.clients?.name || e.clientName;
+      if (cId && !seen.has(cId)) {
+        seen.add(cId);
+        list.push({ id: cId, name: cName || "Client" });
+      }
+    });
+    initialPosts.forEach((p) => {
+      const c = p.engagements?.clients;
+      if (c && c.id && !seen.has(c.id)) {
+        seen.add(c.id);
+        list.push({ id: c.id, name: c.name || "Client" });
       }
     });
     return list;
-  }, [engagements]);
+  }, [engagements, initialPosts]);
 
   // Filter posts by client and status
   const filteredPosts = initialPosts.filter((post) => {
-    // Client filter
     if (selectedClientId !== "all") {
       const cId = post.engagements?.clients?.id;
       if (cId !== selectedClientId) return false;
     }
 
-    // Status tab filter (for list view)
     if (filter === "all") return true;
     if (filter === "draft") return post.status === "draft" || post.status === "internal_review";
     if (filter === "review") return post.status === "client_review";
@@ -155,9 +206,10 @@ export function ContentStudioClient({
 
   // Kanban column buckets
   const kanbanColumns = useMemo(() => {
-    const clientScoped = selectedClientId === "all"
-      ? initialPosts
-      : initialPosts.filter((p) => p.engagements?.clients?.id === selectedClientId);
+    const clientScoped =
+      selectedClientId === "all"
+        ? initialPosts
+        : initialPosts.filter((p) => p.engagements?.clients?.id === selectedClientId);
 
     return [
       {
@@ -182,7 +234,9 @@ export function ContentStudioClient({
         id: "scheduled",
         title: "04 Scheduled",
         subtitle: "Locked on timeline",
-        posts: clientScoped.filter((p) => p.status === "approved" || p.status === "scheduled"),
+        posts: clientScoped.filter(
+          (p) => p.status === "approved" || p.status === "scheduled"
+        ),
       },
       {
         id: "published",
@@ -217,102 +271,63 @@ export function ContentStudioClient({
         description="Shape founder conviction and unfiltered opinions into distinctive, high-impact LinkedIn perspectives."
       >
         <div className="flex items-center gap-2">
-          {/* View Mode Toggle */}
-          <div className="flex items-center rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-0.5">
-            <button
-              onClick={() => setViewMode("kanban")}
-              className={`px-2.5 py-1 text-xs rounded-[3px] transition-colors cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "kanban"
-                  ? "bg-[var(--color-surface-active)] text-[var(--color-ink)] font-medium shadow-xs"
-                  : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-              }`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              <span>Kanban</span>
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`px-2.5 py-1 text-xs rounded-[3px] transition-colors cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "list"
-                  ? "bg-[var(--color-surface-active)] text-[var(--color-ink)] font-medium shadow-xs"
-                  : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-              }`}
-            >
-              <List className="h-3.5 w-3.5" />
-              <span>List</span>
-            </button>
-          </div>
+          <SegmentedFilter
+            options={[
+              {
+                id: "kanban",
+                label: "Kanban",
+                icon: <LayoutGrid className="h-3.5 w-3.5" />,
+              },
+              {
+                id: "list",
+                label: "List",
+                icon: <List className="h-3.5 w-3.5" />,
+              },
+            ]}
+            value={viewMode}
+            onChange={(val) => setViewMode(val as "kanban" | "list")}
+          />
 
-          <button
-            onClick={() => setShowNewModal(true)}
+          <Link
+            href={newPerspectiveHref}
             className="btn btn-primary text-xs cursor-pointer inline-flex items-center gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>New Perspective</span>
-          </button>
+          </Link>
         </div>
       </PageHeader>
 
-      {/* KPI Slabs Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div
-          onClick={() => {
-            setViewMode("list");
-            setFilter("draft");
-          }}
-          className={`card p-5 space-y-2 cursor-pointer transition-all ${
-            filter === "draft" && viewMode === "list" ? "border-[var(--color-accent-dim)]" : ""
-          }`}
-        >
-          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] font-medium">
-            01 Capture &amp; Voice QA
-          </span>
-          <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ink)]">
-            {draftCount}
-          </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Extracting ideas &amp; voice polish</p>
-        </div>
-
-        <div
-          onClick={() => {
-            setViewMode("list");
-            setFilter("review");
-          }}
-          className={`card p-5 space-y-2 cursor-pointer transition-all ${
-            filter === "review" && viewMode === "list" ? "border-[var(--color-warn-line)]" : ""
-          }`}
-        >
-          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-warn-text)] font-medium">
-            02 Awaiting Founder Review
-          </span>
-          <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-warn-text)]">
-            {reviewCount}
-          </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Pending 1-tap sign-off on Founder Desk</p>
-        </div>
-
-        <div
-          onClick={() => {
-            setViewMode("list");
-            setFilter("scheduled");
-          }}
-          className={`card p-5 space-y-2 cursor-pointer transition-all ${
-            filter === "scheduled" && viewMode === "list" ? "border-[var(--color-ok-line)]" : ""
-          }`}
-        >
-          <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ok-text)] font-medium">
-            03 Locked &amp; Scheduled
-          </span>
-          <div className="font-display text-3xl font-normal tabular-nums text-[var(--color-ok-text)]">
-            {scheduledCount}
-          </div>
-          <p className="text-[11.5px] text-[var(--color-ink-secondary)]">Ready on publishing timeline</p>
-        </div>
-      </div>
+      {/* Editorial Cadence Ribbon */}
+      <MetricRibbon
+        items={[
+          {
+            label: "Capture & Voice QA",
+            value: draftCount,
+            subtext: "perspectives in drafting",
+          },
+          {
+            label: "Awaiting Founder Review",
+            value: reviewCount,
+            subtext: reviewCount > 0 ? "pending 1-tap sign-off" : "desk is clear",
+            tone: reviewCount > 0 ? "warn" : "default",
+          },
+          {
+            label: "Locked & Scheduled",
+            value: scheduledCount,
+            subtext: "ready on publishing timeline",
+            tone: scheduledCount > 0 ? "ok" : "default",
+          },
+          {
+            label: "Pipeline Volume",
+            value: initialPosts.length,
+            subtext: "total perspectives",
+          },
+        ]}
+      />
 
       {/* Filter & Client Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--color-line-subtle)] pb-3">
-        {/* Client Selector Dropdown */}
         <div className="flex items-center gap-2">
           <Filter className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)] shrink-0" />
           <div className="w-52">
@@ -332,33 +347,25 @@ export function ContentStudioClient({
           </div>
         </div>
 
-        {/* View Mode Context or List Tabs */}
         {viewMode === "list" ? (
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-            {[
-              { id: "all", label: `All (${initialPosts.length})` },
-              { id: "draft", label: `Drafts (${draftCount})` },
-              { id: "review", label: `Founder Review (${reviewCount})` },
-              { id: "scheduled", label: `Scheduled (${scheduledCount})` },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setFilter(tab.id)}
-                className={`rounded-[var(--radius-sm)] px-2.5 py-1 text-xs transition-colors cursor-pointer whitespace-nowrap ${
-                  filter === tab.id
-                    ? "bg-[var(--color-surface-active)] text-[var(--color-ink)] border border-[var(--color-line-strong)] font-medium"
-                    : "bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] border border-[var(--color-line)] hover:text-[var(--color-ink)]"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <SegmentedFilter
+            options={[
+              { id: "all", label: "All", count: initialPosts.length },
+              { id: "draft", label: "Drafts", count: draftCount },
+              { id: "review", label: "Founder Review", count: reviewCount },
+              { id: "scheduled", label: "Scheduled", count: scheduledCount },
+            ]}
+            value={filter}
+            onChange={setFilter}
+          />
         ) : (
           <div className="text-xs font-sans tabular-nums text-[var(--color-ink-tertiary)] flex items-center gap-2">
             <span>Editorial Flow · Idea to Publishing</span>
             <span>·</span>
-            <Link href="/calendar" className="hover:text-[var(--color-ink)] underline flex items-center gap-1">
+            <Link
+              href="/calendar"
+              className="hover:text-[var(--color-ink)] underline flex items-center gap-1"
+            >
               <span>Publishing Schedule</span>
               <ArrowRight className="h-3 w-3" />
             </Link>
@@ -369,187 +376,248 @@ export function ContentStudioClient({
       {/* VIEW 1: KANBAN BOARD VIEW */}
       {viewMode === "kanban" && (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 items-start overflow-x-auto pb-4">
-          {kanbanColumns.map((col) => {
-            const isReviewCol = col.id === "client_review";
-            const isApprovedCol = col.id === "scheduled";
-
-            return (
-              <div
-                key={col.id}
-                className="rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)]/40 p-3 space-y-3 min-w-[240px]"
-              >
-                {/* Column Header */}
-                <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-2">
-                  <div>
-                    <h3 className="font-semibold text-xs text-[var(--color-ink)] flex items-center gap-1.5">
-                      <span>{col.title}</span>
-                      <span className="font-sans text-[11px] text-[var(--color-ink-tertiary)] font-normal tabular-nums">
-                        ({col.posts.length})
-                      </span>
-                    </h3>
-                    <p className="text-[10.5px] text-[var(--color-ink-tertiary)] mt-0.5">
-                      {col.subtitle}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Column Post Cards */}
-                <div className="space-y-2.5">
-                  {col.posts.length === 0 ? (
-                    <div className="p-4 text-center text-[11px] text-[var(--color-ink-muted)] italic">
-                      Empty stage
-                    </div>
-                  ) : (
-                    col.posts.map((post) => {
-                      const client = post.engagements?.clients;
-                      const tabooWords: string[] = client?.client_contexts?.[0]?.taboo_words || [];
-                      const bodyLower = (post.body_markdown || "").toLowerCase();
-                      const flagged = tabooWords.filter((w) => bodyLower.includes(w.toLowerCase()));
-
-                      return (
-                        <div
-                          key={post.id}
-                          className="rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-raised)] p-3 space-y-2.5 shadow-xs hover:border-[var(--color-accent-dim)] transition-colors"
-                        >
-                          {/* Card Client & Pillar */}
-                          <div className="flex items-center justify-between text-[10.5px]">
-                            <div className="flex items-center gap-1.5 truncate max-w-[140px]">
-                              <BrandLogo nameOrDomain={client?.name || "Client"} size={14} className="rounded-[2px]" />
-                              <span className="font-medium text-[var(--color-ink-secondary)] truncate">
-                                {client?.name || "Client"}
-                              </span>
-                            </div>
-                            {post.target_pillar && (
-                              <span className="font-sans tabular-nums text-[10px] uppercase tracking-wider text-[var(--color-ink-tertiary)]">
-                                {post.target_pillar.split(" ")[0]}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Post Title (Links to Editor) */}
-                          <Link
-                            href={`/content/${post.id}`}
-                            className="font-medium text-xs text-[var(--color-ink)] hover:text-[var(--color-accent-text)] transition-colors line-clamp-2 block"
-                          >
-                            {post.title}
-                          </Link>
-
-                          {/* Taboo Warning if detected */}
-                          {flagged.length > 0 && (
-                            <div className="flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums text-[var(--color-danger-text)] border-l-2 border-[var(--color-danger-line)] pl-2 py-0.5">
-                              <ShieldAlert className="h-3 w-3 shrink-0" />
-                              <span className="truncate">Taboo: {flagged.join(", ")}</span>
-                            </div>
-                          )}
-
-                          {/* Published or Scheduled Date */}
-                          {post.status === "published" && post.published_at ? (
-                            <div className="flex items-center gap-1 text-[10.5px] font-sans tabular-nums text-[var(--color-ok-text)]">
-                              <CheckCircle2 className="h-3 w-3 shrink-0" />
-                              <span>Published {formatDisplayDateIST(post.published_at)}</span>
-                            </div>
-                          ) : post.scheduled_publish_date ? (
-                            <div className="flex items-center gap-1 text-[10.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
-                              <Calendar className="h-3 w-3 text-[var(--color-accent)] shrink-0" />
-                              <span>{formatDisplayDateIST(post.scheduled_publish_date)}</span>
-                            </div>
-                          ) : null}
-
-                          {/* Card Actions Footer */}
-                          <div className="pt-2 border-t border-[var(--color-line-subtle)] flex items-center justify-between gap-1.5">
-                            <Link
-                              href={`/content/${post.id}`}
-                              className="text-[11px] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] inline-flex items-center gap-1 font-medium"
-                            >
-                              <span>Edit</span>
-                              <ChevronRight className="h-3 w-3" />
-                            </Link>
-
-                            <div className="flex items-center gap-1.5">
-                              {post.status === "draft" && (
-                                <button
-                                  onClick={() => handleStatusTransition(post.id, "internal_review")}
-                                  className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] text-[var(--color-ink)] transition-colors cursor-pointer"
-                                  title="Move to Internal Voice QA"
-                                >
-                                  Ready for QA &rarr;
-                                </button>
-                              )}
-
-                              {post.status === "internal_review" && (
-                                <button
-                                  onClick={() => handleStatusTransition(post.id, "client_review")}
-                                  className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-warn-line)] bg-[var(--color-warn-bg)] hover:bg-[var(--color-warn-bg)]/80 text-[var(--color-warn-text)] transition-colors cursor-pointer"
-                                  title="Send to Founder Desk for Review"
-                                >
-                                  Send to Founder &rarr;
-                                </button>
-                              )}
-
-                              {post.status === "client_review" && (
-                                <button
-                                  onClick={() => openWhatsAppPing(post)}
-                                  className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] text-[var(--color-ink)] transition-colors cursor-pointer inline-flex items-center gap-1"
-                                  title="Ping on WhatsApp"
-                                >
-                                  <WhatsAppIcon size={12} className="text-[#25D366]" />
-                                  <span>Ping</span>
-                                </button>
-                              )}
-
-                              {post.status === "approved" && (
-                                <button
-                                  onClick={() => handleStatusTransition(post.id, "scheduled")}
-                                  className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-accent-dim)] bg-[var(--color-accent-dim)]/10 hover:bg-[var(--color-accent-dim)]/20 text-[var(--color-accent-text)] transition-colors cursor-pointer"
-                                  title="Confirm Scheduled Slot on Timeline"
-                                >
-                                  Lock Schedule &rarr;
-                                </button>
-                              )}
-
-                              {post.status === "scheduled" && (
-                                <button
-                                  onClick={() => setPublishingPost(post)}
-                                  className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-ok-line)] bg-[var(--color-ok-bg)] hover:bg-[var(--color-ok-bg)]/80 text-[var(--color-ok-text)] transition-colors cursor-pointer inline-flex items-center gap-1 font-medium"
-                                  title="Mark as Published on LinkedIn"
-                                >
-                                  <CheckCircle2 className="h-2.5 w-2.5" />
-                                  <span>Live on LinkedIn &rarr;</span>
-                                </button>
-                              )}
-
-                              {post.status === "published" && (
-                                post.linkedin_post_url ? (
-                                  <a
-                                    href={post.linkedin_post_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] text-[var(--color-ink)] inline-flex items-center gap-1 transition-colors"
-                                    title="View live LinkedIn post"
-                                  >
-                                    <span>Live</span>
-                                    <ExternalLink className="h-2.5 w-2.5" />
-                                  </a>
-                                ) : (
-                                  <button
-                                    onClick={() => setPublishingPost(post)}
-                                    className="px-2 py-0.5 text-[10.5px] font-sans font-medium rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-surface-hover)] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors cursor-pointer"
-                                    title="Add live LinkedIn link"
-                                  >
-                                    + URL
-                                  </button>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
+          {kanbanColumns.map((col) => (
+            <div
+              key={col.id}
+              className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)]/40 p-3 space-y-3 min-w-[240px]"
+            >
+              {/* Column Header */}
+              <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-2">
+                <div>
+                  <h3 className="font-semibold text-xs text-[var(--color-ink)] flex items-center gap-1.5">
+                    <span>{col.title}</span>
+                    <span className="font-sans text-[11px] text-[var(--color-ink-tertiary)] font-normal tabular-nums">
+                      ({col.posts.length})
+                    </span>
+                  </h3>
+                  <p className="text-[10.5px] text-[var(--color-ink-tertiary)] mt-0.5">
+                    {col.subtitle}
+                  </p>
                 </div>
               </div>
-            );
-          })}
+
+              {/* Column Post Cards */}
+              <div className="space-y-2.5">
+                {col.posts.length === 0 ? (
+                  <div className="p-4 text-center text-[11px] text-[var(--color-ink-muted)] italic">
+                    Empty stage
+                  </div>
+                ) : (
+                  col.posts.map((post) => {
+                    const client = post.engagements?.clients;
+                    const tabooWords: string[] = client?.client_contexts?.[0]?.taboo_words || [];
+                    const bodyLower = (post.body_markdown || "").toLowerCase();
+                    const flagged = tabooWords.filter((w) => {
+                      const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                      return new RegExp(`\\b${escaped}\\b`, "i").test(bodyLower);
+                    });
+
+                    const unresolvedNotes = (post.content_feedback || [])
+                      .filter((fb: any) => !fb.is_resolved && fb.comment)
+                      .sort(
+                        (a: any, b: any) =>
+                          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                      );
+                    const latestUnresolved = unresolvedNotes[0];
+                    const hasFounderRevision = unresolvedNotes.some(
+                      (fb: any) => fb.author_type === "client"
+                    );
+
+                    return (
+                      <div
+                        key={post.id}
+                        className="rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-raised)] p-3 space-y-2.5 shadow-xs hover:border-[var(--color-line-strong)] transition-colors"
+                      >
+                        {/* Card Client & Pillar */}
+                        <div className="flex items-center justify-between text-[10.5px]">
+                          <div className="flex items-center gap-1.5 truncate max-w-[140px]">
+                            <BrandLogo
+                              nameOrDomain={client?.name || "Client"}
+                              size={14}
+                              className="rounded-[2px]"
+                            />
+                            <span className="font-medium text-[var(--color-ink-secondary)] truncate">
+                              {client?.name || "Client"}
+                            </span>
+                          </div>
+                          {post.target_pillar && (
+                            <span className="font-sans tabular-nums text-[10px] uppercase tracking-wider text-[var(--color-ink-tertiary)]">
+                              {post.target_pillar.split(" ")[0]}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Unresolved Revision Note Indicator (if returned to Draft) */}
+                        {latestUnresolved && (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-warn-text)]">
+                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-warn)] shrink-0" />
+                              <span>
+                                {latestUnresolved.author_type === "operator"
+                                  ? "QA Revision Note"
+                                  : "Founder Revision"}
+                              </span>
+                            </div>
+                            <p className="border-l-2 border-[var(--color-line-strong)] pl-2 py-0.5 text-[11px] text-[var(--color-ink-secondary)] line-clamp-2 leading-snug">
+                              {latestUnresolved.comment}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Post Title (Links to Editor) */}
+                        <Link
+                          href={`/content/${post.id}`}
+                          className="font-medium text-xs text-[var(--color-ink)] hover:text-[var(--color-accent-text)] transition-colors line-clamp-2 block"
+                        >
+                          {post.title}
+                        </Link>
+
+                        {/* Taboo Warning if detected */}
+                        {flagged.length > 0 && (
+                          <div className="flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums text-[var(--color-danger-text)] border-l-2 border-[var(--color-danger-line)] pl-2 py-0.5">
+                            <ShieldAlert className="h-3 w-3 shrink-0" />
+                            <span className="truncate">Taboo: {flagged.join(", ")}</span>
+                          </div>
+                        )}
+
+                        {/* Published or Scheduled Date */}
+                        {post.status === "published" && post.published_at ? (
+                          <div className="flex items-center gap-1 text-[10.5px] font-sans tabular-nums text-[var(--color-ok-text)]">
+                            <CheckCircle2 className="h-3 w-3 shrink-0" />
+                            <span>Published {formatDisplayDateIST(post.published_at)}</span>
+                          </div>
+                        ) : post.scheduled_publish_date ? (
+                          <div className="flex items-center gap-1 text-[10.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
+                            <Calendar className="h-3 w-3 text-[var(--color-accent)] shrink-0" />
+                            <span>{formatDisplayDateIST(post.scheduled_publish_date)}</span>
+                          </div>
+                        ) : null}
+
+                        {/* Card Actions Footer */}
+                        <div className="pt-2 border-t border-[var(--color-line-subtle)] flex items-center justify-between gap-1.5">
+                          <Link
+                            href={`/content/${post.id}`}
+                            className="text-[11px] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] inline-flex items-center gap-1 font-medium"
+                          >
+                            <span>Studio</span>
+                            <ChevronRight className="h-3 w-3" />
+                          </Link>
+
+                          <div className="flex items-center gap-1">
+                            {post.status === "draft" && (
+                              hasFounderRevision ? (
+                                <button
+                                  onClick={() => handleStatusTransition(post, "client_review")}
+                                  disabled={isPending}
+                                  className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer"
+                                  title="Re-send revised post directly to Founder Desk"
+                                >
+                                  <span>Re-send &rarr;</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleStatusTransition(post, "internal_review")}
+                                  disabled={isPending}
+                                  className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer"
+                                  title="Move to Internal Voice QA"
+                                >
+                                  <span>Ready for QA &rarr;</span>
+                                </button>
+                              )
+                            )}
+
+                            {post.status === "internal_review" && (
+                              <button
+                                onClick={() => handleStatusTransition(post, "client_review")}
+                                disabled={isPending}
+                                className="btn btn-primary text-[10.5px] py-0.5 px-2 cursor-pointer"
+                                title="Send to Founder Desk & copy review link"
+                              >
+                                <span>Send to Founder &rarr;</span>
+                              </button>
+                            )}
+
+                            {post.status === "client_review" && (
+                              <>
+                                <button
+                                  onClick={() => copyReviewLink(post)}
+                                  className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer inline-flex items-center gap-1"
+                                  title="Copy private Founder Desk link"
+                                >
+                                  {copiedId === post.id ? (
+                                    <>
+                                      <Check className="h-2.5 w-2.5 text-[var(--color-ok)]" />
+                                      <span>Copied</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="h-2.5 w-2.5 text-[var(--color-ink-tertiary)]" />
+                                      <span>Link</span>
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => openWhatsAppPing(post)}
+                                  className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer inline-flex items-center gap-1"
+                                  title="Ping founder on WhatsApp"
+                                >
+                                  <WhatsAppIcon size={11} className="text-[#25D366]" />
+                                  <span>Ping</span>
+                                </button>
+                              </>
+                            )}
+
+                            {post.status === "approved" && (
+                              <button
+                                onClick={() => handleStatusTransition(post, "scheduled")}
+                                disabled={isPending}
+                                className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer"
+                                title="Confirm Scheduled Slot on Timeline"
+                              >
+                                <span>Lock Schedule &rarr;</span>
+                              </button>
+                            )}
+
+                            {post.status === "scheduled" && (
+                              <button
+                                onClick={() => setPublishingPost(post)}
+                                className="btn btn-primary text-[10.5px] py-0.5 px-2 cursor-pointer inline-flex items-center gap-1"
+                                title="Mark as Published on LinkedIn"
+                              >
+                                <span>Publish &rarr;</span>
+                              </button>
+                            )}
+
+                            {post.status === "published" &&
+                              (post.linkedin_post_url ? (
+                                <a
+                                  href={post.linkedin_post_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-secondary text-[10.5px] py-0.5 px-2 inline-flex items-center gap-1"
+                                  title="View live LinkedIn post"
+                                >
+                                  <span>Live</span>
+                                  <ExternalLink className="h-2.5 w-2.5" />
+                                </a>
+                              ) : (
+                                <button
+                                  onClick={() => setPublishingPost(post)}
+                                  className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer"
+                                  title="Add live LinkedIn link"
+                                >
+                                  <span>+ URL</span>
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -557,37 +625,37 @@ export function ContentStudioClient({
       {viewMode === "list" && (
         <div className="space-y-3.5">
           {filteredPosts.length === 0 ? (
-            <div className="card p-12 text-center space-y-3">
-              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-base-subtle)] text-[var(--color-ink-tertiary)] border border-[var(--color-line)]">
-                <Feather className="h-5 w-5" />
-              </div>
-              <p className="font-display text-base font-normal text-[var(--color-ink)]">
-                No perspectives found
-              </p>
-              <p className="text-xs text-[var(--color-ink-tertiary)]">
-                Draft a perspective to capture founder conviction and shape it for LinkedIn.
-              </p>
-              <button
-                onClick={() => setShowNewModal(true)}
-                className="btn btn-primary text-xs inline-flex mt-2"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Draft Perspective</span>
-              </button>
-            </div>
+            <EmptyState
+              icon={Feather}
+              title="No perspectives found"
+              description="Draft a perspective to capture founder conviction and shape it for LinkedIn."
+              action={
+                <Link
+                  href={newPerspectiveHref}
+                  className="btn btn-primary text-xs inline-flex items-center gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Draft Perspective</span>
+                </Link>
+              }
+            />
           ) : (
             filteredPosts.map((post) => {
               const client = post.engagements?.clients;
-              const tabooWords: string[] = client?.client_contexts?.[0]?.taboo_words || [];
-              const bodyLower = (post.body_markdown || "").toLowerCase();
-              const flaggedWords = tabooWords.filter((w) => bodyLower.includes(w.toLowerCase()));
-
               const isDraft = post.status === "draft";
               const isQA = post.status === "internal_review";
               const isReview = post.status === "client_review";
               const isApproved = post.status === "approved";
               const isScheduled = post.status === "scheduled";
               const isPaused = post.status === "paused";
+
+              const unresolvedNotes = (post.content_feedback || [])
+                .filter((fb: any) => !fb.is_resolved && fb.comment)
+                .sort(
+                  (a: any, b: any) =>
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                );
+              const latestUnresolved = unresolvedNotes[0];
 
               return (
                 <div
@@ -606,7 +674,7 @@ export function ContentStudioClient({
                         <span className="inline-flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-secondary)]">
                           <span
                             className={`h-1.5 w-1.5 rounded-full ${
-                              isReview
+                              isReview || latestUnresolved
                                 ? "bg-[var(--color-warn)]"
                                 : isApproved || isScheduled
                                 ? "bg-[var(--color-ok)]"
@@ -615,15 +683,22 @@ export function ContentStudioClient({
                                 : "bg-[var(--color-ink-muted)]"
                             }`}
                           />
-                          {post.status?.replace("_", " ")}
+                          {latestUnresolved
+                            ? latestUnresolved.author_type === "operator"
+                              ? "QA Revision"
+                              : "Founder Revision"
+                            : post.status?.replace("_", " ")}
                         </span>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-ink-secondary)]">
                         <div className="flex items-center gap-1.5">
-                          <BrandLogo nameOrDomain={client?.name || "Client"} size={14} className="rounded-[2px]" />
+                          <BrandLogo
+                            nameOrDomain={client?.name || "Client"}
+                            size={14}
+                            className="rounded-[2px]"
+                          />
                           <span>
-                            Client:{" "}
                             <strong className="text-[var(--color-ink)] font-medium">
                               {client?.name || "Client"}
                             </strong>{" "}
@@ -633,7 +708,7 @@ export function ContentStudioClient({
                         {post.target_pillar && (
                           <>
                             <span className="text-[var(--color-ink-tertiary)]">·</span>
-                            <span>Pillar: {post.target_pillar}</span>
+                            <span>{post.target_pillar}</span>
                           </>
                         )}
                         {post.scheduled_publish_date && (
@@ -653,15 +728,46 @@ export function ContentStudioClient({
                         href={`/content/${post.id}`}
                         className="btn btn-secondary text-xs inline-flex items-center gap-1"
                       >
-                        <span>Open Editor</span>
+                        <span>Open Studio</span>
                         <ExternalLink className="h-3 w-3" />
                       </Link>
+
+                      {isDraft && (
+                        <button
+                          onClick={() =>
+                            handleStatusTransition(
+                              post,
+                              latestUnresolved?.author_type === "client"
+                                ? "client_review"
+                                : "internal_review"
+                            )
+                          }
+                          disabled={isPending}
+                          className="btn btn-primary text-xs cursor-pointer"
+                        >
+                          <span>
+                            {latestUnresolved?.author_type === "client"
+                              ? "Re-send to Founder ↗"
+                              : "Ready for QA →"}
+                          </span>
+                        </button>
+                      )}
+
+                      {isQA && (
+                        <button
+                          onClick={() => handleStatusTransition(post, "client_review")}
+                          disabled={isPending}
+                          className="btn btn-primary text-xs cursor-pointer"
+                        >
+                          <span>Send to Founder ↗</span>
+                        </button>
+                      )}
 
                       {isReview && (
                         <>
                           <button
                             onClick={() => copyReviewLink(post)}
-                            className="btn btn-secondary text-xs"
+                            className="btn btn-secondary text-xs cursor-pointer"
                             title="Copy Review Link"
                           >
                             <Copy className="h-3 w-3" />
@@ -669,7 +775,7 @@ export function ContentStudioClient({
                           </button>
                           <button
                             onClick={() => openWhatsAppPing(post)}
-                            className="btn btn-primary text-xs"
+                            className="btn btn-primary text-xs cursor-pointer"
                             title="Nudge founder on WhatsApp"
                           >
                             <WhatsAppIcon size={13} className="text-[#25D366]" />
@@ -687,13 +793,13 @@ export function ContentStudioClient({
                         </button>
                       )}
 
-                      {post.status === "published" && (
-                        post.linkedin_post_url ? (
+                      {post.status === "published" &&
+                        (post.linkedin_post_url ? (
                           <a
                             href={post.linkedin_post_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="btn btn-secondary text-xs inline-flex items-center gap-1 text-[var(--color-ok-text)]"
+                            className="btn btn-secondary text-xs inline-flex items-center gap-1"
                           >
                             <span>Live on LinkedIn</span>
                             <ExternalLink className="h-3 w-3" />
@@ -701,14 +807,22 @@ export function ContentStudioClient({
                         ) : (
                           <button
                             onClick={() => setPublishingPost(post)}
-                            className="btn btn-secondary text-xs inline-flex items-center gap-1"
+                            className="btn btn-secondary text-xs inline-flex items-center gap-1 cursor-pointer"
                           >
                             <span>+ Add URL</span>
                           </button>
-                        )
-                      )}
+                        ))}
                     </div>
                   </div>
+
+                  {latestUnresolved && (
+                    <p className="border-l-2 border-[var(--color-line-strong)] pl-3 py-1 text-xs text-[var(--color-ink)] leading-relaxed">
+                      <span className="font-medium text-[var(--color-warn-text)] mr-1.5">
+                        {latestUnresolved.author_name}:
+                      </span>
+                      {latestUnresolved.comment}
+                    </p>
+                  )}
 
                   {/* Body Snippet */}
                   <p className="text-xs text-[var(--color-ink-secondary)] line-clamp-2 leading-relaxed font-sans">
@@ -720,13 +834,6 @@ export function ContentStudioClient({
           )}
         </div>
       )}
-
-      {/* NEW CONTENT MODAL */}
-      <NewContentModal
-        isOpen={showNewModal}
-        onClose={() => setShowNewModal(false)}
-        engagements={engagements}
-      />
 
       {/* MARK PUBLISHED MODAL */}
       <MarkPublishedModal

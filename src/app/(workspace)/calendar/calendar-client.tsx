@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import {
   getTodayDateStringIST,
   toDateStringIST,
@@ -249,28 +250,22 @@ export function CalendarClient({
       >
         <div className="flex items-center gap-2">
           {/* View Switcher */}
-          <div className="flex items-center rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-0.5">
-            <button
-              onClick={() => setView("month")}
-              className={`px-2.5 py-1 text-xs rounded-[3px] transition-colors cursor-pointer ${
-                view === "month"
-                  ? "bg-[var(--color-surface-active)] text-[var(--color-ink)] font-medium shadow-xs"
-                  : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-              }`}
-            >
-              Month
-            </button>
-            <button
-              onClick={() => setView("agenda")}
-              className={`px-2.5 py-1 text-xs rounded-[3px] transition-colors cursor-pointer ${
-                view === "agenda"
-                  ? "bg-[var(--color-surface-active)] text-[var(--color-ink)] font-medium shadow-xs"
-                  : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-              }`}
-            >
-              Agenda
-            </button>
-          </div>
+          <SegmentedFilter
+            options={[
+              {
+                id: "month",
+                label: "Month",
+                icon: <CalendarDays className="h-3.5 w-3.5" />,
+              },
+              {
+                id: "agenda",
+                label: "Agenda",
+                icon: <List className="h-3.5 w-3.5" />,
+              },
+            ]}
+            value={view}
+            onChange={(val) => setView(val as CalendarView)}
+          />
 
           <Link href="/content" className="btn btn-secondary text-xs">
             <FileText className="h-3.5 w-3.5" />

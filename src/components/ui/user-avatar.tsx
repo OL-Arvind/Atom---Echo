@@ -36,7 +36,7 @@ export function UserAvatar({
     return (
       <div
         style={{ width: size, height: size }}
-        className={`relative overflow-hidden bg-[var(--color-base-overlay)] border border-[var(--color-line-strong)] flex items-center justify-center shrink-0 select-none ${className}`}
+        className={`relative overflow-hidden flex items-center justify-center shrink-0 select-none ${className}`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -44,7 +44,7 @@ export function UserAvatar({
           alt={alt || normalizedSeed || "Avatar"}
           width={size}
           height={size}
-          className="w-full h-full object-contain p-[2px]"
+          className="w-full h-full object-contain"
         />
       </div>
     );
@@ -53,7 +53,7 @@ export function UserAvatar({
   return (
     <div
       style={{ width: size, height: size }}
-      className={`relative overflow-hidden border border-[var(--color-line)] flex items-center justify-center shrink-0 select-none ${className}`}
+      className={`relative overflow-hidden flex items-center justify-center shrink-0 select-none ${className}`}
     >
       <Avatar
         size={size}

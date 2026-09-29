@@ -67,13 +67,46 @@ export interface ClientContext {
   knowledge_items?: KnowledgeItem[];
 }
 
+export type KnowledgeCategory =
+  | "origin_story"
+  | "case_study"
+  | "metric_proof"
+  | "framework"
+  | "contrarian_opinion";
+
 export interface KnowledgeItem {
   id: string;
   client_id: string;
-  category: "origin_story" | "case_study" | "metric_proof" | "framework" | "contrarian_opinion";
+  category: KnowledgeCategory;
   title: string;
   content: string;
   verified_metrics?: Record<string, string>;
+  source_meeting_id?: string | null;
+  created_at?: string;
+}
+
+export type MeetingChannel =
+  | "fathom_video"
+  | "google_meet"
+  | "zoom"
+  | "phone_call"
+  | "whatsapp"
+  | "in_person";
+
+export interface ClientMeeting {
+  id: string;
+  client_id: string;
+  title: string;
+  meeting_date: string;
+  channel: MeetingChannel;
+  attendees?: string | null;
+  fathom_recording_url?: string | null;
+  summary: string;
+  raw_transcript?: string | null;
+  key_decisions?: string[] | null;
+  action_items?: string[] | null;
+  created_at: string;
+  knowledge_items?: KnowledgeItem[];
 }
 
 export interface ContentItem {
@@ -217,6 +250,8 @@ export interface CommandCenterAlert {
   founder_name?: string;
   founder_phone?: string;
   founder_email?: string;
+  linkedin_url?: string;
+  website_url?: string;
   review_token?: string;
   post_id?: string;
   post_title?: string;
@@ -237,6 +272,9 @@ export interface CommandCenterAlert {
   subtotal_amount?: number;
   due_date?: string;
   line_items?: InvoiceLineItem[];
+  scheduled_publish_date?: string | null;
+  taboo_words?: string[];
+  voice_guidelines?: string;
 }
 
 export interface CommandCenterScheduledPost {
@@ -260,6 +298,8 @@ export interface CommandCenterExpenseItem {
   engagements?: unknown;
 }
 
+export type CredentialAccessScope = "agency_only" | "client_shared";
+
 export interface ClientCredential {
   id: string;
   client_id: string;
@@ -267,6 +307,7 @@ export interface ClientCredential {
   username_or_email: string;
   two_factor_method?: string | null;
   notes?: string | null;
+  access_scope?: CredentialAccessScope;
   created_at?: string;
 }
 
@@ -276,11 +317,39 @@ export interface ClientWithEngagements extends Client {
     Engagement & {
       content_items?: Array<{
         id: string;
+        title?: string;
         status: ContentStatus;
         scheduled_publish_date?: string;
+        created_at?: string;
       }>;
     }
   >;
+}
+
+export type DocumentCategory =
+  | "agreement"
+  | "proposal"
+  | "quotation"
+  | "roadmap"
+  | "asset"
+  | "other";
+
+export type DocumentType = "link" | "file";
+
+export interface ClientDocument {
+  id: string;
+  client_id: string;
+  title: string;
+  category: DocumentCategory;
+  document_type: DocumentType;
+  file_url: string;
+  file_name?: string | null;
+  file_size_bytes?: number | null;
+  external_platform?: string | null;
+  notes?: string | null;
+  version?: string | null;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface ClientWithRelations extends Client {
@@ -289,6 +358,10 @@ export interface ClientWithRelations extends Client {
   tool_expenses?: ToolExpense[];
   client_requests?: ClientRequest[];
   credentials?: ClientCredential[];
+  meetings?: ClientMeeting[];
+  knowledge_items?: KnowledgeItem[];
+  documents?: ClientDocument[];
+  invoices?: Invoice[];
   review_tokens?: Array<{
     id: string;
     token_hash: string;
@@ -308,4 +381,5 @@ export interface CommandCenterReviewPost {
   created_at?: string;
   engagements?: unknown;
 }
+
 

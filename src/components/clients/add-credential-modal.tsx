@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, Lock, Shield, Key } from "lucide-react";
+import { X, Lock, Key } from "lucide-react";
 import { addCredentialAction } from "@/lib/actions/credentials";
 
 interface AddCredentialModalProps {
@@ -14,6 +14,7 @@ interface AddCredentialModalProps {
 export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialModalProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [accessScope, setAccessScope] = useState<"agency_only" | "client_shared">("agency_only");
   const router = useRouter();
 
   if (!isOpen) return null;
@@ -36,22 +37,13 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6 shadow-xl space-y-4 text-[var(--color-ink)] animate-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-5 shadow-2xl space-y-4 text-[var(--color-ink)] animate-in">
+        {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-xs)] bg-[var(--color-accent-bg)] border border-[var(--color-accent-line)] text-[var(--color-accent-text)]">
-              <Shield className="h-4 w-4" />
-            </div>
-            <div>
-              <h2 className="font-display text-lg font-normal text-[var(--color-ink)]">
-                Add Client Login
-              </h2>
-              <p className="text-[11px] text-[var(--color-ink-secondary)]">
-                Securely store account login details. Passwords auto-mask after 30 seconds.
-              </p>
-            </div>
-          </div>
+          <h2 className="text-sm font-semibold text-[var(--color-ink)]">
+            Add Login
+          </h2>
           <button
             onClick={onClose}
             className="rounded-[var(--radius-xs)] p-1 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] hover:bg-[var(--color-base-subtle)] transition-colors cursor-pointer"
@@ -67,9 +59,48 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
         )}
 
         <form onSubmit={handleSubmit} noValidate className="space-y-3">
+          {/* Access Scope Segmented Control */}
+          <div>
+            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1.5">
+              Visibility
+            </label>
+            <div className="flex rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-0.5">
+              <button
+                type="button"
+                onClick={() => setAccessScope("agency_only")}
+                className={`flex-1 py-1.5 px-3 rounded-[var(--radius-xs)] text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
+                  accessScope === "agency_only"
+                    ? "bg-[var(--color-surface)] text-[var(--color-ink)] shadow-sm"
+                    : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink-secondary)]"
+                }`}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ink-muted)]" />
+                <span>Agency Internal</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAccessScope("client_shared")}
+                className={`flex-1 py-1.5 px-3 rounded-[var(--radius-xs)] text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
+                  accessScope === "client_shared"
+                    ? "bg-[var(--color-surface)] text-[var(--color-ink)] shadow-sm"
+                    : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink-secondary)]"
+                }`}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+                <span>Shared with Client</span>
+              </button>
+            </div>
+            <p className="text-[10.5px] text-[var(--color-ink-tertiary)] mt-1">
+              {accessScope === "client_shared"
+                ? "Surfaced in founder's mobile desk for 1-tap copy."
+                : "Visible strictly to Atom & Echo operators."}
+            </p>
+            <input type="hidden" name="access_scope" value={accessScope} />
+          </div>
+
           <div>
             <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
-              Platform / Service *
+              Platform / Service
             </label>
             <input
               name="platform"
@@ -81,7 +112,7 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
 
           <div>
             <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
-              Username or Email *
+              Username or Email
             </label>
             <input
               name="username_or_email"
@@ -93,37 +124,25 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
 
           <div>
             <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
-              Password *
+              Password
             </label>
             <input
               name="password"
               type="password"
               required
-              placeholder="Enter account password"
+              placeholder="Enter password"
               className="input text-xs font-sans tabular-nums"
             />
           </div>
 
           <div>
             <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
-              2FA Method / Notes
+              2FA / Access Instructions <span className="text-[var(--color-ink-muted)] font-normal">(Optional)</span>
             </label>
             <input
               name="two_factor_method"
-              placeholder="e.g. WhatsApp OTP, Authenticator app"
+              placeholder="e.g. Authenticator app, WhatsApp OTP, or proxy notes"
               className="input text-xs"
-            />
-          </div>
-
-          <div>
-            <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
-              Notes &amp; Setup Instructions
-            </label>
-            <textarea
-              name="notes"
-              rows={2}
-              placeholder="e.g. Dedicated proxy IP, active hours, do not reset sessions"
-              className="input text-xs resize-none"
             />
           </div>
 
@@ -131,16 +150,16 @@ export function AddCredentialModal({ clientId, isOpen, onClose }: AddCredentialM
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-secondary text-xs"
+              className="btn btn-secondary text-xs active:scale-[0.98]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="btn btn-primary text-xs disabled:opacity-50"
+              className="btn btn-primary text-xs active:scale-[0.98] disabled:opacity-50"
             >
-              <span>{isPending ? "Saving..." : "Save Login"}</span>
+              {isPending ? "Saving..." : "Save Login"}
             </button>
           </div>
         </form>

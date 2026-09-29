@@ -195,6 +195,7 @@ export function LogExpenseModal({
             <CustomDatePicker
               name="incurred_date"
               defaultValue={new Date().toISOString().split("T")[0]}
+              presetMode="past"
             />
           </div>
 

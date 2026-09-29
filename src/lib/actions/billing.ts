@@ -190,6 +190,10 @@ export async function updateInvoiceStatusAction(invoiceId: string, status: Invoi
       }
     }
 
+    const clientId = (inv.engagements as any)?.clients?.id;
+    if (clientId) {
+      revalidate(`/clients/${clientId}`);
+    }
     revalidate("/billing");
     revalidate(`/billing/invoices/${invoiceId}`);
     revalidate("/command-center");

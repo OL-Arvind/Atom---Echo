@@ -11,8 +11,13 @@ import {
 import { OnboardClientModal } from "@/components/clients/onboard-client-modal";
 import { HeaderActions } from "@/components/layout/header-actions";
 import { AlertInspectorPane } from "@/components/command-center/alert-inspector-pane";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { generateDraftInvoiceAction } from "@/lib/actions/client";
-import { approveContentAction, resolveContentFeedbackAction } from "@/lib/actions/content";
+import {
+  approveContentAction,
+  resolveContentFeedbackAction,
+  sendForClientReviewAction,
+} from "@/lib/actions/content";
 import { updateInvoiceStatusAction } from "@/lib/actions/billing";
 import { formatDisplayDateIST } from "@/lib/date-utils";
 import { parseFeedbackComment } from "@/lib/feedback-utils";
@@ -83,34 +88,97 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
 
   const copyReviewLink = (alert: CommandCenterAlert) => {
     const token = alert.review_token;
-    if (!token) {
-      showToast("No active review link available for this client yet.");
+    if (token && alert.post_status !== "internal_review") {
+      const shareUrl = `${window.location.origin}/review/${token}`;
+      navigator.clipboard.writeText(shareUrl);
+      setCopiedToken(alert.id);
+      showToast(`Copied 1-tap review link for ${alert.founder_name || "Founder"}`);
+      setTimeout(() => setCopiedToken(null), 2500);
       return;
     }
-    const shareUrl = `${window.location.origin}/review/${token}`;
-    navigator.clipboard.writeText(shareUrl);
-    setCopiedToken(alert.id);
-    showToast(`Copied 1-tap review link for ${alert.founder_name || "Founder"}`);
-    setTimeout(() => setCopiedToken(null), 2500);
+
+    const targetId = alert.post_id || alert.entity_id || alert.client_id;
+    if (!targetId) {
+      showToast("Unable to generate review link for this item.");
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await sendForClientReviewAction(targetId, window.location.origin);
+      if (res.success && res.reviewUrl) {
+        navigator.clipboard.writeText(res.reviewUrl);
+        setCopiedToken(alert.id);
+        setAlerts((prev) =>
+          prev.map((a) =>
+            a.id === alert.id
+              ? {
+                  ...a,
+                  post_status: "client_review",
+                  review_token: res.token,
+                  waiting_on: `${alert.founder_name || "Founder"} (Founder Sign-Off)`,
+                }
+              : a
+          )
+        );
+        showToast(
+          alert.post_status === "internal_review"
+            ? `QA approved! Dispatched to ${alert.founder_name || "Founder"} & copied review link`
+            : `Copied 1-tap review link for ${alert.founder_name || "Founder"}`
+        );
+        setTimeout(() => setCopiedToken(null), 2500);
+        router.refresh();
+      } else {
+        showToast(`Error: ${res.error || "Could not generate review link"}`);
+      }
+    });
   };
 
   const openWhatsAppPing = (alert: CommandCenterAlert) => {
-    const token = alert.review_token;
-    if (!token) {
+    const phone = alert.founder_phone ? alert.founder_phone.replace(/[^0-9]/g, "") : "";
+    const openWaWithUrl = (shareUrl: string) => {
+      const message = encodeURIComponent(
+        `Hi ${alert.founder_name || "there"}, here is your latest thought leadership post ready for 1-tap review: ${shareUrl}`
+      );
+      if (phone) {
+        window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+      } else {
+        window.open(`https://wa.me/?text=${message}`, "_blank");
+      }
+      showToast(`Opened WhatsApp chat for ${alert.founder_name || "Founder"}`);
+    };
+
+    if (alert.review_token && alert.post_status !== "internal_review") {
+      openWaWithUrl(`${window.location.origin}/review/${alert.review_token}`);
+      return;
+    }
+
+    const targetId = alert.post_id || alert.entity_id || alert.client_id;
+    if (!targetId) {
       showToast("No active review link available for this client yet.");
       return;
     }
-    const shareUrl = `${window.location.origin}/review/${token}`;
-    const phone = alert.founder_phone ? alert.founder_phone.replace(/[^0-9]/g, "") : "";
-    if (!phone) {
-      showToast("No WhatsApp phone number configured for this founder.");
-      return;
-    }
-    const message = encodeURIComponent(
-      `Hi ${alert.founder_name || "there"}, here is your latest thought leadership post ready for 1-tap review: ${shareUrl}`
-    );
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-    showToast(`Opened WhatsApp chat for ${alert.founder_name || "Founder"}`);
+
+    startTransition(async () => {
+      const res = await sendForClientReviewAction(targetId, window.location.origin);
+      if (res.success && res.reviewUrl) {
+        setAlerts((prev) =>
+          prev.map((a) =>
+            a.id === alert.id
+              ? {
+                  ...a,
+                  post_status: "client_review",
+                  review_token: res.token,
+                  waiting_on: `${alert.founder_name || "Founder"} (Founder Sign-Off)`,
+                }
+              : a
+          )
+        );
+        openWaWithUrl(res.reviewUrl);
+        router.refresh();
+      } else {
+        showToast(`Error: ${res.error || "Could not generate review link"}`);
+      }
+    });
   };
 
   const handleQuickApprove = (alert: CommandCenterAlert) => {
@@ -232,10 +300,10 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
   }, [alerts, selectedAlertId]);
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex-1 flex flex-col min-h-0">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-[var(--color-base-overlay)] text-[var(--color-ink)] text-xs px-4 py-2.5 rounded-lg shadow-dialog border border-[var(--color-line-strong)]">
+        <div className="toast">
           <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -246,17 +314,17 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
         <OnboardClientModal buttonText="Onboard Founder" />
       </HeaderActions>
 
-      {/* Single Unified Studio Console (Linear / Superhuman Master Layout) */}
-      <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] shadow-card overflow-hidden flex flex-col lg:flex-row min-h-[calc(100vh-6.5rem)]">
-        {/* LEFT PANE: Attention Queue & Integrated Horizon (Calibrated 400px Scan Measure) */}
-        <div className="w-full lg:w-[410px] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-[var(--color-line)] bg-[var(--color-base-raised)]">
+      {/* Full-bleed Native Workstation Console */}
+      <div className="flex-1 flex flex-col lg:flex-row h-full min-h-0 w-full bg-[var(--color-surface)] overflow-hidden">
+        {/* LEFT PANE: Attention Queue & Integrated Horizon (Calibrated 410px Scan Measure) */}
+        <div className="w-full lg:w-[410px] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-[var(--color-line)] bg-[var(--color-base-raised)] h-full min-h-0">
           {/* Header with Filter Tabs */}
-          <div className="border-b border-[var(--color-line)] p-4 sm:p-5 bg-[var(--color-base-subtle)]/40">
+          <div className="border-b border-[var(--color-line)] p-4 sm:p-5 bg-[var(--color-base-subtle)]/40 shrink-0">
             <div className="flex items-center justify-between mb-3.5">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-[var(--color-ink)] tracking-tight font-display">Editorial Queue</span>
-                <span className="text-[10.5px] font-sans text-[var(--color-ink-muted)] px-2 py-0.5 rounded-full bg-[var(--color-base-subtle)] border border-[var(--color-line-subtle)] font-normal tabular-nums">
-                  {alerts.length}
+                <span className="text-xs font-sans text-[var(--color-ink-tertiary)] tabular-nums">
+                  ({alerts.length})
                 </span>
               </div>
               <Link
@@ -267,9 +335,9 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
               </Link>
             </div>
 
-            {/* Clean Filter Tabs */}
-            <div className="flex items-center gap-1.5">
-              {[
+            {/* Cohesive Segmented Filter Track */}
+            <SegmentedFilter
+              options={[
                 { id: "all", label: "All", count: alerts.length },
                 {
                   id: "review",
@@ -293,25 +361,14 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                       a.entity_type === "tool_renewal"
                   ).length,
                 },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setFilter(tab.id as "all" | "review" | "billing" | "request")}
-                  className={`px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
-                    filter === tab.id
-                      ? "bg-[var(--color-surface)] text-[var(--color-ink)] font-medium shadow-2xs border border-[var(--color-line-strong)]"
-                      : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] hover:bg-[var(--color-base-subtle)]"
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <span className="ml-1 opacity-60 text-[10.5px] tabular-nums">({tab.count})</span>
-                </button>
-              ))}
-            </div>
+              ]}
+              value={filter}
+              onChange={(val) => setFilter(val as "all" | "review" | "billing" | "request")}
+            />
           </div>
 
           {/* Queue List Items */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {filteredAlerts.length > 0 ? (
               <div className="divide-y divide-white/[0.04]">
                 {filteredAlerts.map((alert: CommandCenterAlert) => {
@@ -333,11 +390,21 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                     const tagSnippet = tags.length > 0 ? tags.join(" · ") : "";
                     const detail = note || tagSnippet || "Revision requested";
                     secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · ${detail}`;
-                    badgeLabel = "Revision requested";
+                    badgeLabel = alert.waiting_on?.includes("Internal QA")
+                      ? "QA revision"
+                      : "Revision requested";
                   } else if (isReview) {
                     primaryLabel = alert.post_title || alert.title;
-                    secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · Awaiting sign-off`;
-                    badgeLabel = "Pending review";
+                    if (alert.post_status === "internal_review") {
+                      secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · Ready for Internal Voice QA`;
+                      badgeLabel = "Voice QA";
+                    } else if (alert.post_status === "draft") {
+                      secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · Draft behind schedule`;
+                      badgeLabel = "Overdue draft";
+                    } else {
+                      secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · Awaiting sign-off`;
+                      badgeLabel = "Pending review";
+                    }
                   } else if (isInvoiceDraft) {
                     primaryLabel = `${alert.client_name || "Client"}${alert.founder_name ? ` (${alert.founder_name})` : ""}`;
                     secondaryLabel = `Draft Invoice ${alert.invoice_number || ""} · ₹${Number(alert.total_amount || 0).toLocaleString("en-IN")}`;
@@ -417,7 +484,7 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
           </div>
 
           {/* Integrated Upcoming Releases Horizon (No separate card!) */}
-          <div className="border-t border-[var(--color-line)] p-4 sm:p-4.5 bg-[var(--color-base-subtle)]/60 mt-auto">
+          <div className="border-t border-[var(--color-line)] p-4 sm:p-4.5 bg-[var(--color-base-subtle)]/60 mt-auto shrink-0">
             <div className="flex items-center justify-between pb-2.5">
               <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)] tracking-tight">
                 <Calendar className="h-3.5 w-3.5 text-[var(--color-accent)]" />
@@ -434,9 +501,10 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
             {initialData.scheduledPosts && initialData.scheduledPosts.length > 0 ? (
               <div className="space-y-1">
                 {initialData.scheduledPosts.slice(0, 3).map((post: CommandCenterScheduledPost) => (
-                  <div
+                  <Link
                     key={post.id}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--color-surface-hover)] text-xs gap-3 transition-colors"
+                    href={`/content/${post.id}`}
+                    className="flex items-center justify-between p-2 rounded-[var(--radius-sm)] hover:bg-[var(--color-surface-hover)] text-xs gap-3 transition-colors group"
                   >
                     <div className="min-w-0 space-y-0.5">
                       <div className="flex items-center gap-1.5 text-[11px]">
@@ -450,17 +518,19 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
                           &middot; {getScheduledPostFounder(post)}
                         </span>
                       </div>
-                      <p className="text-[var(--color-ink)] font-medium truncate text-[12px]">{post.title}</p>
+                      <p className="text-[var(--color-ink)] group-hover:text-[var(--color-accent-text)] font-medium truncate text-[12px] transition-colors">
+                        {post.title}
+                      </p>
                     </div>
                     <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-muted)] shrink-0 font-medium">
                       {post.target_pillar || "Perspective"}
                     </span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (
               <p className="text-[11.5px] text-[var(--color-ink-muted)] py-2 text-center">
-                No upcoming releases queued today.
+                No approved perspectives are locked into a publishing slot.
               </p>
             )}
           </div>

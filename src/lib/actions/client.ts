@@ -11,6 +11,7 @@ function revalidate(path: string) {
 }
 import {
   createClientSchema,
+  updateClientSchema,
   tabooWordSchema,
   toolExpenseSchema,
   updateClientContextSchema,
@@ -130,6 +131,127 @@ export async function createClientAction(formData: FormData) {
     return { success: true, clientId: client.id };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to create client.";
+    return { success: false, error: message };
+  }
+}
+
+export async function updateClientAction(formData: FormData) {
+  try {
+    await requireOperatorSession();
+    const rawInput = {
+      clientId: formData.get("clientId"),
+      name: formData.get("name"),
+      founder_name: formData.get("founder_name"),
+      founder_title: formData.get("founder_title") || undefined,
+      founder_email: formData.get("founder_email") || undefined,
+      founder_phone: formData.get("founder_phone") || undefined,
+      linkedin_url: formData.get("linkedin_url") || undefined,
+      website_url: formData.get("website_url") || undefined,
+      status: formData.get("status") || "active",
+      service_type: formData.get("service_type") || undefined,
+      monthly_retainer: formData.get("monthly_retainer") || undefined,
+      billing_anchor_day: formData.get("billing_anchor_day") || undefined,
+    };
+
+    const parsed = updateClientSchema.safeParse(rawInput);
+    if (!parsed.success) {
+      return { success: false, error: formatZodError(parsed.error) };
+    }
+
+    const {
+      clientId,
+      name,
+      founder_name,
+      founder_title,
+      founder_email,
+      founder_phone,
+      linkedin_url,
+      website_url,
+      status,
+      service_type,
+      monthly_retainer,
+      billing_anchor_day,
+    } = parsed.data;
+
+    const supabase = createAdminClient();
+
+    // 1. Update client record
+    const { error: clientErr } = await supabase
+      .from("clients")
+      .update({
+        name,
+        founder_name,
+        founder_title,
+        founder_email,
+        founder_phone,
+        linkedin_url,
+        website_url,
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", clientId);
+
+    if (clientErr) {
+      return { success: false, error: clientErr.message };
+    }
+
+    // 2. Check and update primary engagement if fields provided
+    if (
+      service_type !== undefined ||
+      monthly_retainer !== undefined ||
+      billing_anchor_day !== undefined
+    ) {
+      const { data: existingEngs } = await supabase
+        .from("engagements")
+        .select("id")
+        .eq("client_id", clientId)
+        .order("created_at", { ascending: true })
+        .limit(1);
+
+      if (existingEngs && existingEngs.length > 0) {
+        const engId = existingEngs[0].id;
+        const engUpdate: Record<string, unknown> = {
+          updated_at: new Date().toISOString(),
+        };
+        if (service_type !== undefined) engUpdate.service_type = service_type;
+        if (monthly_retainer !== undefined) engUpdate.monthly_retainer = monthly_retainer;
+        if (billing_anchor_day !== undefined) engUpdate.billing_anchor_day = billing_anchor_day;
+
+        const { error: engErr } = await supabase
+          .from("engagements")
+          .update(engUpdate)
+          .eq("id", engId);
+
+        if (engErr) {
+          console.warn("Could not update primary engagement:", engErr.message);
+        }
+      } else if (
+        service_type ||
+        monthly_retainer !== undefined ||
+        billing_anchor_day !== undefined
+      ) {
+        // Insert fallback engagement if client had none
+        await supabase.from("engagements").insert({
+          client_id: clientId,
+          service_type: service_type || "linkedin_branding",
+          status: "active",
+          monthly_retainer: monthly_retainer ?? 0,
+          billing_frequency: "monthly",
+          billing_anchor_day: billing_anchor_day || 1,
+          start_date: new Date().toISOString().split("T")[0],
+        });
+      }
+    }
+
+    revalidate("/clients");
+    revalidate(`/clients/${clientId}`);
+    revalidate("/command-center");
+    revalidate("/billing");
+    revalidate("/content");
+
+    return { success: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to update client.";
     return { success: false, error: message };
   }
 }

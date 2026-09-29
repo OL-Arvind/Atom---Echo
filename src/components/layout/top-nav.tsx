@@ -16,7 +16,6 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { CommandPalette } from "@/components/layout/command-palette";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { useHeader } from "./header-context";
 
 interface RouteMeta {
@@ -175,12 +174,12 @@ export function TopNav() {
           </nav>
         </div>
 
-        {/* Right Side: Global Search, Theme Switcher & Contextual Action Slot */}
+        {/* Right Side: Global Search & Contextual Action Slot */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             type="button"
             onClick={() => setIsCommandOpen(true)}
-            className="group flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] hover:border-[var(--color-line-strong)] text-[12px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] transition-all duration-150 w-72 text-left shadow-2xs active:scale-[0.98] cursor-pointer"
+            className="group flex items-center gap-2.5 px-3 py-1.5 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] hover:border-[var(--color-line-strong)] text-[12px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] transition-[transform,background-color,border-color,color] duration-150 ease-out w-72 text-left shadow-2xs active:scale-[0.98] cursor-pointer"
           >
             <Search size={13} strokeWidth={1.8} className="text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-secondary)] transition-colors shrink-0" />
             <span className="flex-1 truncate text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink-secondary)] transition-colors">
@@ -190,8 +189,6 @@ export function TopNav() {
               ⌘K
             </kbd>
           </button>
-
-          <ThemeToggle />
 
           {/* Action Portal Target */}
           <div id="top-nav-actions" className="flex items-center gap-2 empty:hidden" />

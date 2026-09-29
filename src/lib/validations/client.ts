@@ -56,3 +56,23 @@ export type CreateClientInput = z.infer<typeof createClientSchema>;
 export type ToolExpenseInput = z.infer<typeof toolExpenseSchema>;
 export type UpdateClientContextInput = z.infer<typeof updateClientContextSchema>;
 
+export const updateClientSchema = z.object({
+  clientId: z.string().min(1, "Client ID is required."),
+  name: z.string().trim().min(1, "Company or brand name is required."),
+  founder_name: z.string().trim().min(1, "Founder full name is required."),
+  founder_title: z.string().trim().optional().default("Founder & CEO"),
+  founder_email: optionalEmailSchema,
+  founder_phone: optionalPhoneSchema,
+  linkedin_url: flexibleUrlSchema,
+  website_url: flexibleUrlSchema,
+  status: z.enum(["onboarding", "active", "paused", "churned"]).default("active"),
+  service_type: z
+    .enum(["linkedin_branding", "cold_outreach", "hybrid_growth"])
+    .optional(),
+  monthly_retainer: currencyAmountSchema.optional(),
+  billing_anchor_day: anchorDaySchema.optional(),
+});
+
+export type UpdateClientInput = z.infer<typeof updateClientSchema>;
+
+

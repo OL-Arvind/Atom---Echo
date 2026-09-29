@@ -29,43 +29,63 @@ export function ThemeToggle({
     return () => window.removeEventListener("ae_theme_change", handleThemeChange);
   }, []);
 
-  const toggleTheme = () => {
-    const nextTheme = theme === "light" ? "dark" : "light";
+  const applyTheme = (nextTheme: "light" | "dark") => {
+    if (nextTheme === theme) return;
     setTheme(nextTheme);
     document.documentElement.setAttribute("data-theme", nextTheme);
     localStorage.setItem("ae_theme", nextTheme);
     window.dispatchEvent(new Event("ae_theme_change"));
   };
 
+  const toggleTheme = () => {
+    applyTheme(theme === "light" ? "dark" : "light");
+  };
+
   if (showLabel) {
     return (
-      <button
-        type="button"
-        onClick={toggleTheme}
-        className={`group flex items-center justify-between w-full px-2.5 py-1.5 rounded-md border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] hover:border-[var(--color-line-strong)] text-xs text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-all duration-150 active:scale-[0.98] cursor-pointer ${className}`}
-        title={`Switch to ${theme === "light" ? "Obsidian Dark" : "Paper Light"} mode`}
-        aria-label="Toggle visual theme"
+      <div
+        role="group"
+        aria-label="Appearance theme"
+        className={`grid grid-cols-2 gap-1 p-0.5 rounded-[7px] border border-[var(--color-line)] bg-[var(--color-base-subtle)] select-none ${className}`}
       >
-        <div className="flex items-center gap-2">
-          {theme === "light" ? (
-            <Moon
-              size={13}
-              strokeWidth={1.8}
-              className="text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink)] transition-colors"
-            />
-          ) : (
-            <Sun
-              size={13}
-              strokeWidth={1.8}
-              className="text-[var(--color-accent)] transition-colors"
-            />
-          )}
-          <span className="font-sans text-[12px]">{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
-        </div>
-        <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-muted)]">
-          {theme === "light" ? "Obsidian" : "Paper"}
-        </span>
-      </button>
+        <button
+          type="button"
+          onClick={() => applyTheme("light")}
+          aria-pressed={theme === "light"}
+          title="Warm Paper Light mode"
+          className={`flex items-center justify-center gap-1.5 py-1 px-2 rounded-[5px] text-[11.5px] font-sans transition-[transform,background-color,color,border-color,box-shadow] duration-150 ease-out active:scale-[0.97] cursor-pointer ${
+            theme === "light"
+              ? "bg-[var(--color-base-overlay)] text-[var(--color-ink)] font-medium border border-[var(--color-line)] shadow-2xs"
+              : "bg-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink-secondary)] border border-transparent"
+          }`}
+        >
+          <Sun
+            size={12}
+            strokeWidth={theme === "light" ? 2 : 1.75}
+            className={theme === "light" ? "text-[var(--color-accent)]" : "text-current"}
+          />
+          <span>Paper</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => applyTheme("dark")}
+          aria-pressed={theme === "dark"}
+          title="Obsidian Dark mode"
+          className={`flex items-center justify-center gap-1.5 py-1 px-2 rounded-[5px] text-[11.5px] font-sans transition-[transform,background-color,color,border-color,box-shadow] duration-150 ease-out active:scale-[0.97] cursor-pointer ${
+            theme === "dark"
+              ? "bg-[var(--color-base-overlay)] text-[var(--color-ink)] font-medium border border-[var(--color-line)] shadow-2xs"
+              : "bg-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink-secondary)] border border-transparent"
+          }`}
+        >
+          <Moon
+            size={12}
+            strokeWidth={theme === "dark" ? 2 : 1.75}
+            className={theme === "dark" ? "text-[var(--color-accent)]" : "text-current"}
+          />
+          <span>Obsidian</span>
+        </button>
+      </div>
     );
   }
 
@@ -73,21 +93,21 @@ export function ThemeToggle({
     <button
       type="button"
       onClick={toggleTheme}
-      className={`group relative flex items-center justify-center w-8 h-8 rounded-lg border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] hover:border-[var(--color-line-strong)] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-all duration-150 active:scale-[0.94] cursor-pointer ${className}`}
+      className={`group relative flex items-center justify-center w-8 h-8 rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] hover:bg-[var(--color-base-muted)] hover:border-[var(--color-line-strong)] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] transition-[transform,background-color,color,border-color] duration-150 ease-out active:scale-[0.97] cursor-pointer ${className}`}
       title={`Switch to ${theme === "light" ? "Obsidian Dark" : "Paper Light"} mode`}
-      aria-label="Toggle visual theme"
+      aria-label={`Switch to ${theme === "light" ? "Obsidian Dark" : "Paper Light"} mode`}
     >
       {theme === "light" ? (
         <Moon
           size={14}
           strokeWidth={1.8}
-          className="transition-transform duration-200 group-hover:-rotate-12 text-[var(--color-ink-secondary)] group-hover:text-[var(--color-ink)]"
+          className="transition-transform duration-150 ease-out group-hover:-rotate-12 text-[var(--color-ink-secondary)] group-hover:text-[var(--color-ink)]"
         />
       ) : (
         <Sun
           size={14}
           strokeWidth={1.8}
-          className="transition-transform duration-200 group-hover:rotate-45 text-[var(--color-accent)]"
+          className="transition-transform duration-150 ease-out group-hover:rotate-45 text-[var(--color-accent)]"
         />
       )}
     </button>

@@ -7,7 +7,6 @@ import Image from "next/image";
 import { Eye, EyeOff, Loader2, ArrowRight, CheckCircle2, KeyRound, X } from "lucide-react";
 import { setStoredUser, getInitials } from "@/lib/auth/dummy-auth";
 import { createClient } from "@/lib/supabase/client";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export function LoginClient() {
   const router = useRouter();
@@ -110,7 +109,7 @@ export function LoginClient() {
     <div className="h-[100dvh] w-full flex flex-col lg:flex-row bg-[var(--color-base)] text-[var(--color-ink)] select-none overflow-hidden">
       {/* LEFT HALF: Primary Authentication Interface */}
       <div className="w-full lg:w-1/2 h-full flex flex-col justify-between p-6 sm:p-8 lg:px-12 lg:py-6 xl:px-16 xl:py-7 z-10 overflow-y-auto lg:overflow-hidden">
-        {/* Top: Brand Header with Theme Switcher */}
+        {/* Top: Brand Header */}
         <div className="flex items-center justify-between shrink-0">
           <div className="flex items-center">
             <Image
@@ -132,7 +131,6 @@ export function LoginClient() {
               className="theme-logo-dark object-contain h-[30px] w-auto select-none"
             />
           </div>
-          <ThemeToggle />
         </div>
 
         {/* Center: Main Sign-In Form */}
@@ -158,7 +156,7 @@ export function LoginClient() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isGoogleLoading || isEmailLoading}
-              className="flex w-full items-center justify-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] px-3.5 py-2.5 text-xs font-medium text-[var(--color-ink)] shadow-2xs hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-ink-muted)] transition-all cursor-pointer disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] px-3.5 py-2.5 text-xs font-medium text-[var(--color-ink)] shadow-2xs hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-ink-muted)] transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] cursor-pointer disabled:opacity-50"
             >
               {isGoogleLoading ? (
                 <>
@@ -335,7 +333,7 @@ export function LoginClient() {
 
             {resetSent ? (
               <div className="space-y-4 text-center py-3">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)]">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)]">
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">

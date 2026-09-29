@@ -21,11 +21,30 @@ import {
 } from "@/lib/validations";
 import { requireOperatorSession } from "@/lib/auth/session";
 
+async function autoResolvePostFeedback(
+  supabase: ReturnType<typeof createAdminClient>,
+  postId: string,
+  onlyOperator = false
+) {
+  let query = supabase
+    .from("content_feedback")
+    .update({ is_resolved: true })
+    .eq("content_item_id", postId)
+    .eq("is_resolved", false);
+
+  if (onlyOperator) {
+    query = query.eq("author_type", "operator");
+  }
+
+  await query;
+}
+
 /**
  * 1-Tap Client Approval (AC-2):
  * - Authenticates via 7-day cryptographic token
  * - Transitions post to approved -> scheduled
  * - Computes and locks in next available publishing date
+ * - Auto-resolves any open revision notes on the post
  * - Emits audit trail / triggers revalidation
  */
 export async function approvePostByClientAction(postId: string, token: string) {
@@ -79,6 +98,8 @@ export async function approvePostByClientAction(postId: string, token: string) {
     if (updateErr) {
       return { success: false, error: updateErr.message };
     }
+
+    await autoResolvePostFeedback(supabase, postId);
 
     revalidate("/review");
     revalidate(`/review/${token}`);
@@ -200,6 +221,55 @@ export async function requestContentChangesByClientAction(
 }
 
 /**
+ * Internal QA Revision Request (internal_review -> draft):
+ * Allows Lead Operator (Sudeesh) to return a draft to the writer with an internal QA note.
+ */
+export async function requestInternalRevisionAction(
+  postId: string,
+  note: string
+) {
+  try {
+    const session = await requireOperatorSession();
+    const cleanNote = note.trim();
+    if (!cleanNote) {
+      return { success: false, error: "Please include a quick QA note for the writer." };
+    }
+
+    const supabase = createAdminClient();
+
+    const { error: updateErr } = await supabase
+      .from("content_items")
+      .update({
+        status: "draft",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", postId);
+
+    if (updateErr) {
+      return { success: false, error: updateErr.message };
+    }
+
+    await supabase.from("content_feedback").insert({
+      content_item_id: postId,
+      author_type: "operator",
+      author_name: session.name || "Editorial QA",
+      comment: cleanNote,
+      is_resolved: false,
+    });
+
+    revalidate("/content");
+    revalidate(`/content/${postId}`);
+    revalidate("/command-center");
+    revalidate("/clients");
+
+    return { success: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to return draft for revision.";
+    return { success: false, error: message };
+  }
+}
+
+/**
  * Resolves client content feedback item (marks is_resolved: true)
  */
 export async function resolveContentFeedbackAction(feedbackId: string) {
@@ -228,12 +298,15 @@ export async function resolveContentFeedbackAction(feedbackId: string) {
 /**
  * Generates/retrieves valid 7-day token and formats WhatsApp magic link
  */
-export async function sendForClientReviewAction(postIdOrClientId: string) {
+export async function sendForClientReviewAction(
+  postIdOrClientId: string,
+  origin?: string
+) {
   try {
     await requireOperatorSession();
     const supabase = createAdminClient();
     let clientId: string | null = null;
-    let postTitle: string = "your latest LinkedIn draft";
+    let postTitle: string = "your latest LinkedIn perspective";
 
     const { data: post } = await supabase
       .from("content_items")
@@ -267,6 +340,7 @@ export async function sendForClientReviewAction(postIdOrClientId: string) {
           })
           .eq("id", post.id);
       }
+      await autoResolvePostFeedback(supabase, post.id);
     } else {
       clientId = postIdOrClientId;
     }
@@ -291,22 +365,28 @@ export async function sendForClientReviewAction(postIdOrClientId: string) {
     }
 
     const token = tokenData.token;
+    const baseOrigin = origin ? origin.replace(/\/$/, "") : (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
+    const fullReviewUrl = baseOrigin ? `${baseOrigin}/review/${token}` : `/review/${token}`;
     const phone = client.founder_phone ? client.founder_phone.replace(/[^0-9]/g, "") : "";
     const message = encodeURIComponent(
-      `Hi ${client.founder_name || "there"}, here is ${postTitle} ready for your 1-tap review: /review/${token}`
+      `Hi ${client.founder_name || "there"}, ${postTitle} is ready for your 1-tap review on your Founder Desk:\n${fullReviewUrl}`
     );
     const whatsappUrl = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
 
     revalidate("/content");
+    if (post?.id) revalidate(`/content/${post.id}`);
     revalidate("/command-center");
     revalidate("/clients");
+    revalidate("/review");
 
     return {
       success: true,
       token,
       reviewPath: `/review/${token}`,
+      reviewUrl: fullReviewUrl,
       whatsappUrl,
       founderName: client.founder_name,
+      founderPhone: client.founder_phone,
       expiresAt: tokenData.expiresAt,
     };
   } catch (err: unknown) {
@@ -334,6 +414,7 @@ export async function approveContentAction(contentId: string) {
       .update({
         status: "scheduled",
         scheduled_publish_date: scheduledDate,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", contentId)
       .select()
@@ -343,8 +424,11 @@ export async function approveContentAction(contentId: string) {
       return { success: false, error: error.message };
     }
 
+    await autoResolvePostFeedback(supabase, contentId);
+
     revalidate("/command-center");
     revalidate("/content");
+    revalidate(`/content/${contentId}`);
     revalidate("/calendar");
     revalidate("/clients");
     return { success: true, data };
@@ -366,7 +450,7 @@ export async function requestContentChangesAction(
     // Update post status to draft (per AC-2)
     const { error: updateErr } = await supabase
       .from("content_items")
-      .update({ status: "draft" })
+      .update({ status: "draft", updated_at: new Date().toISOString() })
       .eq("id", contentId);
 
     if (updateErr) {
@@ -394,6 +478,7 @@ export async function requestContentChangesAction(
 
     revalidate("/command-center");
     revalidate("/content");
+    revalidate(`/content/${contentId}`);
     revalidate("/clients");
     return { success: true };
   } catch (err: unknown) {
@@ -406,10 +491,14 @@ export async function requestContentChangesAction(
 export async function createContentAction(formData: FormData) {
   try {
     await requireOperatorSession();
+    const bodyText = (formData.get("body_markdown") as string) || "";
+    const firstLine = bodyText.split("\n").map((l) => l.trim()).find(Boolean)?.slice(0, 80) || "Untitled Perspective";
+    const rawTitle = ((formData.get("title") as string) || "").trim() || firstLine;
+
     const rawInput = {
       engagement_id: formData.get("engagement_id"),
-      title: formData.get("title"),
-      body_markdown: formData.get("body_markdown"),
+      title: rawTitle,
+      body_markdown: bodyText,
       target_pillar: formData.get("target_pillar") || undefined,
       status: formData.get("status") || undefined,
       scheduled_publish_date: formData.get("scheduled_publish_date") || undefined,
@@ -448,6 +537,7 @@ export async function createContentAction(formData: FormData) {
       return { success: false, error: error.message };
     }
 
+    let reviewToken: string | null = null;
     // If moving to client_review, ensure a valid 7-day cryptographic review token exists
     if (status === "client_review") {
       const { data: eng } = await supabase
@@ -457,14 +547,16 @@ export async function createContentAction(formData: FormData) {
         .single();
 
       if (eng?.client_id) {
-        await getClientActiveReviewToken(eng.client_id);
+        const tokenData = await getClientActiveReviewToken(eng.client_id);
+        reviewToken = tokenData?.token || null;
       }
     }
 
     revalidate("/content");
     revalidate("/command-center");
     revalidate("/clients");
-    return { success: true, post: newPost };
+    revalidate("/calendar");
+    return { success: true, post: newPost, reviewToken };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to create content.";
     return { success: false, error: message };
@@ -481,18 +573,26 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
       updated_at: new Date().toISOString(),
     };
 
-    if (newStatus === "scheduled") {
+    if (newStatus === "approved") {
+      // Per AUT-06: if post already has a scheduled_publish_date, lock directly into 'scheduled'
+      const { data: cur } = await supabase
+        .from("content_items")
+        .select("scheduled_publish_date")
+        .eq("id", contentId)
+        .single();
+      if (cur?.scheduled_publish_date) {
+        updateData.status = "scheduled";
+      }
+    } else if (newStatus === "scheduled") {
       const { data: cur } = await supabase
         .from("content_items")
         .select("scheduled_publish_date")
         .eq("id", contentId)
         .single();
       if (!cur?.scheduled_publish_date) {
-        updateData.scheduled_publish_date = new Date(Date.now() + 86400000 * 2).toISOString();
+        updateData.scheduled_publish_date = calculateNextPublishSlot(null);
       }
-    }
-
-    if (newStatus === "published") {
+    } else if (newStatus === "published") {
       const { data: cur } = await supabase
         .from("content_items")
         .select("published_at")
@@ -509,12 +609,18 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
       .eq("id", contentId)
       .select(`
         id,
+        title,
         status,
+        scheduled_publish_date,
         published_at,
         linkedin_post_url,
         engagement_id,
         engagements (
-          client_id
+          client_id,
+          clients (
+            founder_name,
+            founder_phone
+          )
         )
       `)
       .single();
@@ -523,11 +629,18 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
       return { success: false, error: error.message };
     }
 
+    let reviewToken: string | null = null;
     if (newStatus === "client_review") {
       const clientId = (data?.engagements as any)?.client_id;
       if (clientId) {
-        await getClientActiveReviewToken(clientId);
+        const tokenData = await getClientActiveReviewToken(clientId);
+        reviewToken = tokenData?.token || null;
       }
+      await autoResolvePostFeedback(supabase, contentId);
+    } else if (newStatus === "internal_review") {
+      await autoResolvePostFeedback(supabase, contentId, true);
+    } else if (["approved", "scheduled", "published"].includes(newStatus)) {
+      await autoResolvePostFeedback(supabase, contentId);
     }
 
     revalidate("/content");
@@ -536,7 +649,7 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
     revalidate("/command-center");
     revalidate("/clients");
     revalidate("/review");
-    return { success: true, data };
+    return { success: true, data, reviewToken };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to update content status.";
     return { success: false, error: message };
@@ -548,6 +661,7 @@ export async function updateContentStatusAction(contentId: string, newStatus: st
  * - Transitions post to 'published'
  * - Sets published_at timestamp (defaults to now)
  * - Optionally stores verified linkedin_post_url
+ * - Auto-resolves any remaining feedback
  * - Revalidates all pipeline & client views
  */
 export async function publishContentPostAction(
@@ -612,6 +726,8 @@ export async function publishContentPostAction(
       return { success: false, error: error.message };
     }
 
+    await autoResolvePostFeedback(supabase, parsed.data.postId);
+
     revalidate("/content");
     revalidate(`/content/${postId}`);
     revalidate("/calendar");
@@ -631,27 +747,45 @@ export async function updateContentPostAction(postId: string, formData: FormData
     await requireOperatorSession();
     const supabase = createAdminClient();
 
-    const title = formData.get("title") as string;
-    const bodyMarkdown = formData.get("body_markdown") as string;
+    const bodyMarkdown = (formData.get("body_markdown") as string) ?? "";
+    const firstLine =
+      bodyMarkdown
+        .split("\n")
+        .map((l) => l.trim())
+        .find(Boolean)
+        ?.slice(0, 80) || "Untitled Perspective";
+    const rawTitle = ((formData.get("title") as string) || "").trim();
+    const title = rawTitle || firstLine;
     const targetPillar = formData.get("target_pillar") as string;
     const status = formData.get("status") as string;
     const scheduledDate = formData.get("scheduled_publish_date") as string;
     const linkedinPostUrl = formData.get("linkedin_post_url") as string | null;
 
-    if (!postId || !title) {
-      return { success: false, error: "Post ID and Title are required." };
+    if (!postId) {
+      return { success: false, error: "Post ID is required." };
     }
 
     const updateData: Record<string, unknown> = {
       title,
-      body_markdown: bodyMarkdown ?? "",
+      body_markdown: bodyMarkdown,
       target_pillar: targetPillar || null,
       updated_at: new Date().toISOString(),
     };
 
     if (status) {
       updateData.status = status;
-      if (status === "published") {
+      if (status === "approved" && scheduledDate) {
+        updateData.status = "scheduled";
+      } else if (status === "scheduled" && !scheduledDate) {
+        const { data: cur } = await supabase
+          .from("content_items")
+          .select("scheduled_publish_date")
+          .eq("id", postId)
+          .single();
+        if (!cur?.scheduled_publish_date) {
+          updateData.scheduled_publish_date = calculateNextPublishSlot(null);
+        }
+      } else if (status === "published") {
         const { data: cur } = await supabase
           .from("content_items")
           .select("published_at")
@@ -663,7 +797,7 @@ export async function updateContentPostAction(postId: string, formData: FormData
       }
     }
 
-    if (scheduledDate !== undefined) {
+    if (scheduledDate !== undefined && scheduledDate !== null) {
       updateData.scheduled_publish_date = scheduledDate ? new Date(scheduledDate).toISOString() : null;
     }
 
@@ -679,6 +813,7 @@ export async function updateContentPostAction(postId: string, formData: FormData
         id,
         title,
         status,
+        scheduled_publish_date,
         published_at,
         linkedin_post_url,
         engagement_id,
@@ -692,12 +827,20 @@ export async function updateContentPostAction(postId: string, formData: FormData
       return { success: false, error: error.message };
     }
 
+    let reviewToken: string | null = null;
+    const finalStatus = String(updateData.status || updatedPost.status);
     // If moving to client_review, ensure a valid cryptographic review token exists for this client (AUT-01)
-    if (status === "client_review") {
+    if (finalStatus === "client_review") {
       const clientId = (updatedPost.engagements as any)?.client_id;
       if (clientId) {
-        await getClientActiveReviewToken(clientId);
+        const tokenData = await getClientActiveReviewToken(clientId);
+        reviewToken = tokenData?.token || null;
       }
+      await autoResolvePostFeedback(supabase, postId);
+    } else if (finalStatus === "internal_review") {
+      await autoResolvePostFeedback(supabase, postId, true);
+    } else if (["approved", "scheduled", "published"].includes(finalStatus)) {
+      await autoResolvePostFeedback(supabase, postId);
     }
 
     revalidate("/content");
@@ -706,7 +849,7 @@ export async function updateContentPostAction(postId: string, formData: FormData
     revalidate("/command-center");
     revalidate("/clients");
     revalidate("/review");
-    return { success: true, post: updatedPost };
+    return { success: true, post: updatedPost, reviewToken };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to update post.";
     return { success: false, error: message };

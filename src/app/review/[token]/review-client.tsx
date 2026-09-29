@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useEffect } from "react";
 import {
   CheckCircle2,
   MessageSquare,
@@ -19,16 +19,48 @@ import {
   ChevronRight,
   Calendar,
   ExternalLink,
+  ArrowUpRight,
   Check,
   Sparkles,
+  Lock,
+  Eye,
+  EyeOff,
+  Copy,
+  Key,
 } from "lucide-react";
 import {
   approvePostByClientAction,
   requestContentChangesByClientAction,
 } from "@/lib/actions/content";
+import {
+  revealClientCredentialByTokenAction,
+  copyClientCredentialByTokenAction,
+} from "@/lib/actions/credentials";
 import { AtomEchoLogo } from "@/components/ui/logo";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { BrandLogo } from "@/components/ui/brand-logo";
 import { formatDisplayDateTimeIST, formatDisplayDateIST } from "@/lib/date-utils";
+import { parseFeedbackComment } from "@/lib/feedback-utils";
+import { LinkedInFeedCard } from "@/components/content/linkedin-feed-card";
+import type { ClientCredential } from "@/types/domain";
+
+export interface ReviewSharedCredential {
+  id: string;
+  platform: string;
+  username_or_email: string;
+  two_factor_method?: string | null;
+  notes?: string | null;
+  access_scope?: string;
+  created_at?: string;
+}
+
+function isMeaningful(val?: string | null): boolean {
+  if (!val) return false;
+  const trimmed = val.trim();
+  if (!trimmed) return false;
+  const lower = trimmed.toLowerCase();
+  return !["na", "n/a", "none", "-", "null", "undefined"].includes(lower);
+}
 
 export interface ReviewPostItem {
   id: string;
@@ -40,6 +72,8 @@ export interface ReviewPostItem {
   linkedin_post_url?: string;
   created_at: string;
   status?: string;
+  last_client_feedback?: string | null;
+  last_client_feedback_at?: string | null;
 }
 
 interface ReviewPortalClientProps {
@@ -50,6 +84,7 @@ interface ReviewPortalClientProps {
   initialPendingPosts: ReviewPostItem[];
   initialApprovedPosts: ReviewPostItem[];
   publishedPosts?: ReviewPostItem[];
+  sharedCredentials?: ReviewSharedCredential[];
   token: string;
   // Backward compatibility in case single post is passed
   post?: ReviewPostItem;
@@ -72,6 +107,7 @@ export function ReviewPortalClient({
   initialPendingPosts,
   initialApprovedPosts,
   publishedPosts = [],
+  sharedCredentials = [],
   token,
   post,
 }: ReviewPortalClientProps) {
@@ -86,12 +122,43 @@ export function ReviewPortalClient({
     return [];
   }, [initialPendingPosts, post]);
 
-  const [activeTab, setActiveTab] = useState<"queue" | "archive">("queue");
+  const [activeTab, setActiveTab] = useState<"queue" | "archive" | "vault">("queue");
   const [pendingQueue, setPendingQueue] = useState<ReviewPostItem[]>(defaultPending);
   const [approvedArchive, setApprovedArchive] = useState<ReviewPostItem[]>(
     initialApprovedPosts || []
   );
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Vault credentials state
+  const [revealedPasswords, setRevealedPasswords] = useState<Record<string, string>>({});
+  const [countdownTimers, setCountdownTimers] = useState<Record<string, number>>({});
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // Auto-wipe countdown ticker (30s timer per revealed credential)
+  useEffect(() => {
+    const hasActiveTimers = Object.values(countdownTimers).some((t) => t > 0);
+    if (!hasActiveTimers) return;
+
+    const interval = setInterval(() => {
+      setCountdownTimers((prev) => {
+        const next: Record<string, number> = {};
+        for (const [id, count] of Object.entries(prev)) {
+          if (count > 1) {
+            next[id] = count - 1;
+          } else {
+            // Timer expired: clear password from state
+            setRevealedPasswords((p) => {
+              const { [id]: _, ...rest } = p;
+              return rest;
+            });
+          }
+        }
+        return next;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [countdownTimers]);
 
   const [isPending, startTransition] = useTransition();
   const [showFeedbackDrawer, setShowFeedbackDrawer] = useState(false);
@@ -102,6 +169,76 @@ export function ReviewPortalClient({
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [viewMode, setViewMode] = useState<"linkedin" | "editorial">("linkedin");
+
+  const handleCopyUsername = async (cred: ReviewSharedCredential) => {
+    try {
+      await navigator.clipboard.writeText(cred.username_or_email);
+      setCopiedField(`user-${cred.id}`);
+      if (typeof window !== "undefined" && "vibrate" in navigator) {
+        try {
+          navigator.vibrate(20);
+        } catch {}
+      }
+      setTimeout(() => {
+        setCopiedField((prev) => (prev === `user-${cred.id}` ? null : prev));
+      }, 2000);
+    } catch {
+      // Ignore clipboard write error
+    }
+  };
+
+  const handleCopyPassword = async (credId: string) => {
+    try {
+      const res = await copyClientCredentialByTokenAction(credId, token);
+      if (res.success && res.password) {
+        await navigator.clipboard.writeText(res.password);
+        setCopiedField(`pass-${credId}`);
+        if (typeof window !== "undefined" && "vibrate" in navigator) {
+          try {
+            navigator.vibrate(20);
+          } catch {}
+        }
+        setTimeout(() => {
+          setCopiedField((prev) => (prev === `pass-${credId}` ? null : prev));
+        }, 2000);
+      } else {
+        setError(res.error || "Failed to copy password");
+        setTimeout(() => setError(null), 3000);
+      }
+    } catch {
+      setError("Failed to copy password to clipboard");
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  const handleRevealPassword = async (credId: string) => {
+    if (revealedPasswords[credId]) {
+      // Hide immediately
+      setRevealedPasswords((prev) => {
+        const { [credId]: _, ...rest } = prev;
+        return rest;
+      });
+      setCountdownTimers((prev) => {
+        const { [credId]: _, ...rest } = prev;
+        return rest;
+      });
+      return;
+    }
+
+    try {
+      const res = await revealClientCredentialByTokenAction(credId, token);
+      if (res.success && res.password) {
+        setRevealedPasswords((prev) => ({ ...prev, [credId]: res.password! }));
+        setCountdownTimers((prev) => ({ ...prev, [credId]: 30 }));
+      } else {
+        setError(res.error || "Failed to reveal password");
+        setTimeout(() => setError(null), 3000);
+      }
+    } catch {
+      setError("Failed to decrypt password");
+      setTimeout(() => setError(null), 3000);
+    }
+  };
 
   const initials = founderName
     .split(" ")
@@ -251,34 +388,41 @@ export function ReviewPortalClient({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <div className="flex rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-0.5 text-[10.5px]">
-              <button
-                onClick={() => setViewMode("linkedin")}
-                className={`rounded-[var(--radius-xs)] px-2 py-0.5 transition-colors cursor-pointer ${
-                  viewMode === "linkedin"
-                    ? "bg-[var(--color-surface-active)] text-[var(--color-ink)] font-medium"
-                    : "text-[var(--color-ink-tertiary)]"
-                }`}
-              >
-                Feed
-              </button>
-              <button
-                onClick={() => setViewMode("editorial")}
-                className={`rounded-[var(--radius-xs)] px-2 py-0.5 transition-colors cursor-pointer ${
-                  viewMode === "editorial"
-                    ? "bg-[var(--color-surface-active)] text-[var(--color-ink)] font-medium"
-                    : "text-[var(--color-ink-tertiary)]"
-                }`}
-              >
-                Text
-              </button>
+          {activeTab !== "vault" ? (
+            <div className="flex items-center gap-1.5">
+              <div className="flex rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-0.5 text-[10.5px]">
+                <button
+                  onClick={() => setViewMode("linkedin")}
+                  className={`rounded-[var(--radius-xs)] px-2 py-0.5 transition-colors cursor-pointer ${
+                    viewMode === "linkedin"
+                      ? "bg-[var(--color-surface-active)] text-[var(--color-ink)] font-medium"
+                      : "text-[var(--color-ink-tertiary)]"
+                  }`}
+                >
+                  Feed
+                </button>
+                <button
+                  onClick={() => setViewMode("editorial")}
+                  className={`rounded-[var(--radius-xs)] px-2 py-0.5 transition-colors cursor-pointer ${
+                    viewMode === "editorial"
+                      ? "bg-[var(--color-surface-active)] text-[var(--color-ink)] font-medium"
+                      : "text-[var(--color-ink-tertiary)]"
+                  }`}
+                >
+                  Text
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-1 text-[10.5px] font-sans tabular-nums text-[var(--color-ink-secondary)]">
+              <ShieldCheck className="h-3.5 w-3.5 text-[var(--color-accent)]" />
+              <span>Vault</span>
+            </div>
+          )}
         </div>
 
-        {/* Tab Navigation: Queue vs Archive */}
-        <div className="flex border-t border-[var(--color-line-subtle)] px-4 bg-[var(--color-base-subtle)]/50">
+        {/* Tab Navigation: Sign-Off vs Approved vs Vault */}
+        <div className="flex border-t border-[var(--color-line-subtle)] px-2 bg-[var(--color-base-subtle)]/50">
           <button
             onClick={() => setActiveTab("queue")}
             className={`flex-1 py-2 text-xs font-medium border-b-2 text-center transition-colors cursor-pointer ${
@@ -287,7 +431,7 @@ export function ReviewPortalClient({
                 : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink-secondary)]"
             }`}
           >
-            Awaiting Your Sign-Off {pendingQueue.length > 0 ? `(${pendingQueue.length})` : ""}
+            Sign-Off {pendingQueue.length > 0 ? `(${pendingQueue.length})` : ""}
           </button>
           <button
             onClick={() => setActiveTab("archive")}
@@ -297,7 +441,17 @@ export function ReviewPortalClient({
                 : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink-secondary)]"
             }`}
           >
-            Approved &amp; Locked {approvedArchive.length > 0 ? `(${approvedArchive.length})` : ""}
+            Approved {approvedArchive.length > 0 ? `(${approvedArchive.length})` : ""}
+          </button>
+          <button
+            onClick={() => setActiveTab("vault")}
+            className={`flex-1 py-2 text-xs font-medium border-b-2 text-center transition-colors cursor-pointer ${
+              activeTab === "vault"
+                ? "border-[var(--color-accent)] text-[var(--color-ink)] font-semibold"
+                : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink-secondary)]"
+            }`}
+          >
+            Vault {sharedCredentials.length > 0 ? `(${sharedCredentials.length})` : ""}
           </button>
         </div>
       </header>
@@ -332,7 +486,7 @@ export function ReviewPortalClient({
           {pendingQueue.length === 0 ? (
             /* ALL CAUGHT UP CELEBRATORY SCREEN */
             <div className="mt-8 rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] p-7 text-center shadow-dialog space-y-4 animate-in">
-              <div className="mx-auto flex h-13 w-13 items-center justify-center rounded-2xl bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)] font-medium text-base">
+              <div className="mx-auto flex h-13 w-13 items-center justify-center rounded-full bg-[var(--color-ok-bg)] text-[var(--color-ok-text)] border border-[var(--color-ok-line)] font-medium text-base">
                 <CheckCircle2 className="h-7 w-7 text-[var(--color-ok)]" />
               </div>
               <div className="space-y-1.5">
@@ -444,91 +598,56 @@ export function ReviewPortalClient({
                 {currentPost.title}
               </h1>
 
-              {/* VIEW 1: REALISTIC LINKEDIN CARD PREVIEW */}
-              {viewMode === "linkedin" && (
-                <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-card overflow-hidden">
-                  {/* LinkedIn Author Header */}
-                  <div className="flex items-start justify-between p-3.5 border-b border-[var(--color-line-subtle)]">
-                    <div className="flex items-center gap-3">
-                      <UserAvatar
-                        seed={founderName || clientName || "Founder"}
-                        size={40}
-                        className="rounded-lg"
-                        alt={founderName}
-                      />
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-semibold text-[var(--color-ink)]">{founderName}</span>
-                          <span className="text-[10px] text-[var(--color-ink-tertiary)]">&middot; 1st</span>
-                        </div>
-                        <p className="text-[10.5px] text-[var(--color-ink-secondary)] line-clamp-1 leading-tight">
-                          {founderTitle} at {clientName}
-                        </p>
-                        <div className="flex items-center gap-1 text-[9.5px] text-[var(--color-ink-tertiary)] mt-0.5">
-                          <span>
-                            {currentPost.scheduled_publish_date
-                              ? `Scheduled for ${formatDisplayDateIST(currentPost.scheduled_publish_date, {
-                                  weekday: "short",
-                                  month: "short",
-                                  day: "numeric",
-                                })}`
-                              : "Proposed slot: Next available"}
-                          </span>
-                          <span>&middot;</span>
-                          <Globe className="h-2.5 w-2.5 text-[var(--color-ink-tertiary)]" />
-                        </div>
-                      </div>
+              {/* Prior Revision Context (Editorial Hairline Inset — eliminates founder amnesia on re-review) */}
+              {currentPost.last_client_feedback && (() => {
+                const { tags, note } = parseFeedbackComment(currentPost.last_client_feedback);
+                return (
+                  <div className="border-l-2 border-[var(--color-line-strong)] pl-3.5 py-1.5 space-y-1">
+                    <div className="flex items-center justify-between gap-2 text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-secondary)]">
+                      <span className="font-semibold text-[var(--color-accent-text)]">
+                        Updated following your note
+                      </span>
+                      {currentPost.last_client_feedback_at && (
+                        <span className="text-[var(--color-ink-muted)]">
+                          {formatDisplayDateIST(currentPost.last_client_feedback_at)}
+                        </span>
+                      )}
                     </div>
-
-                    <div className="text-[var(--color-ink-muted)] p-1">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </div>
-                  </div>
-
-                  {/* LinkedIn Post Body with fold (~210 chars cutoff) */}
-                  <div className="p-4 space-y-2.5">
-                    <div
-                      className={`whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--color-ink)] font-sans transition-all ${
-                        !isExpanded && currentPost.body_markdown.length > 210 ? "line-clamp-5" : ""
-                      }`}
-                    >
-                      {currentPost.body_markdown}
-                    </div>
-
-                    {currentPost.body_markdown.length > 210 && (
-                      <button
-                        onClick={() => setIsExpanded(!isExpanded)}
-                        className="text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-text)] flex items-center gap-1 cursor-pointer pt-1"
-                      >
-                        <span>{isExpanded ? "Show less" : "...see more"}</span>
-                        {isExpanded ? (
-                          <ChevronUp className="h-3 w-3" />
-                        ) : (
-                          <ChevronDown className="h-3 w-3" />
-                        )}
-                      </button>
+                    {tags.length > 0 && (
+                      <p className="text-xs font-medium text-[var(--color-ink)]">
+                        {tags.join(" · ")}
+                      </p>
+                    )}
+                    {note && (
+                      <p className="font-serif italic text-xs text-[var(--color-ink-secondary)] leading-relaxed">
+                        &ldquo;{note}&rdquo;
+                      </p>
                     )}
                   </div>
+                );
+              })()}
 
-                  {/* LinkedIn Engagement Bar Preview */}
-                  <div className="border-t border-[var(--color-line-subtle)] px-4 py-2.5 bg-[var(--color-base-subtle)]/70 flex items-center justify-between text-[11px] text-[var(--color-ink-tertiary)]">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1 text-[var(--color-ink-secondary)]">
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                        <span>Like</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[var(--color-ink-secondary)]">
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        <span>Comment</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[var(--color-ink-secondary)]">
-                        <Share2 className="h-3.5 w-3.5" />
-                        <span>Repost</span>
-                      </div>
-                    </div>
-                    <Bookmark className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-                  </div>
-                </div>
+              {/* VIEW 1: REALISTIC LINKEDIN FEED PREVIEW */}
+              {viewMode === "linkedin" && (
+                <LinkedInFeedCard
+                  authorName={founderName}
+                  authorTitle={`${founderTitle} at ${clientName}`}
+                  authorAvatarSeed={founderName || clientName || "Founder"}
+                  linkedinUrl={linkedinUrl || undefined}
+                  bodyMarkdown={currentPost.body_markdown}
+                  statusLabel={
+                    currentPost.scheduled_publish_date
+                      ? `Slot: ${formatDisplayDateIST(currentPost.scheduled_publish_date, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}`
+                      : "Proposed slot: Next available"
+                  }
+                  showModeToggle={true}
+                  initialMode="mobile"
+                  showDiagnostics={false}
+                />
               )}
 
               {/* VIEW 2: EDITORIAL READING VIEW */}
@@ -725,6 +844,178 @@ export function ReviewPortalClient({
                   )}
                 </div>
               ))}
+            </div>
+          )}
+        </main>
+      )}
+
+      {/* TAB 3: FOUNDER ACCESS VAULT (SHARED CREDENTIALS) */}
+      {activeTab === "vault" && (
+        <main className="mx-auto max-w-md px-3.5 pt-3 space-y-3.5">
+          <div className="flex items-center justify-between text-xs pb-1 border-b border-[var(--color-line-subtle)]">
+            <span className="font-sans tabular-nums text-[10.5px] uppercase tracking-wider text-[var(--color-ink-tertiary)]">
+              Shared Credential Vault
+            </span>
+            <span className="text-xs font-sans tabular-nums text-[var(--color-ink-secondary)]">
+              {sharedCredentials.length} {sharedCredentials.length === 1 ? "Account" : "Accounts"}
+            </span>
+          </div>
+
+          {sharedCredentials.length === 0 ? (
+            <div className="rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] p-6 text-center space-y-3">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-ink-secondary)]">
+                <ShieldCheck className="h-5 w-5 text-[var(--color-accent)]" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-xs font-semibold text-[var(--color-ink)]">
+                  No Shared Logins
+                </h2>
+                <p className="text-[11.5px] text-[var(--color-ink-secondary)] leading-relaxed">
+                  Logins provisioned for your team will appear here for 1-tap access.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sharedCredentials.map((cred) => {
+                const isRevealed = !!revealedPasswords[cred.id];
+                const countdown = countdownTimers[cred.id] ?? 0;
+                const isCopiedUser = copiedField === `user-${cred.id}`;
+                const isCopiedPass = copiedField === `pass-${cred.id}`;
+
+                return (
+                  <div
+                    key={cred.id}
+                    className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-4 space-y-3 shadow-sm"
+                  >
+                    {/* Header: Platform & Shared Dot */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <BrandLogo
+                          nameOrDomain={cred.platform}
+                          size={28}
+                          className="rounded-md object-contain shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <span className="font-semibold text-xs text-[var(--color-ink)] block truncate">
+                            {cred.platform}
+                          </span>
+                          <span className="text-[10px] font-sans tabular-nums text-[var(--color-ink-tertiary)] uppercase tracking-wider block">
+                            Shared Access
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-secondary)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+                        <span>Ready</span>
+                      </div>
+                    </div>
+
+                    {/* Username Field */}
+                    <div className="space-y-1">
+                      <span className="text-[9.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)] uppercase tracking-wider block">
+                        Login / Username
+                      </span>
+                      <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] p-2 border border-[var(--color-line)] flex items-center justify-between gap-2">
+                        <span className="font-sans tabular-nums text-xs text-[var(--color-ink)] font-medium truncate select-all">
+                          {cred.username_or_email}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyUsername(cred)}
+                          className="btn btn-secondary text-xs h-7 px-2.5 shrink-0 flex items-center gap-1 active:scale-[0.97] transition-transform cursor-pointer"
+                          title="Copy username"
+                        >
+                          {isCopiedUser ? (
+                            <>
+                              <Check className="h-3 w-3 text-[var(--color-ok)]" />
+                              <span className="text-[10px] font-medium text-[var(--color-ok)]">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3 text-[var(--color-ink-tertiary)]" />
+                              <span className="text-[10px]">Copy</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Password Field */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)] uppercase tracking-wider block">
+                          {isRevealed ? (
+                            <span className="text-[var(--color-accent)] font-medium">
+                              Auto-wipes in {countdown}s
+                            </span>
+                          ) : (
+                            "Encrypted Password"
+                          )}
+                        </span>
+                      </div>
+                      <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] p-2 border border-[var(--color-line)] flex items-center justify-between gap-2">
+                        <span className="font-sans tabular-nums text-xs font-semibold text-[var(--color-ink)] tracking-wider truncate select-all">
+                          {isRevealed ? revealedPasswords[cred.id] : "••••••••••••••••"}
+                        </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleRevealPassword(cred.id)}
+                            className="btn btn-secondary text-xs h-7 px-2 shrink-0 flex items-center gap-1 active:scale-[0.97] transition-transform cursor-pointer"
+                            title={isRevealed ? "Hide" : "Reveal (30s)"}
+                          >
+                            {isRevealed ? (
+                              <>
+                                <EyeOff className="h-3 w-3 text-[var(--color-accent)]" />
+                                <span className="text-[10px]">Hide</span>
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="h-3 w-3 text-[var(--color-ink-tertiary)]" />
+                                <span className="text-[10px]">Reveal</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyPassword(cred.id)}
+                            className="btn btn-secondary text-xs h-7 px-2 shrink-0 flex items-center gap-1 active:scale-[0.97] transition-transform cursor-pointer"
+                            title="Copy password"
+                          >
+                            {isCopiedPass ? (
+                              <>
+                                <Check className="h-3 w-3 text-[var(--color-ok)]" />
+                                <span className="text-[10px] font-medium text-[var(--color-ok)]">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3 text-[var(--color-ink-tertiary)]" />
+                                <span className="text-[10px]">Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2FA Method if meaningful */}
+                    {isMeaningful(cred.two_factor_method) && (
+                      <div className="border-l-2 border-[var(--color-line-strong)] pl-2.5 py-0.5 text-[11px] text-[var(--color-ink-secondary)] font-sans tabular-nums">
+                        <span className="font-medium text-[var(--color-ink)]">2FA:</span>{" "}
+                        {cred.two_factor_method}
+                      </div>
+                    )}
+
+                    {/* Notes if meaningful */}
+                    {isMeaningful(cred.notes) && (
+                      <div className="border-l-2 border-[var(--color-line-strong)] pl-2.5 py-0.5 text-[11px] text-[var(--color-ink-secondary)] leading-relaxed whitespace-pre-wrap">
+                        {cred.notes}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </main>

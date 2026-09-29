@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ChevronLeft,
+  ChevronRight,
   Sparkles,
   Shield,
   FileText,
@@ -26,6 +27,11 @@ import {
   Clock,
   Send,
   X,
+  Globe,
+  Pencil,
+  Calendar,
+  FolderOpen,
+  Receipt,
 } from "lucide-react";
 import { revealCredentialAction, copyCredentialAction } from "@/lib/actions/credentials";
 import {
@@ -36,29 +42,62 @@ import {
   deleteClientAction,
 } from "@/lib/actions/client";
 import { AddCredentialModal } from "@/components/clients/add-credential-modal";
+import { EditCredentialModal } from "@/components/clients/edit-credential-modal";
+import { DeleteCredentialModal } from "@/components/clients/delete-credential-modal";
 import { LogExpenseModal } from "@/components/clients/log-expense-modal";
 import { EditVoiceModal } from "@/components/clients/edit-voice-modal";
+import { EditClientModal } from "@/components/clients/edit-client-modal";
+import { NewContentModal } from "@/components/content/new-content-modal";
 import { ClientCredentialsTab } from "@/components/clients/client-credentials-tab";
+import { ClientMeetingsTab } from "@/components/clients/client-meetings-tab";
+import { ClientDocumentsTab } from "@/components/clients/client-documents-tab";
+import { ClientBillingTab } from "@/components/clients/client-billing-tab";
+import { useHeader } from "@/components/layout/header-context";
 import { BrandLogo } from "@/components/ui/brand-logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { LinkedInIcon } from "@/components/ui/linkedin-icon";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { formatDisplayDateIST } from "@/lib/date-utils";
 import type {
   ClientWithRelations,
   Engagement,
   ContentItem,
   ToolExpense,
   ClientRequest,
+  ClientCredential,
+  ClientDocument,
 } from "@/types/domain";
 
 interface ClientWorkspaceViewProps {
   client: ClientWithRelations;
 }
 
+function getPostExcerpt(title?: string | null, body?: string | null): string {
+  if (!body) return "";
+  let clean = body.trim();
+  if (title && clean.toLowerCase().startsWith(title.trim().toLowerCase())) {
+    clean = clean.slice(title.trim().length).replace(/^[\s.—–\-:]+/, "").trim();
+  }
+  return clean || body.trim();
+}
+
 export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
-  const [activeTab, setActiveTab] = useState<"overview" | "context" | "tools" | "vault" | "review">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "context" | "meetings" | "documents" | "tools" | "vault" | "review"
+  >("overview");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const { setCustomBreadcrumbs } = useHeader();
+
+  // Sync TopNav breadcrumb with client name
+  useEffect(() => {
+    setCustomBreadcrumbs([
+      { label: "Client Roster", href: "/clients" },
+      { label: client.name },
+    ]);
+    return () => setCustomBreadcrumbs(null);
+  }, [client.name, setCustomBreadcrumbs]);
 
   // Taboo words state
   const [newTabooWord, setNewTabooWord] = useState("");
@@ -68,15 +107,30 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
   const [countdownTimers, setCountdownTimers] = useState<Record<string, number>>({});
   
   // Modals & Menu State
+  const [showNewContentModal, setShowNewContentModal] = useState(false);
   const [showAddCredModal, setShowAddCredModal] = useState(false);
+  const [editingCred, setEditingCred] = useState<ClientCredential | null>(null);
+  const [deletingCred, setDeletingCred] = useState<ClientCredential | null>(null);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
   const [showEditVoiceModal, setShowEditVoiceModal] = useState(false);
+  const [showEditClientModal, setShowEditClientModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
 
   const clientPosts = client.content_items || [];
   const clientTools = client.tool_expenses || [];
   const credentials = client.credentials || [];
+  const clientMeetings = client.meetings || [];
+  const knowledgeItems = client.knowledge_items || [];
+  const [clientDocuments, setClientDocuments] = useState<ClientDocument[]>(
+    client.documents || []
+  );
+  const clientInvoices = client.invoices || [];
+
+  useEffect(() => {
+    setClientDocuments(client.documents || []);
+  }, [client.documents]);
   const context = client.context || null;
   const reviewToken = client.review_tokens?.[0]?.token_hash || null;
   const reviewUrl = reviewToken
@@ -264,6 +318,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
     startTransition(async () => {
       const res = await generateDraftInvoiceAction(client.id);
       if (res.success) {
+        setActiveTab("tools");
         showToast(
           `Created draft invoice ${res.invoiceNumber} (₹${res.subtotal?.toLocaleString("en-IN")}) with ${res.toolExpensesCount} software expenses`
         );
@@ -287,9 +342,51 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
   };
 
   const reviewPendingCount = clientPosts.filter((p: ContentItem) => p.status === "client_review").length;
+  const scheduledCount = clientPosts.filter(
+    (p: ContentItem) => p.status === "scheduled" || p.status === "approved"
+  ).length;
+  const draftCount = clientPosts.filter(
+    (p: ContentItem) => p.status === "draft" || p.status === "internal_review"
+  ).length;
+
+  // Next billing cycle calculation
+  const today = new Date();
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const thisMonthAnchor = new Date(today.getFullYear(), today.getMonth(), billingAnchorDay);
+  const nextBillingDate =
+    thisMonthAnchor >= todayMidnight
+      ? thisMonthAnchor
+      : new Date(today.getFullYear(), today.getMonth() + 1, billingAnchorDay);
+  const daysUntilInvoice = Math.max(
+    0,
+    Math.ceil((nextBillingDate.getTime() - todayMidnight.getTime()) / (1000 * 60 * 60 * 24))
+  );
+  const nextBillingFormatted = nextBillingDate.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  const primaryServiceLabel =
+    primaryEngagement?.service_type === "linkedin_branding"
+      ? "LinkedIn Founder Branding"
+      : primaryEngagement?.service_type === "cold_outreach"
+      ? "Cold Outbound Outreach"
+      : primaryEngagement
+      ? "Hybrid Growth Engine"
+      : "Retainer Engagement";
+
+  const modalEngagements = (client.engagements || []).map((eng: Engagement) => ({
+    id: eng.id,
+    clientName: client.name,
+    founderName: client.founder_name,
+    serviceType: eng.service_type,
+    tabooWords: context?.taboo_words || [],
+    corePillars: context?.core_pillars || [],
+  }));
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 pb-12">
+    <div className="w-full space-y-5 pb-4">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="toast">
@@ -302,20 +399,15 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
           <div className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-5 shadow-dialog space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-danger-bg)] text-[var(--color-danger-text)] border border-[var(--color-danger-line)] shrink-0">
-                <Trash2 className="h-4 w-4" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-sm text-[var(--color-ink)]">
-                  Delete {client.name}?
-                </h2>
-                <p className="text-xs text-[var(--color-ink-tertiary)]">
-                  This action cannot be undone.
-                </p>
-              </div>
+            <div className="space-y-1">
+              <h2 className="font-semibold text-sm text-[var(--color-ink)]">
+                Delete {client.name}?
+              </h2>
+              <p className="text-xs text-[var(--color-ink-tertiary)]">
+                This action cannot be undone.
+              </p>
             </div>
-            <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] p-3 border border-[var(--color-line)]">
+            <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed border-l-2 border-[var(--color-line-strong)] pl-3.5 py-1">
               Permanently removes client profile, engagements, content, invoices, credentials, and access tokens.
             </p>
             <div className="flex items-center justify-end gap-2 pt-1">
@@ -329,9 +421,47 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               <button
                 onClick={handleDeleteClient}
                 disabled={isPending}
-                className="btn text-xs bg-[var(--color-danger)] text-white hover:opacity-90 border-0"
+                className="btn btn-primary text-xs"
               >
                 {isPending ? "Deleting…" : "Delete Permanently"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EMERGENCY PAUSE CONFIRMATION MODAL */}
+      {showPauseConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-5 shadow-dialog space-y-4">
+            <div className="space-y-1">
+              <h2 className="font-semibold text-sm text-[var(--color-ink)]">
+                Pause Publishing for {client.name}?
+              </h2>
+              <p className="text-xs text-[var(--color-ink-tertiary)]">
+                Immediate operational freeze
+              </p>
+            </div>
+            <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed border-l-2 border-[var(--color-line-strong)] pl-3.5 py-1">
+              This will temporarily hold all scheduled content releases for this client until explicitly resumed.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                onClick={() => setShowPauseConfirm(false)}
+                disabled={isPending}
+                className="btn btn-secondary text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowPauseConfirm(false);
+                  handleToggleEmergencyHold(true);
+                }}
+                disabled={isPending}
+                className="btn btn-primary text-xs"
+              >
+                {isPending ? "Pausing…" : "Pause Publishing"}
               </button>
             </div>
           </div>
@@ -362,305 +492,340 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
         </div>
       )}
 
-      {/* ─── 1. TOP UTILITY & ACTION BAR ─── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-        <Link
-          href="/clients"
-          className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors w-fit"
-        >
-          <ChevronLeft className="h-3.5 w-3.5" />
-          <span>Client Roster</span>
-          <span className="text-[var(--color-ink-muted)]">/</span>
-          <span className="text-[var(--color-ink)] font-medium">{client.name}</span>
-        </Link>
-
-        {/* Action Cluster */}
-        <div className="flex items-center gap-2">
-          {/* Dominant Primary Action */}
-          <button
-            onClick={openFounderWhatsApp}
-            className="btn btn-primary text-xs"
-            title="Ping founder on WhatsApp with review link"
-          >
-            <WhatsAppIcon size={14} className="text-[#25D366]" />
-            <span>Ping on WhatsApp</span>
-          </button>
-
-          {/* Quick Copy Link */}
-          <button
-            onClick={handleCopyReviewLink}
-            className="btn btn-secondary text-xs"
-            title="Copy private Founder Desk link"
-          >
-            <Copy className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-            <span className="hidden sm:inline">Copy Desk</span>
-          </button>
-
-          {/* Draft Invoice */}
-          <button
-            onClick={handleDraftInvoice}
-            disabled={isPending}
-            className="btn btn-secondary text-xs"
-            title="Generate draft invoice bundling retainer and tooling pass-throughs"
-          >
-            <FileCheck className="h-3.5 w-3.5 text-[var(--color-accent)]" />
-            <span className="hidden sm:inline">Draft Retainer</span>
-          </button>
-
-          {/* Overflow Menu for Quiet & Destructive Actions */}
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMoreActions(!showMoreActions);
-              }}
-              className="btn btn-secondary text-xs p-1.5 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-              title="More options"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
-
-            {showMoreActions && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 mt-1.5 w-48 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] py-1 shadow-lifted z-20"
-              >
-                <button
-                  onClick={() => {
-                    setShowMoreActions(false);
-                    handleToggleEmergencyHold(!hasEmergencyHold);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-ink)] hover:bg-[var(--color-surface-hover)] transition-colors text-left cursor-pointer"
-                >
-                  <ShieldAlert className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
-                  <span>{hasEmergencyHold ? "Resume Publishing" : "Emergency Pause"}</span>
-                </button>
-                <div className="h-[1px] bg-[var(--color-line-subtle)] my-1" />
-                <button
-                  onClick={() => {
-                    setShowMoreActions(false);
-                    setShowDeleteConfirm(true);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-danger-text)] hover:bg-[var(--color-danger-bg)] transition-colors text-left cursor-pointer"
-                >
-                  <Trash2 className="h-3.5 w-3.5 text-[var(--color-danger-text)]" />
-                  <span>Delete Client</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ─── 2. ENTITY HEADER & TELEMETRY SHELF ─── */}
-      <div className="border-b border-[var(--color-line)] pb-6 space-y-5">
-        {/* Main Entity Row */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
+      {/* ─── UNIFIED ARCHITECTURAL CLIENT MASTHEAD ─── */}
+      <div className="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-card">
+        {/* Band 1: Brand Identity + Primary Action Cluster */}
+        <div className="p-5 sm:px-7 sm:py-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          {/* Left: Logo + Client Name + Founder Contact Strip */}
+          <div className="flex items-start gap-4 min-w-0">
             <BrandLogo
               nameOrDomain={client.website_url || client.founder_email || client.name}
-              size={48}
-              className="h-12 w-12 rounded-[var(--radius-md)] border border-[var(--color-line)] p-1 bg-[var(--color-base-overlay)] shadow-xs"
+              size={52}
+              className="h-[52px] w-[52px] object-contain rounded-[var(--radius-md)] border border-[var(--color-line-subtle)] shrink-0"
               fallback={
                 <UserAvatar
                   seed={client.founder_name || client.name}
-                  size={48}
+                  size={52}
                   className="rounded-[var(--radius-md)]"
                   alt={client.founder_name || client.name}
                 />
               }
             />
 
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="text-xl font-semibold tracking-tight text-[var(--color-ink)] sm:text-2xl">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="font-display text-2xl sm:text-[26px] font-semibold tracking-tight text-[var(--color-ink)] leading-none">
                   {client.name}
                 </h1>
-                <span className="flex items-center gap-1.5 text-xs text-[var(--color-ink-secondary)]">
+                <span className="inline-flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums uppercase tracking-widest text-[var(--color-ink-secondary)]">
                   <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      hasEmergencyHold ? "bg-[var(--color-warn)]" : "bg-[var(--color-ok)]"
+                    className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                      hasEmergencyHold
+                        ? "bg-[var(--color-danger)]"
+                        : client.status?.toLowerCase() === "onboarding"
+                        ? "bg-amber-400"
+                        : "bg-[var(--color-ok)]"
                     }`}
                   />
-                  <span className="font-sans tabular-nums text-[11px] text-[var(--color-ink-muted)] uppercase">
-                    {hasEmergencyHold ? "Paused" : client.status || "Active"}
-                  </span>
+                  <span>{hasEmergencyHold ? "Paused" : client.status || "Active"}</span>
                 </span>
               </div>
 
-              {/* Founder Context Chips */}
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs text-[var(--color-ink-secondary)]">
-                <span>
-                  Founder: <strong className="font-medium text-[var(--color-ink)]">{client.founder_name}</strong>
+              {/* Founder Contact Strip */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[var(--color-ink-tertiary)]">
+                <span className="text-[var(--color-ink-secondary)]">
+                  <strong className="font-medium text-[var(--color-ink)]">{client.founder_name}</strong>
                   {client.founder_title && (
-                    <span className="text-[var(--color-ink-tertiary)]"> ({client.founder_title})</span>
+                    <span className="text-[var(--color-ink-tertiary)]"> · {client.founder_title}</span>
                   )}
                 </span>
+
                 {client.founder_email && (
                   <>
-                    <span className="text-[var(--color-ink-muted)]">·</span>
+                    <span className="text-[var(--color-line-strong)] select-none">·</span>
                     <a
                       href={`mailto:${client.founder_email}`}
-                      className="inline-flex items-center gap-1 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors font-sans tabular-nums text-[11.5px]"
+                      className="inline-flex items-center gap-1.5 hover:text-[var(--color-ink)] transition-colors font-sans tabular-nums text-xs"
                     >
-                      <Mail className="h-3 w-3" />
+                      <Mail className="h-3 w-3 shrink-0" />
                       <span>{client.founder_email}</span>
                     </a>
                   </>
                 )}
+
                 {client.founder_phone && (
                   <>
-                    <span className="text-[var(--color-ink-muted)]">·</span>
+                    <span className="text-[var(--color-line-strong)] select-none">·</span>
                     <button
                       type="button"
                       onClick={openFounderWhatsApp}
-                      className="inline-flex items-center gap-1.5 text-[var(--color-ink-tertiary)] hover:text-[#25D366] transition-colors font-sans tabular-nums text-[11.5px] cursor-pointer"
+                      className="inline-flex items-center gap-1.5 hover:text-[#25D366] transition-colors font-sans tabular-nums text-xs cursor-pointer"
                       title="Open WhatsApp chat with review link"
                     >
-                      <WhatsAppIcon size={13} className="text-[#25D366]" />
+                      <WhatsAppIcon size={12} className="text-[#25D366] shrink-0" />
                       <span>{client.founder_phone}</span>
                     </button>
+                  </>
+                )}
+
+                {client.linkedin_url && (
+                  <>
+                    <span className="text-[var(--color-line-strong)] select-none">·</span>
+                    <a
+                      href={client.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 hover:text-[#0A66C2] transition-colors text-xs"
+                      title="Open founder's LinkedIn Profile"
+                    >
+                      <LinkedInIcon size={13} color="brand" />
+                      <span>LinkedIn</span>
+                      <ArrowUpRight className="h-3 w-3 opacity-60" />
+                    </a>
+                  </>
+                )}
+
+                {client.website_url && (
+                  <>
+                    <span className="text-[var(--color-line-strong)] select-none">·</span>
+                    <a
+                      href={client.website_url.startsWith("http") ? client.website_url : `https://${client.website_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 hover:text-[var(--color-ink)] transition-colors text-xs"
+                      title="Visit Company Website"
+                    >
+                      <Globe className="h-3 w-3 shrink-0" />
+                      <span>{client.website_url.replace(/^https?:\/\//, "")}</span>
+                      <ArrowUpRight className="h-3 w-3 opacity-60" />
+                    </a>
                   </>
                 )}
               </div>
             </div>
           </div>
+
+          {/* Right: Balanced Operational Action Cluster */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              onClick={handleCopyReviewLink}
+              className="btn btn-secondary text-xs"
+              title="Copy 1-tap Founder Desk link"
+            >
+              <Copy className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
+              <span>Copy Review Link</span>
+            </button>
+
+            <button
+              onClick={() => setShowEditClientModal(true)}
+              className="btn btn-secondary text-xs"
+              title="Edit client profile and retainer terms"
+            >
+              <Pencil className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
+              <span>Edit Details</span>
+            </button>
+
+            <button
+              onClick={openFounderWhatsApp}
+              className="btn btn-primary text-xs"
+              title="Ping founder on WhatsApp with private review link"
+            >
+              <WhatsAppIcon size={14} className="text-[#25D366]" />
+              <span>Ping on WhatsApp</span>
+            </button>
+
+            {/* Overflow Menu */}
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMoreActions(!showMoreActions);
+                }}
+                className="btn btn-secondary text-xs p-2 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
+                title="More operational actions"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+
+              {showMoreActions && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 mt-1.5 w-52 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] py-1 shadow-lifted z-30 animate-in"
+                >
+                  <button
+                    onClick={() => { setShowMoreActions(false); handleDraftInvoice(); }}
+                    disabled={isPending}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-ink)] hover:bg-[var(--color-surface-hover)] transition-colors text-left cursor-pointer"
+                  >
+                    <FileCheck className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
+                    <span>Draft Retainer Invoice</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowMoreActions(false);
+                      if (hasEmergencyHold) {
+                        handleToggleEmergencyHold(false);
+                      } else {
+                        setShowPauseConfirm(true);
+                      }
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-ink)] hover:bg-[var(--color-surface-hover)] transition-colors text-left cursor-pointer"
+                  >
+                    <ShieldAlert className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
+                    <span>{hasEmergencyHold ? "Resume Publishing" : "Emergency Pause"}</span>
+                  </button>
+
+                  <div className="h-[1px] bg-[var(--color-line-subtle)] my-1" />
+
+                  <button
+                    onClick={() => { setShowMoreActions(false); setShowDeleteConfirm(true); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-danger-text)] hover:bg-[var(--color-surface-hover)] transition-colors text-left cursor-pointer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-[var(--color-danger-text)]" />
+                    <span>Delete Client</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Commercial & Operational Telemetry Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-          <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] p-3">
-            <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
+        {/* Band 2: 4-Column Architectural Vitals Ledger */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 border-t border-[var(--color-line-subtle)] divide-y sm:divide-y-0 sm:divide-x divide-[var(--color-line-subtle)] bg-[var(--color-base-subtle)]/35">
+          <div className="px-5 py-4 sm:px-7">
+            <span className="block text-[10px] font-sans uppercase tracking-widest text-[var(--color-ink-tertiary)] font-medium mb-1.5">
               Monthly Retainer
             </span>
-            <div className="font-display text-lg font-normal text-[var(--color-ink)] tabular-nums mt-0.5">
-              ₹{totalRetainer.toLocaleString("en-IN")}{" "}
-              <span className="text-xs font-normal text-[var(--color-ink-tertiary)] font-sans">/ mo</span>
+            <div className="flex items-baseline gap-1">
+              <span className="font-display text-[22px] font-semibold tabular-nums tracking-tight text-[var(--color-ink)] leading-none">
+                ₹{totalRetainer.toLocaleString("en-IN")}
+              </span>
+              <span className="text-xs font-sans text-[var(--color-ink-muted)]">/mo</span>
             </div>
+            <span className="block text-[11.5px] text-[var(--color-ink-secondary)] mt-1.5 truncate">
+              {primaryServiceLabel}
+            </span>
           </div>
 
-          <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] p-3">
-            <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
-              Billing Anchor Day
+          <div className="px-5 py-4 sm:px-7">
+            <span className="block text-[10px] font-sans uppercase tracking-widest text-[var(--color-ink-tertiary)] font-medium mb-1.5">
+              Next Invoice Cycle
             </span>
-            <div className="font-display text-lg font-normal text-[var(--color-ink)] tabular-nums mt-0.5">
-              Day {billingAnchorDay}{" "}
-              <span className="text-xs font-normal text-[var(--color-ink-tertiary)] font-sans">of month</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-display text-[22px] font-semibold tabular-nums tracking-tight text-[var(--color-ink)] leading-none">
+                {daysUntilInvoice === 0
+                  ? "Due today"
+                  : `In ${daysUntilInvoice} ${daysUntilInvoice === 1 ? "day" : "days"}`}
+              </span>
             </div>
+            <span className="block text-[11.5px] font-sans tabular-nums text-[var(--color-ink-secondary)] mt-1.5">
+              Due {nextBillingFormatted} · Day {billingAnchorDay} anchor
+            </span>
           </div>
 
-          <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] p-3">
-            <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
-              Perspectives
+          <div className="px-5 py-4 sm:px-7">
+            <span className="block text-[10px] font-sans uppercase tracking-widest text-[var(--color-ink-tertiary)] font-medium mb-1.5">
+              Editorial Cadence
             </span>
-            <div className="font-display text-lg font-normal text-[var(--color-ink)] tabular-nums mt-0.5 flex items-baseline gap-2">
-              <span>{clientPosts.length} stories</span>
-              {reviewPendingCount > 0 && (
-                <span className="text-[11px] font-sans tabular-nums text-[var(--color-warn-text)] inline-flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-warn)]" />
-                  {reviewPendingCount} in review
-                </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-display text-[22px] font-semibold tabular-nums tracking-tight text-[var(--color-ink)] leading-none">
+                {clientPosts.length}
+              </span>
+              <span className="text-xs font-sans text-[var(--color-ink-muted)]">
+                {clientPosts.length === 1 ? "perspective" : "perspectives"}
+              </span>
+            </div>
+            <div className="mt-1.5 text-[11.5px] text-[var(--color-ink-secondary)] flex items-center gap-1.5">
+              {reviewPendingCount > 0 ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-warn)] shrink-0" />
+                  <span className="text-[var(--color-warn-text)]">{reviewPendingCount} awaiting sign-off</span>
+                </>
+              ) : scheduledCount > 0 ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ok)] shrink-0" />
+                  <span>{scheduledCount} scheduled for release</span>
+                </>
+              ) : (
+                <span>{draftCount} in working draft</span>
               )}
             </div>
           </div>
 
-          <div className="rounded-[var(--radius-sm)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] p-3">
-            <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block">
+          <div className="px-5 py-4 sm:px-7">
+            <span className="block text-[10px] font-sans uppercase tracking-widest text-[var(--color-ink-tertiary)] font-medium mb-1.5">
               Dedicated Tooling
             </span>
-            <div className="font-display text-lg font-normal text-[var(--color-ink)] tabular-nums mt-0.5">
-              ₹{unbilledToolTotal.toLocaleString("en-IN")}{" "}
-              <span className="text-xs font-normal text-[var(--color-ink-tertiary)] font-sans">
-                ({clientTools.length} tools)
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-display text-[22px] font-semibold tabular-nums tracking-tight text-[var(--color-ink)] leading-none">
+                ₹{unbilledToolTotal.toLocaleString("en-IN")}
               </span>
+              <span className="text-xs font-sans text-[var(--color-ink-muted)]">unbilled</span>
             </div>
+            <span className="block text-[11.5px] font-sans tabular-nums text-[var(--color-ink-secondary)] mt-1.5">
+              {clientTools.length} {clientTools.length === 1 ? "active tool seat" : "active tool seats"} · Zero markup
+            </span>
           </div>
+        </div>
+
+        {/* Band 3: Integrated Workspace Tab Navigation */}
+        <div className="px-5 sm:px-7 border-t border-[var(--color-line-subtle)] bg-[var(--color-surface)] rounded-b-[var(--radius-lg)] flex items-center gap-7 overflow-x-auto overflow-y-hidden no-scrollbar">
+          {([
+            { id: "overview",   label: "Perspectives",   count: clientPosts.length },
+            { id: "context",    label: "Voice & Edges",  count: 0 },
+            { id: "meetings",   label: "Meetings",       count: clientMeetings.length },
+            { id: "documents",  label: "Documents",      count: clientDocuments.length },
+            { id: "tools",      label: "Billing",        count: clientInvoices.length + clientTools.length },
+            { id: "vault",      label: "Vault",          count: credentials.length },
+            { id: "review",     label: "Review Portal",  count: reviewPendingCount },
+          ] as const).map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 py-3.5 text-[13px] transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
+                  isActive
+                    ? "border-[var(--color-ink)] text-[var(--color-ink)] font-semibold"
+                    : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] font-medium"
+                }`}
+              >
+                <span>{tab.label}</span>
+                {tab.count > 0 && (
+                  <span
+                    className={`font-sans tabular-nums text-[11px] ${
+                      isActive ? "text-[var(--color-ink-secondary)]" : "text-[var(--color-ink-muted)]"
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* ─── 3. PAGE-LEVEL TAB NAVIGATION (FLUID CONTROLLER) ─── */}
-      <div className="flex border-b border-[var(--color-line)] gap-7 overflow-x-auto overflow-y-hidden no-scrollbar">
-        <button
-          onClick={() => setActiveTab("overview")}
-          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
-            activeTab === "overview"
-              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
-              : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-          }`}
-        >
-          <FileText className="h-3.5 w-3.5" />
-          <span>Perspectives &amp; Schedule</span>
-        </button>
+      {/* ─── TAB PANELS ─── */}
 
-        <button
-          onClick={() => setActiveTab("context")}
-          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
-            activeTab === "context"
-              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
-              : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-          }`}
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          <span>Founder Voice &amp; Edges</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("tools")}
-          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
-            activeTab === "tools"
-              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
-              : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-          }`}
-        >
-          <Wrench className="h-3.5 w-3.5" />
-          <span>Dedicated Tooling ({clientTools.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("vault")}
-          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
-            activeTab === "vault"
-              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
-              : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-          }`}
-        >
-          <Shield className="h-3.5 w-3.5" />
-          <span>Credential Vault ({credentials.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("review")}
-          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
-            activeTab === "review"
-              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
-              : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
-          }`}
-        >
-          <Share2 className="h-3.5 w-3.5" />
-          <span>Founder Desk Portal</span>
-        </button>
-      </div>
-
-      {/* ─── 4. TAB PANELS ─── */}
-
-      {/* TAB 1: OVERVIEW & PIPELINE (ASYMMETRIC 65/35 COCKPIT) */}
+      {/* TAB 1: PERSPECTIVES & FOUNDER DOSSIER (8 / 4 Asymmetric Split) */}
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column: Content Operations Pipeline (65%) */}
+          {/* Left Column (8 cols): Editorial Publishing Stream */}
           <div className="lg:col-span-8 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-[var(--color-ink)]">
+                <h2 className="font-display text-base font-semibold tracking-tight text-[var(--color-ink)]">
                   Editorial Publishing Stream
                 </h2>
-                <p className="text-xs text-[var(--color-ink-secondary)]">
-                  Active drafts, perspectives awaiting founder sign-off, and scheduled releases.
+                <p className="text-xs text-[var(--color-ink-tertiary)] mt-0.5">
+                  Click any perspective to open the full Story &amp; Post Editor.
                 </p>
               </div>
-
               <Link
-                href="/content"
-                className="btn btn-secondary text-xs py-1 px-2.5 inline-flex items-center gap-1.5"
+                href={`/content/new?clientId=${client.id}`}
+                className="btn btn-primary text-xs shrink-0 inline-flex items-center gap-1.5"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>New Perspective</span>
@@ -668,16 +833,16 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
             </div>
 
             {clientPosts.length === 0 ? (
-              <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-line)] bg-[var(--color-base-subtle)]/50 p-8 text-center space-y-3">
+              <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-line)] bg-[var(--color-surface)] p-10 text-center space-y-3">
                 <FileText className="h-7 w-7 text-[var(--color-ink-muted)] mx-auto" />
                 <div className="space-y-1 max-w-sm mx-auto">
-                  <p className="text-xs font-medium text-[var(--color-ink)]">No perspectives drafted yet</p>
-                  <p className="text-[11.5px] text-[var(--color-ink-tertiary)]">
-                    Shape founder conviction in the Content Studio to send to their private Founder Desk.
+                  <p className="text-sm font-medium text-[var(--color-ink)]">No perspectives drafted yet</p>
+                  <p className="text-xs text-[var(--color-ink-tertiary)] leading-relaxed">
+                    Capture {client.founder_name}&apos;s unfiltered conviction and shape it into a LinkedIn perspective ready for 1-tap review.
                   </p>
                 </div>
                 <Link
-                  href="/content"
+                  href={`/content/new?clientId=${client.id}`}
                   className="btn btn-primary text-xs inline-flex items-center gap-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -685,25 +850,25 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                 </Link>
               </div>
             ) : (
-              <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] divide-y divide-[var(--color-line-subtle)]">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] divide-y divide-[var(--color-line-subtle)] shadow-2xs overflow-hidden">
                 {clientPosts.map((post: any) => {
                   const isReview = post.status === "client_review";
                   const isApproved = post.status === "approved" || post.status === "scheduled";
                   const isPaused = post.status === "paused";
+                  const excerpt = getPostExcerpt(post.title, post.body_markdown);
 
                   return (
                     <div
                       key={post.id}
-                      className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[var(--color-surface-hover)] transition-colors"
+                      onClick={() => router.push(`/content/${post.id}`)}
+                      className="group p-5 hover:bg-[var(--color-surface-hover)] transition-colors cursor-pointer flex flex-col gap-2.5"
                     >
-                      <div className="space-y-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-xs text-[var(--color-ink)] truncate">
-                            {post.title}
-                          </span>
-                          <span className="flex items-center gap-1.5 text-xs shrink-0">
+                      {/* Top Meta Row */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-2 text-[11px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
+                          <span className="inline-flex items-center gap-1.5 font-medium uppercase tracking-wider text-[var(--color-ink-secondary)]">
                             <span
-                              className={`h-1.5 w-1.5 rounded-full ${
+                              className={`h-1.5 w-1.5 rounded-full shrink-0 ${
                                 isPaused
                                   ? "bg-[var(--color-danger)]"
                                   : isReview
@@ -713,31 +878,57 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
                                   : "bg-[var(--color-ink-muted)]"
                               }`}
                             />
-                            <span className="font-sans tabular-nums text-[10.5px] uppercase text-[var(--color-ink-muted)]">
-                              {post.status?.replace("_", " ")}
-                            </span>
+                            <span>{post.status?.replace("_", " ")}</span>
+                          </span>
+
+                          {post.target_pillar && (
+                            <>
+                              <span className="text-[var(--color-line-strong)]">·</span>
+                              <span>{post.target_pillar}</span>
+                            </>
+                          )}
+
+                          {post.scheduled_publish_date && (
+                            <>
+                              <span className="text-[var(--color-line-strong)]">·</span>
+                              <span>Slot: {formatDisplayDateIST(post.scheduled_publish_date)}</span>
+                            </>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isReview && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyReviewLink();
+                              }}
+                              className="btn btn-secondary text-[11px] py-1 px-2.5"
+                              title="Copy private review link"
+                            >
+                              <Copy className="h-3 w-3 text-[var(--color-ink-tertiary)]" />
+                              <span>Copy Link</span>
+                            </button>
+                          )}
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-ink-tertiary)] group-hover:text-[var(--color-ink)] transition-colors">
+                            <span>Open Editor</span>
+                            <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                           </span>
                         </div>
-                        <p className="text-xs text-[var(--color-ink-secondary)] line-clamp-1">
-                          {post.body_markdown}
-                        </p>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        {isReview && (
-                          <button
-                            onClick={handleCopyReviewLink}
-                            className="btn btn-secondary text-[11px] py-1 px-2.5"
-                            title="Copy private review link"
-                          >
-                            <Copy className="h-3 w-3 text-[var(--color-ink-tertiary)]" />
-                            <span>Copy Review Link</span>
-                          </button>
-                        )}
-                        <span className="font-sans tabular-nums text-[11px] text-[var(--color-ink-tertiary)]">
-                          {post.target_pillar || "Thought Leadership"}
-                        </span>
-                      </div>
+                      {/* Headline */}
+                      <h3 className="font-display text-[15px] font-semibold tracking-tight text-[var(--color-ink)] group-hover:text-[var(--color-accent-text)] transition-colors leading-snug">
+                        {post.title}
+                      </h3>
+
+                      {/* De-duplicated Excerpt */}
+                      {excerpt && excerpt !== post.title && (
+                        <p className="text-[13px] text-[var(--color-ink-secondary)] line-clamp-2 leading-relaxed">
+                          {excerpt}
+                        </p>
+                      )}
                     </div>
                   );
                 })}
@@ -745,247 +936,295 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
             )}
           </div>
 
-          {/* Right Column: Active Commercial Line & Actions (35%) */}
+          {/* Right Column (4 cols): Founder Voice Snapshot & Portal Dossier */}
           <div className="lg:col-span-4 space-y-4">
-            <div className="space-y-1">
-              <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                Contracted Services
-              </h2>
-              <p className="text-xs text-[var(--color-ink-secondary)]">
-                Active commercial engagements and billing terms.
-              </p>
+            {/* Dossier Card 1: Voice & Positioning Guardrails */}
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 space-y-4 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[10.5px] font-sans uppercase tracking-widest font-semibold text-[var(--color-ink-tertiary)]">
+                  Voice &amp; Guardrails
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("context")}
+                  className="text-xs font-medium text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] inline-flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  <span>Configure</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {context?.tone_archetype || context?.positioning_statement ? (
+                <div className="space-y-3">
+                  {context?.tone_archetype && (
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-muted)] block mb-0.5">
+                        Tone Archetype
+                      </span>
+                      <p className="text-xs font-semibold text-[var(--color-ink)]">
+                        {context.tone_archetype}
+                      </p>
+                    </div>
+                  )}
+                  {context?.positioning_statement && (
+                    <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed border-l-2 border-[var(--color-line-strong)] pl-3 py-0.5 line-clamp-3">
+                      {context.positioning_statement}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowEditVoiceModal(true)}
+                  className="w-full text-left rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] p-3 text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] hover:border-[var(--color-line-strong)] transition-colors cursor-pointer"
+                >
+                  Define {client.founder_name}&apos;s tone archetype, positioning, and content pillars &rarr;
+                </button>
+              )}
+
+              {/* Core Pillars */}
+              {context?.core_pillars && context.core_pillars.length > 0 && (
+                <div className="space-y-1.5 pt-2 border-t border-[var(--color-line-subtle)]">
+                  <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-muted)] block">
+                    Content Pillars
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {context.core_pillars.map((pillar: string) => (
+                      <span
+                        key={pillar}
+                        className="text-[11px] font-sans text-[var(--color-ink-secondary)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] px-2 py-0.5 rounded-[var(--radius-xs)]"
+                      >
+                        {pillar}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Taboo Words Summary */}
+              <div className="flex items-center justify-between pt-2 border-t border-[var(--color-line-subtle)] text-xs">
+                <span className="text-[var(--color-ink-tertiary)]">Avoided buzzwords</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("context")}
+                  className="font-sans tabular-nums font-medium text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] cursor-pointer"
+                >
+                  {context?.taboo_words?.length || 0} terms &rarr;
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {(client.engagements || []).map((eng: any) => (
-                <div
-                  key={eng.id}
-                  className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-4 space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-xs text-[var(--color-ink)]">
-                      {eng.service_type === "linkedin_branding"
-                        ? "LinkedIn Founder Branding"
-                        : eng.service_type === "cold_outreach"
-                        ? "Cold Outbound Outreach"
-                        : "Hybrid Growth Engine"}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 font-sans tabular-nums text-[10.5px] uppercase tracking-wider text-[var(--color-ok-text)]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ok)]" />
-                      {eng.status}
-                    </span>
-                  </div>
-
-                  <div className="divide-y divide-[var(--color-line-subtle)] text-xs">
-                    <div className="flex items-center justify-between py-1.5 text-[var(--color-ink-secondary)]">
-                      <span>Monthly Retainer</span>
-                      <span className="font-sans tabular-nums font-medium text-[var(--color-ink)]">
-                        ₹{Number(eng.monthly_retainer || 0).toLocaleString("en-IN")}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 text-[var(--color-ink-secondary)]">
-                      <span>Billing Anchor</span>
-                      <span className="font-sans tabular-nums text-[var(--color-ink)]">
-                        Day {eng.billing_anchor_day} of month
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Quick WhatsApp Review Dispatch Widget */}
-              <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Share2 className="h-4 w-4 text-[var(--color-accent)]" />
-                  <span className="text-xs font-semibold text-[var(--color-ink)]">
-                    Founder Desk Gateway
-                  </span>
-                </div>
-                <p className="text-[11.5px] text-[var(--color-ink-secondary)] leading-relaxed">
-                  Send private zero-login links directly to {client.founder_name} on WhatsApp for 1-click approvals or voice notes.
-                </p>
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    onClick={openFounderWhatsApp}
-                    className="btn btn-primary text-xs w-full justify-center"
+            {/* Dossier Card 2: Founder Desk & Recent Sync */}
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 space-y-4 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[10.5px] font-sans uppercase tracking-widest font-semibold text-[var(--color-ink-tertiary)]">
+                  Founder Desk Portal
+                </span>
+                {reviewUrl && (
+                  <Link
+                    href={`/review/${reviewToken}`}
+                    target="_blank"
+                    className="text-xs font-medium text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] inline-flex items-center gap-1 transition-colors"
                   >
-                    <WhatsAppIcon size={14} className="text-[#25D366]" />
-                    <span>Ping Founder on WhatsApp</span>
+                    <span>Open Live</span>
+                    <ArrowUpRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+
+              <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed">
+                Zero-login mobile portal for {client.founder_name} to approve drafts in one tap or leave voice notes.
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopyReviewLink}
+                  className="btn btn-secondary text-xs flex-1 justify-center"
+                >
+                  <Copy className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)]" />
+                  <span>Copy Desk Link</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("review")}
+                  className="btn btn-secondary text-xs px-3"
+                  title="Preview mobile Founder Desk"
+                >
+                  <span>Preview</span>
+                </button>
+              </div>
+
+              {/* Latest Conversation Sync */}
+              <div className="pt-3 border-t border-[var(--color-line-subtle)] space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-muted)]">
+                    Latest Sync
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("meetings")}
+                    className="text-[11px] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] cursor-pointer"
+                  >
+                    All ({clientMeetings.length}) &rarr;
                   </button>
                 </div>
+                {clientMeetings.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("meetings")}
+                    className="w-full text-left group/meet cursor-pointer"
+                  >
+                    <p className="text-xs font-medium text-[var(--color-ink)] group-hover/meet:text-[var(--color-accent-text)] truncate transition-colors">
+                      {clientMeetings[0].title}
+                    </p>
+                    <span className="text-[11px] font-sans tabular-nums text-[var(--color-ink-muted)]">
+                      {formatDisplayDateIST(clientMeetings[0].meeting_date)}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("meetings")}
+                    className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] cursor-pointer"
+                  >
+                    No conversations logged yet &rarr;
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
+
       {/* TAB 2: VOICE & WORDS TO AVOID */}
       {activeTab === "context" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                  Brand Voice &amp; Target Audience
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="font-display text-base font-semibold tracking-tight text-[var(--color-ink)]">
+                  Brand Voice &amp; Positioning
                 </h2>
-                <p className="text-xs text-[var(--color-ink-secondary)]">
-                  Foundational tone and positioning parameters used when generating content for this founder.
+                <p className="text-xs text-[var(--color-ink-tertiary)] mt-0.5">
+                  Foundational tone, audience, and content pillars for {client.founder_name}.
                 </p>
               </div>
               <button
                 onClick={() => setShowEditVoiceModal(true)}
-                className="btn btn-secondary text-xs shrink-0"
+                className="btn btn-primary text-xs shrink-0"
               >
-                <Sparkles className="h-3.5 w-3.5" />
+                <Pencil className="h-3.5 w-3.5" />
                 <span>Edit Voice &amp; Pillars</span>
               </button>
             </div>
 
-            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 space-y-4">
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] divide-y divide-[var(--color-line-subtle)] shadow-2xs">
               {/* Positioning Statement */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
-                    Positioning Statement
-                  </span>
-                  <button
-                    onClick={() => setShowEditVoiceModal(true)}
-                    className="text-[10.5px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                </div>
+              <div className="p-5 space-y-1.5">
+                <span className="text-[10px] font-sans uppercase tracking-widest text-[var(--color-ink-tertiary)] block font-medium">
+                  Positioning Statement
+                </span>
                 {context?.positioning_statement ? (
-                  <p className="text-xs leading-relaxed text-[var(--color-ink)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)] whitespace-pre-wrap">
+                  <p className="text-[13px] leading-relaxed text-[var(--color-ink)] whitespace-pre-wrap">
                     {context.positioning_statement}
                   </p>
                 ) : (
-                  <div
+                  <button
+                    type="button"
                     onClick={() => setShowEditVoiceModal(true)}
-                    className="text-xs leading-relaxed text-[var(--color-ink-muted)] bg-[var(--color-base-subtle)]/60 p-3 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] cursor-pointer hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink-secondary)] transition-all flex items-center justify-between"
+                    className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] transition-colors cursor-pointer"
                   >
-                    <span>No positioning statement configured yet. Click to add.</span>
-                    <Sparkles className="h-3 w-3 shrink-0 opacity-60" />
-                  </div>
+                    No positioning statement configured yet. Click to define &rarr;
+                  </button>
                 )}
               </div>
 
               {/* Target Audience / ICP */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
-                    Target Audience / ICP
-                  </span>
-                  <button
-                    onClick={() => setShowEditVoiceModal(true)}
-                    className="text-[10.5px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                </div>
+              <div className="p-5 space-y-1.5">
+                <span className="text-[10px] font-sans uppercase tracking-widest text-[var(--color-ink-tertiary)] block font-medium">
+                  Target Audience / ICP
+                </span>
                 {context?.target_audience_icp ? (
-                  <p className="text-xs leading-relaxed text-[var(--color-ink)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)] whitespace-pre-wrap">
+                  <p className="text-[13px] leading-relaxed text-[var(--color-ink)] whitespace-pre-wrap">
                     {context.target_audience_icp}
                   </p>
                 ) : (
-                  <div
+                  <button
+                    type="button"
                     onClick={() => setShowEditVoiceModal(true)}
-                    className="text-xs leading-relaxed text-[var(--color-ink-muted)] bg-[var(--color-base-subtle)]/60 p-3 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] cursor-pointer hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink-secondary)] transition-all flex items-center justify-between"
+                    className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] transition-colors cursor-pointer"
                   >
-                    <span>No target audience or ICP defined yet. Click to add.</span>
-                    <Sparkles className="h-3 w-3 shrink-0 opacity-60" />
-                  </div>
+                    No target audience or ICP defined yet. Click to define &rarr;
+                  </button>
                 )}
               </div>
 
               {/* Tone Archetype */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
-                    Tone Archetype
-                  </span>
-                  <button
-                    onClick={() => setShowEditVoiceModal(true)}
-                    className="text-[10.5px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                </div>
+              <div className="p-5 space-y-1.5">
+                <span className="text-[10px] font-sans uppercase tracking-widest text-[var(--color-ink-tertiary)] block font-medium">
+                  Tone Archetype
+                </span>
                 {context?.tone_archetype ? (
-                  <p className="text-xs leading-relaxed text-[var(--color-ink)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)] font-medium">
+                  <p className="text-[13px] font-medium text-[var(--color-ink)]">
                     {context.tone_archetype}
                   </p>
                 ) : (
-                  <div
+                  <button
+                    type="button"
                     onClick={() => setShowEditVoiceModal(true)}
-                    className="text-xs leading-relaxed text-[var(--color-ink-muted)] bg-[var(--color-base-subtle)]/60 p-3 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] cursor-pointer hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink-secondary)] transition-all flex items-center justify-between"
+                    className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] transition-colors cursor-pointer"
                   >
-                    <span>No tone archetype defined yet. Click to add.</span>
-                    <Sparkles className="h-3 w-3 shrink-0 opacity-60" />
-                  </div>
+                    No tone archetype defined yet. Click to define &rarr;
+                  </button>
                 )}
               </div>
 
               {/* Voice Guidelines & Nuances */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
-                    Voice Guidelines &amp; Nuances
-                  </span>
-                  <button
-                    onClick={() => setShowEditVoiceModal(true)}
-                    className="text-[10.5px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                </div>
+              <div className="p-5 space-y-1.5">
+                <span className="text-[10px] font-sans uppercase tracking-widest text-[var(--color-ink-tertiary)] block font-medium">
+                  Voice Guidelines &amp; Nuances
+                </span>
                 {context?.voice_guidelines ? (
-                  <p className="text-xs leading-relaxed text-[var(--color-ink)] bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)] whitespace-pre-wrap">
+                  <p className="text-[13px] leading-relaxed text-[var(--color-ink)] whitespace-pre-wrap">
                     {context.voice_guidelines}
                   </p>
                 ) : (
-                  <div
+                  <button
+                    type="button"
                     onClick={() => setShowEditVoiceModal(true)}
-                    className="text-xs leading-relaxed text-[var(--color-ink-muted)] bg-[var(--color-base-subtle)]/60 p-3 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] cursor-pointer hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink-secondary)] transition-all flex items-center justify-between"
+                    className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] transition-colors cursor-pointer"
                   >
-                    <span>No specific voice guidelines defined yet. Click to add.</span>
-                    <Sparkles className="h-3 w-3 shrink-0 opacity-60" />
-                  </div>
+                    No specific voice guidelines defined yet. Click to define &rarr;
+                  </button>
                 )}
               </div>
 
               {/* Core Content Pillars */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
-                    Core Content Pillars
-                  </span>
-                  <button
-                    onClick={() => setShowEditVoiceModal(true)}
-                    className="text-[10.5px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                </div>
+              <div className="p-5 space-y-2">
+                <span className="text-[10px] font-sans uppercase tracking-widest text-[var(--color-ink-tertiary)] block font-medium">
+                  Core Content Pillars
+                </span>
                 {context?.core_pillars && context.core_pillars.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5 bg-[var(--color-base-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-line)]">
+                  <div className="flex flex-wrap gap-1.5">
                     {context.core_pillars.map((pillar: string) => (
                       <span
                         key={pillar}
-                        className="inline-flex items-center rounded-[var(--radius-xs)] bg-[var(--color-base)] border border-[var(--color-line)] text-[var(--color-ink)] px-2.5 py-1 text-xs font-sans font-medium"
+                        className="inline-flex items-center rounded-[var(--radius-xs)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] text-[var(--color-ink)] px-2.5 py-1 text-xs font-sans font-medium"
                       >
                         {pillar}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <div
+                  <button
+                    type="button"
                     onClick={() => setShowEditVoiceModal(true)}
-                    className="text-xs leading-relaxed text-[var(--color-ink-muted)] bg-[var(--color-base-subtle)]/60 p-3 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line)] cursor-pointer hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink-secondary)] transition-all flex items-center justify-between"
+                    className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-ink-secondary)] transition-colors cursor-pointer"
                   >
-                    <span>No core pillars configured yet. Click to add themes.</span>
-                    <Sparkles className="h-3 w-3 shrink-0 opacity-60" />
-                  </div>
+                    No core pillars configured yet. Click to add themes &rarr;
+                  </button>
                 )}
               </div>
             </div>
@@ -993,28 +1232,28 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
 
           {/* Words to Avoid (Negative Guardrails) */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="space-y-1">
-              <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                Words to Avoid (Taboo Terms)
+            <div>
+              <h2 className="font-display text-base font-semibold tracking-tight text-[var(--color-ink)]">
+                Words to Avoid
               </h2>
-              <p className="text-xs text-[var(--color-ink-secondary)]">
-                Language &amp; buzzwords this founder despises. The editor automatically flags them before review.
+              <p className="text-xs text-[var(--color-ink-tertiary)] mt-0.5">
+                Buzzwords this founder refuses to use. Flagged automatically in the editor.
               </p>
             </div>
 
-            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-4 space-y-3.5">
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 space-y-4 shadow-2xs">
               <div className="flex flex-wrap gap-2 min-h-[48px]">
                 {(!context?.taboo_words || context.taboo_words.length === 0) ? (
-                  <span className="text-xs text-[var(--color-ink-muted)] font-sans tabular-nums py-1">
-                    No avoided words configured. Every founder has opinions on buzzwords they refuse to use.
+                  <span className="text-xs text-[var(--color-ink-muted)] py-1">
+                    No avoided words configured yet.
                   </span>
                 ) : (
                   context.taboo_words.map((w: string) => (
                     <span
                       key={w}
-                      className="inline-flex items-center gap-1.5 rounded-[var(--radius-xs)] bg-[var(--color-base)] border border-[var(--color-line)] text-[var(--color-ink)] px-2 py-1 text-xs font-sans"
+                      className="inline-flex items-center gap-1.5 rounded-[var(--radius-xs)] bg-[var(--color-base-subtle)] border border-[var(--color-line)] text-[var(--color-ink)] px-2.5 py-1 text-xs font-sans"
                     >
-                      <span className="line-through text-[var(--color-ink-tertiary)]">{w}</span>
+                      <span className="line-through text-[var(--color-ink-secondary)]">{w}</span>
                       <button
                         onClick={() => handleRemoveTabooWord(w)}
                         className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] cursor-pointer"
@@ -1028,13 +1267,13 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               </div>
 
               {/* Add Taboo Word Form */}
-              <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-line-subtle)]">
+              <div className="flex items-center gap-2 pt-3 border-t border-[var(--color-line-subtle)]">
                 <input
                   type="text"
                   value={newTabooWord}
                   onChange={(e) => setNewTabooWord(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddTabooWord()}
-                  placeholder="Add a phrase to avoid (e.g. synergy)..."
+                  placeholder="Add phrase to avoid (e.g. synergy)..."
                   className="input text-xs flex-1"
                 />
                 <button
@@ -1051,74 +1290,43 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
         </div>
       )}
 
-      {/* TAB 3: SOFTWARE EXPENSES */}
-      {activeTab === "tools" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                Dedicated Client Tooling
-              </h2>
-              <p className="text-xs text-[var(--color-ink-secondary)]">
-                Specialized tooling (Clay, Instantly, HeyReach, proxies) deployed for this founder. Invoiced at zero markup.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowAddExpenseModal(true)}
-              className="btn btn-primary text-xs"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Add Tool Expense</span>
-            </button>
-          </div>
+      {/* TAB 2.5: CLIENT MEMORY & MEETINGS */}
+      {activeTab === "meetings" && (
+        <ClientMeetingsTab
+          clientId={client.id}
+          clientName={client.name}
+          founderName={client.founder_name}
+          meetings={clientMeetings}
+          knowledgeItems={knowledgeItems}
+        />
+      )}
 
-          {clientTools.length === 0 ? (
-            <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-line)] bg-[var(--color-base-subtle)]/50 p-8 text-center space-y-2">
-              <p className="text-xs text-[var(--color-ink-tertiary)]">No dedicated software tools allocated to this account.</p>
-              <button
-                onClick={() => setShowAddExpenseModal(true)}
-                className="btn btn-secondary text-xs"
-              >
-                Log First Expense
-              </button>
-            </div>
-          ) : (
-            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] overflow-hidden">
-              <div className="divide-y divide-[var(--color-line-subtle)]">
-                {clientTools.map((tool: ToolExpense) => (
-                  <div
-                    key={tool.id}
-                    className="p-3.5 flex items-center justify-between text-xs hover:bg-[var(--color-surface-hover)] transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <BrandLogo
-                        nameOrDomain={tool.tool_name || tool.description}
-                        size={28}
-                        className="rounded-md border border-[var(--color-line)] p-0.5"
-                      />
-                      <div className="space-y-0.5 min-w-0">
-                        <span className="font-medium text-[var(--color-ink)] block truncate">
-                          {tool.description}
-                        </span>
-                        <span className="text-[var(--color-ink-tertiary)] text-[11px] font-sans tabular-nums">
-                          Date: {tool.incurred_date} · Tool: {tool.tool_name}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-sans text-sm font-medium text-[var(--color-ink)] block tabular-nums">
-                        ₹{Number(tool.amount).toLocaleString("en-IN")}
-                      </span>
-                      <span className="text-[10.5px] font-sans tabular-nums uppercase text-[var(--color-ink-muted)]">
-                        {tool.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+      {/* TAB 2.8: DOCUMENTS & STRATEGIC ASSETS */}
+      {activeTab === "documents" && (
+        <ClientDocumentsTab
+          clientId={client.id}
+          clientName={client.name}
+          documents={clientDocuments}
+          invoices={clientInvoices}
+          onToast={(msg) => showToast(msg)}
+          onDocumentsChange={setClientDocuments}
+        />
+      )}
+
+      {/* TAB 3: INVOICES & DEDICATED TOOLING */}
+      {activeTab === "tools" && (
+        <ClientBillingTab
+          clientId={client.id}
+          clientName={client.name}
+          invoices={clientInvoices}
+          tools={clientTools}
+          monthlyRetainer={totalRetainer}
+          billingAnchorDay={billingAnchorDay}
+          onDraftInvoice={handleDraftInvoice}
+          onOpenAddExpense={() => setShowAddExpenseModal(true)}
+          isDrafting={isPending}
+          onToast={(msg) => showToast(msg)}
+        />
       )}
 
       {/* TAB 4: CREDENTIAL VAULT */}
@@ -1130,6 +1338,8 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
           onRevealPassword={handleRevealPassword}
           onCopyPassword={handleCopyPassword}
           onOpenAddCredModal={() => setShowAddCredModal(true)}
+          onEditCredential={(cred) => setEditingCred(cred)}
+          onDeleteCredential={(cred) => setDeletingCred(cred)}
         />
       )}
 
@@ -1140,7 +1350,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Share2 className="h-4 w-4 text-[var(--color-accent)]" />
-                <h2 className="text-sm font-semibold text-[var(--color-ink)]">
+                <h2 className="font-display text-base font-semibold tracking-tight text-[var(--color-ink)]">
                   Private Founder Desk Gateway
                 </h2>
               </div>
@@ -1149,7 +1359,7 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               </p>
             </div>
 
-            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-4 space-y-4">
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 space-y-4 shadow-2xs">
               <div className="space-y-1.5">
                 <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
                   Private Founder Desk URL
@@ -1188,17 +1398,17 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
               </button>
             </div>
 
-            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-4 space-y-1.5">
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 space-y-1.5 shadow-2xs">
               <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-ink-tertiary)] block font-medium">
                 Founder Approval Queue
               </span>
-              <div className="font-display text-xl font-normal text-[var(--color-ink)] tabular-nums">
+              <div className="font-display text-2xl font-semibold text-[var(--color-ink)] tabular-nums">
                 {reviewPendingCount}{" "}
                 <span className="text-xs font-normal text-[var(--color-ink-tertiary)] font-sans">
                   perspectives awaiting review
                 </span>
               </div>
-              <p className="text-[11.5px] text-[var(--color-ink-secondary)] leading-relaxed">
+              <p className="text-xs text-[var(--color-ink-secondary)] leading-relaxed">
                 When a perspective is sent for review, it appears instantly on the founder&apos;s mobile phone for 1-tap sign-off or voice notes.
               </p>
             </div>
@@ -1223,11 +1433,34 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
         </div>
       )}
 
+      {/* FUNCTIONAL MODAL: NEW CONTENT PERSPECTIVE */}
+      <NewContentModal
+        engagements={modalEngagements}
+        isOpen={showNewContentModal}
+        onClose={() => setShowNewContentModal(false)}
+      />
+
       {/* FUNCTIONAL MODAL: ADD CREDENTIAL */}
       <AddCredentialModal
         clientId={client.id}
         isOpen={showAddCredModal}
         onClose={() => setShowAddCredModal(false)}
+      />
+
+      {/* FUNCTIONAL MODAL: EDIT CREDENTIAL */}
+      <EditCredentialModal
+        credential={editingCred}
+        isOpen={!!editingCred}
+        onClose={() => setEditingCred(null)}
+        onSuccess={() => showToast("Login credentials updated successfully.")}
+      />
+
+      {/* FUNCTIONAL MODAL: DELETE CREDENTIAL */}
+      <DeleteCredentialModal
+        credential={deletingCred}
+        isOpen={!!deletingCred}
+        onClose={() => setDeletingCred(null)}
+        onSuccess={() => showToast("Login removed from vault.")}
       />
 
       {/* FUNCTIONAL MODAL: LOG SOFTWARE EXPENSE */}
@@ -1245,6 +1478,14 @@ export function ClientWorkspaceView({ client }: ClientWorkspaceViewProps) {
         onClose={() => setShowEditVoiceModal(false)}
         initialContext={context}
         onSuccess={() => showToast("Voice & positioning parameters updated successfully.")}
+      />
+
+      {/* FUNCTIONAL MODAL: EDIT CLIENT PROFILE & COMMERCIAL TERMS */}
+      <EditClientModal
+        client={client}
+        isOpen={showEditClientModal}
+        onClose={() => setShowEditClientModal(false)}
+        onSuccess={() => showToast("Client profile & commercial terms updated successfully.")}
       />
     </div>
   );

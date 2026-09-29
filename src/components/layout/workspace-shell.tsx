@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { Sidebar } from "./sidebar";
 import { TopNav } from "./top-nav";
@@ -27,14 +27,25 @@ function WorkspaceContent({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("ae_auth_change", handleAuth);
   }, [router]);
 
+  const pathname = usePathname();
+  const isFullBleed = pathname.startsWith("/command-center");
+
   return (
     <div
-      className={`min-h-screen flex flex-col transition-[padding-left] duration-200 ease-in-out ${
+      className={`transition-[padding-left] duration-200 ease-in-out ${
         isCollapsed ? "pl-[64px]" : "pl-[220px]"
-      }`}
+      } ${isFullBleed ? "h-[100dvh] flex flex-col overflow-hidden" : "min-h-screen flex flex-col"}`}
     >
       <TopNav />
-      <main className="flex-1 p-4 md:p-5 lg:p-6 bg-[var(--color-base)]">{children}</main>
+      <main
+        className={`flex-1 bg-[var(--color-base)] ${
+          isFullBleed
+            ? "p-0 flex flex-col overflow-hidden min-h-0"
+            : "px-4 py-3.5 md:px-5 md:py-4 lg:px-6 lg:py-4"
+        }`}
+      >
+        {children}
+      </main>
     </div>
   );
 }

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import {
   createClientRequestAction,
   updateClientRequestStatusAction,
@@ -217,93 +218,92 @@ export function OperationsClient({
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[var(--color-line)] pb-2 text-xs">
+      {/* Standardized Page-Level Tabs */}
+      <div className="flex border-b border-[var(--color-line)] gap-7 overflow-x-auto overflow-y-hidden no-scrollbar">
         <button
           onClick={() => setActiveTab("requests")}
-          className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
             activeTab === "requests"
-              ? "bg-[var(--color-ink)] text-[var(--color-base)]"
-              : "text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)]"
+              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
+              : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Founder Escalations ({initialClientRequests.length})
+          <ShieldAlert className="h-3.5 w-3.5" />
+          <span>Founder Escalations ({initialClientRequests.length})</span>
         </button>
         <button
           onClick={() => setActiveTab("credentials")}
-          className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
             activeTab === "credentials"
-              ? "bg-[var(--color-ink)] text-[var(--color-base)]"
-              : "text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)]"
+              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
+              : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Vault Audit Trail ({initialCredentialLogs.length})
+          <Shield className="h-3.5 w-3.5" />
+          <span>Vault Audit Trail ({initialCredentialLogs.length})</span>
         </button>
         <button
           onClick={() => setActiveTab("feedback")}
-          className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+          className={`flex items-center gap-2 pb-3 text-xs transition-colors border-b-2 -mb-[1px] cursor-pointer whitespace-nowrap ${
             activeTab === "feedback"
-              ? "bg-[var(--color-ink)] text-[var(--color-base)]"
-              : "text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)]"
+              ? "border-[var(--color-ink)] text-[var(--color-ink)] font-medium"
+              : "border-transparent text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Founder Desk Notes ({initialFeedback.length})
+          <MessageSquare className="h-3.5 w-3.5" />
+          <span>Founder Desk Notes ({initialFeedback.length})</span>
         </button>
       </div>
 
       {/* TAB 1: SERVICE REQUESTS & HOLDS */}
       {activeTab === "requests" && (
         <div className="space-y-4">
-          {/* Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-[var(--color-base-raised)] p-3 rounded-lg border border-[var(--color-line)] text-xs">
+          {/* Cohesive Filter Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-[var(--color-ink-tertiary)] font-sans tabular-nums uppercase text-[10px]">Filter Category:</span>
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="bg-[var(--color-base)] border border-[var(--color-line)] rounded px-2 py-1 text-xs text-[var(--color-ink)]"
-              >
-                <option value="all">All Categories</option>
-                <option value="emergency_hold">Emergency Holds</option>
-                <option value="content_pivot">Content Pivots</option>
-                <option value="design_tweak">Design Tweaks</option>
-                <option value="tool_issue">Tool Issues</option>
-                <option value="general_query">General Queries</option>
-              </select>
+              <Filter className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)] shrink-0" />
+              <div className="w-52">
+                <CustomSelect
+                  size="sm"
+                  options={[
+                    { value: "all", label: "All Categories" },
+                    { value: "emergency_hold", label: "Emergency Holds" },
+                    { value: "content_pivot", label: "Content Pivots" },
+                    { value: "design_tweak", label: "Design Tweaks" },
+                    { value: "tool_issue", label: "Tool Issues" },
+                    { value: "general_query", label: "General Queries" },
+                  ]}
+                  value={categoryFilter}
+                  onChange={setCategoryFilter}
+                />
+              </div>
             </div>
 
-            <div className="flex items-center gap-1 bg-[var(--color-base)] p-0.5 rounded-md border border-[var(--color-line)]">
-              <button
-                onClick={() => setStatusFilter("open")}
-                className={`px-2.5 py-1 rounded text-xs transition-colors ${
-                  statusFilter === "open"
-                    ? "bg-[var(--color-ink)] text-[var(--color-base)] font-medium"
-                    : "text-[var(--color-ink-secondary)]"
-                }`}
-              >
-                Open / In Progress
-              </button>
-              <button
-                onClick={() => setStatusFilter("resolved")}
-                className={`px-2.5 py-1 rounded text-xs transition-colors ${
-                  statusFilter === "resolved"
-                    ? "bg-[var(--color-ink)] text-[var(--color-base)] font-medium"
-                    : "text-[var(--color-ink-secondary)]"
-                }`}
-              >
-                Resolved
-              </button>
-              <button
-                onClick={() => setStatusFilter("all")}
-                className={`px-2.5 py-1 rounded text-xs transition-colors ${
-                  statusFilter === "all"
-                    ? "bg-[var(--color-ink)] text-[var(--color-base)] font-medium"
-                    : "text-[var(--color-ink-secondary)]"
-                }`}
-              >
-                All
-              </button>
-            </div>
+            <SegmentedFilter
+              options={[
+                {
+                  id: "open",
+                  label: "Open / In Progress",
+                  count: initialClientRequests.filter(
+                    (r) => r.status === "submitted" || r.status === "in_progress"
+                  ).length,
+                },
+                {
+                  id: "resolved",
+                  label: "Resolved",
+                  count: initialClientRequests.filter(
+                    (r) => r.status === "resolved" || r.status === "closed"
+                  ).length,
+                },
+                {
+                  id: "all",
+                  label: "All",
+                  count: initialClientRequests.length,
+                },
+              ]}
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val as "all" | "open" | "resolved")}
+            />
           </div>
 
           {/* List */}

@@ -19,7 +19,7 @@ export async function GET(request: Request) {
         email.split("@")[0];
 
       // Provision or sync operator record in Postgres `users` table
-      await resolveOrCreateOperatorRecord(email, fullName);
+      await resolveOrCreateOperatorRecord(email, fullName, data.user.id);
 
       const forwardedHost = request.headers.get("x-forwarded-host");
       const isLocalEnv = process.env.NODE_ENV === "development";

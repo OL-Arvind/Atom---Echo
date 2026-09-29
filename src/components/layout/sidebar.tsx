@@ -120,7 +120,7 @@ export function Sidebar() {
                 background: "transparent",
                 cursor: "pointer",
                 padding: 0,
-                transition: "all 0.15s ease",
+                transition: "background 150ms ease-out, transform 150ms ease-out",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "var(--color-base-subtle)";
@@ -198,7 +198,7 @@ export function Sidebar() {
                 background: "transparent",
                 color: "var(--color-ink-tertiary)",
                 cursor: "pointer",
-                transition: "all 0.12s ease",
+                transition: "background 120ms ease-out, color 120ms ease-out, transform 150ms ease-out",
                 flexShrink: 0,
               }}
               onMouseEnter={(e) => {
@@ -392,7 +392,7 @@ export function Sidebar() {
                   justifyContent: "center",
                   color: "var(--color-ink-muted)",
                   cursor: "pointer",
-                  transition: "all 0.12s ease",
+                  transition: "background 120ms ease-out, color 120ms ease-out, transform 150ms ease-out",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "var(--color-base-subtle)";
@@ -461,7 +461,7 @@ export function Sidebar() {
                 fontSize: "12px",
                 fontFamily: "var(--font-sans)",
                 cursor: "pointer",
-                transition: "all 0.12s ease",
+                transition: "background 120ms ease-out, color 120ms ease-out, transform 150ms ease-out",
                 marginBottom: "4px",
               }}
               onMouseEnter={(e) => {
@@ -507,7 +507,7 @@ export function Sidebar() {
                 width: "100%",
                 textAlign: "left",
                 cursor: "pointer",
-                transition: "all 0.12s ease",
+                transition: "background 120ms ease-out, border-color 120ms ease-out, transform 150ms ease-out",
                 overflow: "hidden",
               }}
               onMouseEnter={(e) => {

@@ -233,15 +233,19 @@ CREATE TRIGGER update_client_contexts_modtime
     BEFORE UPDATE ON client_contexts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 3.6 Meetings
+-- 3.6 Meetings (Client Memory & Meeting Intelligence Stream)
 CREATE TABLE meetings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     meeting_date TIMESTAMPTZ NOT NULL,
+    channel TEXT NOT NULL DEFAULT 'fathom_video', -- 'fathom_video', 'google_meet', 'zoom', 'phone_call', 'whatsapp', 'in_person'
+    attendees TEXT,
     fathom_recording_url TEXT,
     raw_transcript TEXT,
     summary TEXT,
+    key_decisions TEXT[] NOT NULL DEFAULT '{}',
+    action_items TEXT[] NOT NULL DEFAULT '{}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -316,6 +320,7 @@ CREATE TABLE credentials (
     encrypted_password TEXT NOT NULL, -- AES-256-GCM ciphertext + IV
     two_factor_method TEXT,
     notes TEXT,
+    access_scope TEXT NOT NULL DEFAULT 'agency_only' CHECK (access_scope IN ('agency_only', 'client_shared')),
     last_updated_by UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -329,7 +334,8 @@ CREATE TRIGGER update_credentials_modtime
 CREATE TABLE credential_audit_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     credential_id UUID NOT NULL REFERENCES credentials(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id),
+    user_id UUID REFERENCES users(id),
+    client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
     action vault_action NOT NULL,
     ip_address TEXT NOT NULL,
     user_agent TEXT NOT NULL,
