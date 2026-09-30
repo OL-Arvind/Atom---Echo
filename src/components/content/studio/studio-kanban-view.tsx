@@ -1,19 +1,7 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import {
-  CheckCircle2,
-  Calendar,
-  ChevronRight,
-  ShieldAlert,
-  Check,
-  Copy,
-  ExternalLink,
-} from "lucide-react";
-import { BrandLogo } from "@/components/ui/brand-logo";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { formatDisplayDateIST } from "@/lib/date-utils";
+import React, { useState, useMemo } from "react";
+import { StudioKanbanCard } from "./studio-kanban-card";
 
 export interface KanbanColumn {
   id: string;
@@ -32,6 +20,41 @@ export interface StudioKanbanViewProps {
   onSetPublishingPost: (post: any) => void;
 }
 
+const STAGE_CONFIG: Record<
+  string,
+  {
+    dotColor: string;
+    emptyTitle: string;
+    emptyHint: string;
+  }
+> = {
+  draft: {
+    dotColor: "bg-[var(--color-ink-muted)]",
+    emptyTitle: "No drafts queued",
+    emptyHint: "Capture raw ideas from client notes",
+  },
+  internal_review: {
+    dotColor: "bg-[#6366f1]",
+    emptyTitle: "Voice QA is clear",
+    emptyHint: "Drafts ready for editorial review will appear here",
+  },
+  client_review: {
+    dotColor: "bg-[var(--color-warn)]",
+    emptyTitle: "Founder desk clear",
+    emptyHint: "No perspectives awaiting 1-tap approval",
+  },
+  scheduled: {
+    dotColor: "bg-[#0284c7]",
+    emptyTitle: "No scheduled posts",
+    emptyHint: "Lock approved perspectives on calendar",
+  },
+  published: {
+    dotColor: "bg-[var(--color-ok)]",
+    emptyTitle: "No recent publications",
+    emptyHint: "Live LinkedIn posts compound authority here",
+  },
+};
+
 export function StudioKanbanView({
   kanbanColumns,
   isPending,
@@ -41,255 +64,211 @@ export function StudioKanbanView({
   onOpenWhatsApp,
   onSetPublishingPost,
 }: StudioKanbanViewProps) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 items-start overflow-x-auto pb-4">
-      {kanbanColumns.map((col) => (
-        <div
-          key={col.id}
-          className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-base-subtle)]/40 p-3 space-y-3 min-w-[240px]"
-        >
-          {/* Column Header */}
-          <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-2">
-            <div>
-              <h3 className="font-semibold text-xs text-[var(--color-ink)] flex items-center gap-1.5">
-                <span>{col.title}</span>
-                <span className="font-sans text-[11px] text-[var(--color-ink-tertiary)] font-normal tabular-nums">
-                  ({col.posts.length})
-                </span>
-              </h3>
-              <p className="text-[10.5px] text-[var(--color-ink-tertiary)] mt-0.5">
-                {col.subtitle}
-              </p>
-            </div>
-          </div>
+  const [publishedCycle, setPublishedCycle] = useState<"7d" | "all">("7d");
+  const [draggingPostId, setDraggingPostId] = useState<string | null>(null);
+  const [activeDropColId, setActiveDropColId] = useState<string | null>(null);
 
-          {/* Column Post Cards */}
-          <div className="space-y-2.5">
-            {col.posts.length === 0 ? (
-              <div className="p-4 text-center text-[11px] text-[var(--color-ink-muted)] italic">
-                Empty stage
+  const sevenDaysAgo = useMemo(() => Date.now() - 7 * 24 * 60 * 60 * 1000, []);
+
+  // Drag & Drop handlers
+  const handleDragStart = (e: React.DragEvent, post: any) => {
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({ postId: post.id, status: post.status })
+    );
+    e.dataTransfer.effectAllowed = "move";
+    setDraggingPostId(post.id);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingPostId(null);
+    setActiveDropColId(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, colId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (activeDropColId !== colId) {
+      setActiveDropColId(colId);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent, colId: string) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      if (activeDropColId === colId) {
+        setActiveDropColId(null);
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetColId: string) => {
+    e.preventDefault();
+    setActiveDropColId(null);
+    setDraggingPostId(null);
+
+    let rawData: any = null;
+    try {
+      const dataStr = e.dataTransfer.getData("application/json");
+      if (dataStr) rawData = JSON.parse(dataStr);
+    } catch {
+      // ignore parse errors
+    }
+
+    const targetPostId = rawData?.postId || draggingPostId;
+    if (!targetPostId) return;
+
+    // Locate the dragged post across columns
+    let foundPost: any = null;
+    for (const c of kanbanColumns) {
+      const p = c.posts.find((item: any) => item.id === targetPostId);
+      if (p) {
+        foundPost = p;
+        break;
+      }
+    }
+    if (!foundPost) return;
+
+    const currentStatus = foundPost.status;
+    if (currentStatus === targetColId) return;
+    if (
+      targetColId === "scheduled" &&
+      (currentStatus === "approved" || currentStatus === "scheduled")
+    ) {
+      return;
+    }
+
+    // Direct status transition to target column (including published)
+    onStatusTransition(foundPost, targetColId);
+  };
+
+  return (
+    <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 xl:gap-3.5 items-start">
+      {kanbanColumns.map((col) => {
+        const isPublishedCol = col.id === "published";
+        const isDropTarget = activeDropColId === col.id;
+        const stage = STAGE_CONFIG[col.id] || {
+          dotColor: "bg-[var(--color-ink-muted)]",
+          emptyTitle: "No items",
+          emptyHint: "Stage is clear",
+        };
+
+        const displayedPosts =
+          isPublishedCol && publishedCycle === "7d"
+            ? col.posts.filter((p) => {
+                const pubTime = new Date(p.published_at || p.created_at).getTime();
+                return pubTime >= sevenDaysAgo;
+              })
+            : col.posts;
+
+        return (
+          <div
+            key={col.id}
+            onDragOver={(e) => handleDragOver(e, col.id)}
+            onDragLeave={(e) => handleDragLeave(e, col.id)}
+            onDrop={(e) => handleDrop(e, col.id)}
+            className={`flex flex-col min-h-[480px] rounded-[var(--radius-md)] border p-3 min-w-0 transition-all duration-160 ease-out ${
+              isDropTarget
+                ? "border-[var(--color-accent-line)] bg-[var(--color-accent-bg)]/25 ring-2 ring-[var(--color-accent)]/30"
+                : "border-[var(--color-line)] bg-[var(--color-base-subtle)]/40"
+            }`}
+          >
+            {/* Column Header */}
+            <div className="flex items-start justify-between border-b border-[var(--color-line-subtle)] pb-2.5 mb-3 gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${stage.dotColor}`} />
+                  <h3 className="font-semibold text-xs text-[var(--color-ink)] truncate tracking-tight">
+                    {col.title}
+                  </h3>
+                  <span className="font-sans text-[11px] text-[var(--color-ink-muted)] font-medium tabular-nums shrink-0">
+                    ({displayedPosts.length})
+                  </span>
+                </div>
+                <p className="text-[10px] text-[var(--color-ink-muted)] mt-0.5 truncate leading-tight">
+                  {col.subtitle}
+                </p>
+              </div>
+
+              {/* Cycle Scope Toggle for Published Column */}
+              {isPublishedCol && col.posts.length > 0 && (
+                <div className="inline-flex items-center rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-0.5 text-[9.5px] font-sans tabular-nums shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setPublishedCycle("7d")}
+                    className={`px-1.5 py-0.5 rounded-[2px] transition-all cursor-pointer ${
+                      publishedCycle === "7d"
+                        ? "bg-[var(--color-surface)] text-[var(--color-ink)] font-semibold shadow-2xs"
+                        : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
+                    }`}
+                  >
+                    7d
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPublishedCycle("all")}
+                    className={`px-1.5 py-0.5 rounded-[2px] transition-all cursor-pointer ${
+                      publishedCycle === "all"
+                        ? "bg-[var(--color-surface)] text-[var(--color-ink)] font-semibold shadow-2xs"
+                        : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
+                    }`}
+                  >
+                    All ({col.posts.length})
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Column Post Cards or Tactile Empty State */}
+            {displayedPosts.length === 0 ? (
+              <div
+                className={`flex-1 flex flex-col items-center justify-center min-h-[140px] rounded-[var(--radius-sm)] border-2 border-dashed p-4 text-center transition-all ${
+                  isDropTarget
+                    ? "border-[var(--color-accent-line)] bg-[var(--color-accent-bg)]/30 text-[var(--color-accent-text)]"
+                    : "border-[var(--color-line-subtle)]"
+                }`}
+              >
+                <span className="text-[11px] font-sans font-medium text-[var(--color-ink-tertiary)]">
+                  {isDropTarget ? `Drop into ${col.title.replace(/^\d+\s*/, "")}` : stage.emptyTitle}
+                </span>
+                <span className="text-[10px] font-sans text-[var(--color-ink-muted)] mt-1 max-w-[140px] leading-tight">
+                  {isDropTarget ? "Release to transition stage" : stage.emptyHint}
+                </span>
               </div>
             ) : (
-              col.posts.map((post) => {
-                const client = post.engagements?.clients;
-                const tabooWords: string[] = client?.client_contexts?.[0]?.taboo_words || [];
-                const bodyLower = (post.body_markdown || "").toLowerCase();
-                const flagged = tabooWords.filter((w) => {
-                  const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-                  return new RegExp(`\\b${escaped}\\b`, "i").test(bodyLower);
-                });
-
-                const unresolvedNotes = (post.content_feedback || [])
-                  .filter((fb: any) => !fb.is_resolved && fb.comment)
-                  .sort(
-                    (a: any, b: any) =>
-                      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-                  );
-                const latestUnresolved = unresolvedNotes[0];
-                const hasFounderRevision = unresolvedNotes.some(
-                  (fb: any) => fb.author_type === "client"
-                );
-
-                return (
-                  <div
+              <div className="space-y-2.5 flex-1">
+                {displayedPosts.map((post) => (
+                  <StudioKanbanCard
                     key={post.id}
-                    className="rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-raised)] p-3 space-y-2.5 shadow-xs hover:border-[var(--color-line-strong)] transition-colors"
-                  >
-                    {/* Card Client & Pillar */}
-                    <div className="flex items-center justify-between text-[10.5px]">
-                      <div className="flex items-center gap-1.5 truncate max-w-[140px]">
-                        <BrandLogo
-                          nameOrDomain={
-                            client?.website_url ||
-                            client?.founder_email ||
-                            client?.name ||
-                            "Client"
-                          }
-                          size={14}
-                          className="rounded-[2px]"
-                        />
-                        <span className="font-medium text-[var(--color-ink-secondary)] truncate">
-                          {client?.name || "Client"}
-                        </span>
-                      </div>
-                      {post.target_pillar && (
-                        <span className="font-sans tabular-nums text-[10px] uppercase tracking-wider text-[var(--color-ink-tertiary)]">
-                          {post.target_pillar.split(" ")[0]}
-                        </span>
-                      )}
-                    </div>
+                    post={post}
+                    isPending={isPending}
+                    copiedId={copiedId}
+                    isBeingDragged={draggingPostId === post.id}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onStatusTransition={onStatusTransition}
+                    onCopyReviewLink={onCopyReviewLink}
+                    onOpenWhatsApp={onOpenWhatsApp}
+                    onSetPublishingPost={onSetPublishingPost}
+                  />
+                ))}
+              </div>
+            )}
 
-                    {/* Unresolved Revision Note Indicator */}
-                    {latestUnresolved && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-[10px] font-sans tabular-nums uppercase tracking-wider text-[var(--color-warn-text)]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-warn)] shrink-0" />
-                          <span>
-                            {latestUnresolved.author_type === "operator"
-                              ? "QA Revision Note"
-                              : "Founder Revision"}
-                          </span>
-                        </div>
-                        <p className="border-l-2 border-[var(--color-line-strong)] pl-2 py-0.5 text-[11px] text-[var(--color-ink-secondary)] line-clamp-2 leading-snug">
-                          {latestUnresolved.comment}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Post Title */}
-                    <Link
-                      href={`/content/${post.id}`}
-                      className="font-medium text-xs text-[var(--color-ink)] hover:text-[var(--color-accent-text)] transition-colors line-clamp-2 block"
-                    >
-                      {post.title}
-                    </Link>
-
-                    {/* Taboo Warning */}
-                    {flagged.length > 0 && (
-                      <div className="flex items-center gap-1.5 text-[10.5px] font-sans tabular-nums text-[var(--color-danger-text)] border-l-2 border-[var(--color-danger-line)] pl-2 py-0.5">
-                        <ShieldAlert className="h-3 w-3 shrink-0" />
-                        <span className="truncate">Taboo: {flagged.join(", ")}</span>
-                      </div>
-                    )}
-
-                    {/* Published or Scheduled Date */}
-                    {post.status === "published" && post.published_at ? (
-                      <div className="flex items-center gap-1 text-[10.5px] font-sans tabular-nums text-[var(--color-ok-text)]">
-                        <CheckCircle2 className="h-3 w-3 shrink-0" />
-                        <span>Published {formatDisplayDateIST(post.published_at)}</span>
-                      </div>
-                    ) : post.scheduled_publish_date ? (
-                      <div className="flex items-center gap-1 text-[10.5px] font-sans tabular-nums text-[var(--color-ink-tertiary)]">
-                        <Calendar className="h-3 w-3 text-[var(--color-accent)] shrink-0" />
-                        <span>{formatDisplayDateIST(post.scheduled_publish_date)}</span>
-                      </div>
-                    ) : null}
-
-                    {/* Card Actions Footer */}
-                    <div className="pt-2 border-t border-[var(--color-line-subtle)] flex items-center justify-between gap-1.5">
-                      <Link
-                        href={`/content/${post.id}`}
-                        className="text-[11px] text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] inline-flex items-center gap-1 font-medium"
-                      >
-                        <span>Studio</span>
-                        <ChevronRight className="h-3 w-3" />
-                      </Link>
-
-                      <div className="flex items-center gap-1">
-                        {post.status === "draft" && (
-                          hasFounderRevision ? (
-                            <button
-                              onClick={() => onStatusTransition(post, "client_review")}
-                              disabled={isPending}
-                              className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer"
-                              title="Re-send revised post directly to Founder Desk"
-                            >
-                              <span>Re-send &rarr;</span>
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => onStatusTransition(post, "internal_review")}
-                              disabled={isPending}
-                              className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer"
-                              title="Move to Internal Voice QA"
-                            >
-                              <span>Ready for QA &rarr;</span>
-                            </button>
-                          )
-                        )}
-
-                        {post.status === "internal_review" && (
-                          <button
-                            onClick={() => onStatusTransition(post, "client_review")}
-                            disabled={isPending}
-                            className="btn btn-primary text-[10.5px] py-0.5 px-2 cursor-pointer"
-                            title="Send to Founder Desk & copy review link"
-                          >
-                            <span>Send to Founder &rarr;</span>
-                          </button>
-                        )}
-
-                        {post.status === "client_review" && (
-                          <>
-                            <button
-                              onClick={() => onCopyReviewLink(post)}
-                              className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer inline-flex items-center gap-1"
-                              title="Copy private Founder Desk link"
-                            >
-                              {copiedId === post.id ? (
-                                <>
-                                  <Check className="h-2.5 w-2.5 text-[var(--color-ok)]" />
-                                  <span>Copied</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="h-2.5 w-2.5 text-[var(--color-ink-tertiary)]" />
-                                  <span>Link</span>
-                                </>
-                              )}
-                            </button>
-                            <button
-                              onClick={() => onOpenWhatsApp(post)}
-                              className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer inline-flex items-center gap-1"
-                              title="Ping founder on WhatsApp"
-                            >
-                              <WhatsAppIcon size={11} className="text-[#25D366]" />
-                              <span>Ping</span>
-                            </button>
-                          </>
-                        )}
-
-                        {post.status === "approved" && (
-                          <button
-                            onClick={() => onStatusTransition(post, "scheduled")}
-                            disabled={isPending}
-                            className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer"
-                            title="Confirm Scheduled Slot on Timeline"
-                          >
-                            <span>Lock Schedule &rarr;</span>
-                          </button>
-                        )}
-
-                        {post.status === "scheduled" && (
-                          <button
-                            onClick={() => onSetPublishingPost(post)}
-                            className="btn btn-primary text-[10.5px] py-0.5 px-2 cursor-pointer inline-flex items-center gap-1"
-                            title="Mark as Published on LinkedIn"
-                          >
-                            <span>Publish &rarr;</span>
-                          </button>
-                        )}
-
-                        {post.status === "published" &&
-                          (post.linkedin_post_url ? (
-                            <a
-                              href={post.linkedin_post_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-secondary text-[10.5px] py-0.5 px-2 inline-flex items-center gap-1"
-                              title="View live LinkedIn post"
-                            >
-                              <span>Live</span>
-                              <ExternalLink className="h-2.5 w-2.5" />
-                            </a>
-                          ) : (
-                            <button
-                              onClick={() => onSetPublishingPost(post)}
-                              className="btn btn-secondary text-[10.5px] py-0.5 px-2 cursor-pointer"
-                              title="Add live LinkedIn link"
-                            >
-                              <span>+ URL</span>
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+            {/* Show older published archive button if some posts were hidden */}
+            {isPublishedCol && publishedCycle === "7d" && col.posts.length > displayedPosts.length && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPublishedCycle("all")}
+                  className="w-full py-1.5 px-2 rounded-[var(--radius-xs)] border border-dashed border-[var(--color-line)] text-[10.5px] font-sans text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] hover:border-[var(--color-line-strong)] transition-colors cursor-pointer text-center"
+                >
+                  +{col.posts.length - displayedPosts.length} older published perspectives
+                </button>
+              </div>
             )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

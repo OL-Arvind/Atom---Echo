@@ -31,6 +31,8 @@ export async function getContentStudioDataFromDb() {
                 name,
                 founder_name,
                 founder_phone,
+                founder_email,
+                website_url,
                 client_contexts (
                   taboo_words
                 )
@@ -55,6 +57,9 @@ export async function getContentStudioDataFromDb() {
               id,
               name,
               founder_name,
+              founder_phone,
+              founder_email,
+              website_url,
               client_contexts (
                 taboo_words,
                 core_pillars
@@ -80,10 +85,23 @@ export async function getContentStudioDataFromDb() {
           clientId: client?.id,
           clientName: client?.name || "Client",
           founderName: client?.founder_name || "Founder",
+          founderPhone: client?.founder_phone,
+          founderEmail: client?.founder_email,
+          websiteUrl: client?.website_url,
+          website_url: client?.website_url,
           serviceType: eng.service_type,
           tabooWords: ctx?.taboo_words || [],
           corePillars: ctx?.core_pillars || [],
-          clients: client ? { id: client.id, name: client.name } : null,
+          clients: client
+            ? {
+                id: client.id,
+                name: client.name,
+                founder_name: client.founder_name,
+                founder_phone: client.founder_phone,
+                founder_email: client.founder_email,
+                website_url: client.website_url,
+              }
+            : null,
         };
       });
 

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Filter, ArrowRight } from "lucide-react";
+import { Filter, ArrowRight, Columns3, LayoutGrid, List } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
 
@@ -11,10 +11,11 @@ export interface StudioMastheadProps {
   reviewCount: number;
   scheduledCount: number;
   totalCount: number;
-  clientOptions: { id: string; name: string }[];
+  clientOptions: { id: string; name: string; brandName?: string }[];
   selectedClientId: string;
   onSelectClient: (id: string) => void;
-  viewMode: "kanban" | "list";
+  viewMode: "matrix" | "kanban" | "list";
+  onViewModeChange?: (mode: "matrix" | "kanban" | "list") => void;
   filter: string;
   onFilterChange: (filter: string) => void;
 }
@@ -28,6 +29,7 @@ export function StudioMasthead({
   selectedClientId,
   onSelectClient,
   viewMode,
+  onViewModeChange,
   filter,
   onFilterChange,
 }: StudioMastheadProps) {
@@ -94,24 +96,71 @@ export function StudioMasthead({
         </div>
       </div>
 
-      {/* Band 2: Integrated Filter & Client Bar */}
-      <div className="px-5 py-3 lg:px-7 border-t border-[var(--color-line-subtle)] bg-[var(--color-surface)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Filter className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)] shrink-0" />
-          <div className="w-56">
-            <CustomSelect
-              size="sm"
-              options={[
-                { value: "all", label: `All Clients (${clientOptions.length})` },
-                ...clientOptions.map((c) => ({
-                  value: c.id,
-                  label: c.name,
-                  brandName: c.name,
-                })),
-              ]}
-              value={selectedClientId}
-              onChange={onSelectClient}
-            />
+      {/* Band 2: Integrated View & Filter Toolbar */}
+      <div className="px-5 py-2.5 lg:px-7 border-t border-[var(--color-line-subtle)] bg-[var(--color-surface)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Integrated 3-Way Architectural View Switcher */}
+          {onViewModeChange && (
+            <div className="inline-flex items-center rounded-[var(--radius-xs)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-0.5 text-xs font-sans">
+              <button
+                type="button"
+                onClick={() => onViewModeChange("matrix")}
+                className={`px-2.5 py-1 rounded-[2px] transition-all cursor-pointer font-medium flex items-center gap-1.5 active:scale-[0.98] ${
+                  viewMode === "matrix"
+                    ? "bg-[var(--color-surface)] text-[var(--color-ink)] shadow-2xs font-semibold"
+                    : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
+                }`}
+              >
+                <Columns3 className="h-3.5 w-3.5" />
+                <span>Client Matrix</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onViewModeChange("kanban")}
+                className={`px-2.5 py-1 rounded-[2px] transition-all cursor-pointer font-medium flex items-center gap-1.5 active:scale-[0.98] ${
+                  viewMode === "kanban"
+                    ? "bg-[var(--color-surface)] text-[var(--color-ink)] shadow-2xs font-semibold"
+                    : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
+                }`}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+                <span>Kanban</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onViewModeChange("list")}
+                className={`px-2.5 py-1 rounded-[2px] transition-all cursor-pointer font-medium flex items-center gap-1.5 active:scale-[0.98] ${
+                  viewMode === "list"
+                    ? "bg-[var(--color-surface)] text-[var(--color-ink)] shadow-2xs font-semibold"
+                    : "text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)]"
+                }`}
+              >
+                <List className="h-3.5 w-3.5" />
+                <span>List</span>
+              </button>
+            </div>
+          )}
+
+          <div className="h-4 w-px bg-[var(--color-line-strong)]/20 hidden sm:block" />
+
+          {/* Client Filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-3.5 w-3.5 text-[var(--color-ink-tertiary)] shrink-0" />
+            <div className="w-52">
+              <CustomSelect
+                size="sm"
+                options={[
+                  { value: "all", label: `All Clients (${clientOptions.length})` },
+                  ...clientOptions.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                    brandName: c.brandName || c.name,
+                  })),
+                ]}
+                value={selectedClientId}
+                onChange={onSelectClient}
+              />
+            </div>
           </div>
         </div>
 
@@ -128,7 +177,9 @@ export function StudioMasthead({
           />
         ) : (
           <div className="text-xs font-sans tabular-nums text-[var(--color-ink-tertiary)] flex items-center gap-2">
-            <span>Editorial Flow · Idea to Publishing</span>
+            <span>
+              {viewMode === "matrix" ? "Grouped by Client Cadence" : "Editorial Flow"}
+            </span>
             <span>·</span>
             <Link
               href="/calendar"

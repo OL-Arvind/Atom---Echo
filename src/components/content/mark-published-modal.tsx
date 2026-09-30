@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { X, Copy, Check, ExternalLink } from "lucide-react";
 import { publishContentPostAction } from "@/lib/actions/content";
 import { BrandLogo } from "@/components/ui/brand-logo";
@@ -16,7 +16,9 @@ interface MarkPublishedModalProps {
     id: string;
     title: string;
     body_markdown?: string | null;
+    status?: string | null;
     scheduled_publish_date?: string | null;
+    published_at?: string | null;
     linkedin_post_url?: string | null;
     engagements?: {
       clients?: {
@@ -28,7 +30,7 @@ interface MarkPublishedModalProps {
   } | null;
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (data?: { linkedin_post_url?: string; published_at?: string }) => void;
 }
 
 export function MarkPublishedModal({
@@ -43,11 +45,37 @@ export function MarkPublishedModal({
   const [publishedAt, setPublishedAt] = useState(() => toDatetimeLocalIST());
   const [copiedBody, setCopiedBody] = useState(false);
 
+  // Sync state whenever modal is opened
+  useEffect(() => {
+    if (isOpen && post) {
+      setLinkedinUrl(post.linkedin_post_url || "");
+      setPublishedAt(
+        post.published_at
+          ? toDatetimeLocalIST(post.published_at)
+          : toDatetimeLocalIST()
+      );
+      setError(null);
+      setCopiedBody(false);
+    }
+  }, [isOpen, post]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !post) return null;
 
+  const isAlreadyPublished = post.status === "published";
   const clientName = post.engagements?.clients?.name || "Client";
   const founderName = post.engagements?.clients?.founder_name || "Founder";
-  const founderLinkedinUrl = post.engagements?.clients?.linkedin_url || "https://www.linkedin.com/feed/";
+  const founderLinkedinUrl =
+    post.engagements?.clients?.linkedin_url || "https://www.linkedin.com/feed/";
 
   const handleCopyBody = async () => {
     if (!post.body_markdown) return;
@@ -73,7 +101,14 @@ export function MarkPublishedModal({
 
       if (res.success) {
         onClose();
-        if (onSuccess) onSuccess();
+        if (onSuccess) {
+          onSuccess({
+            linkedin_post_url: linkedinUrl.trim() || undefined,
+            published_at: publishedAt
+              ? parseDatetimeLocalIST(publishedAt)
+              : new Date().toISOString(),
+          });
+        }
       } else {
         setError(res.error || "Failed to mark post as published.");
       }
@@ -81,19 +116,29 @@ export function MarkPublishedModal({
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card max-w-md w-full space-y-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs select-none animate-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="w-full max-w-md rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-base-overlay)] p-5 sm:p-6 shadow-dialog space-y-4 text-[var(--color-ink)] animate-in select-text">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--color-line-subtle)] pb-3">
           <div>
             <h3 className="font-medium text-sm text-[var(--color-ink)]">
-              Confirm LinkedIn Publication
+              {isAlreadyPublished
+                ? "Attach Live LinkedIn URL"
+                : "Confirm LinkedIn Publication"}
             </h3>
             <p className="text-[11px] text-[var(--color-ink-tertiary)]">
-              Copy final perspective text, publish on LinkedIn, and log the live URL.
+              {isAlreadyPublished
+                ? "Link the live LinkedIn post to this perspective."
+                : "Copy final perspective text, publish on LinkedIn, and log the live URL."}
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="rounded-[var(--radius-xs)] p-1 text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] hover:bg-[var(--color-base-subtle)] transition-colors cursor-pointer"
           >
@@ -111,8 +156,14 @@ export function MarkPublishedModal({
         <div className="rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-base-subtle)] p-3 space-y-2.5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-xs min-w-0">
-              <BrandLogo nameOrDomain={clientName} size={14} className="rounded-[2px] shrink-0" />
-              <span className="font-medium text-[var(--color-ink)] truncate">{clientName}</span>
+              <BrandLogo
+                nameOrDomain={clientName}
+                size={14}
+                className="rounded-[2px] shrink-0"
+              />
+              <span className="font-medium text-[var(--color-ink)] truncate">
+                {clientName}
+              </span>
               <span className="text-[var(--color-ink-tertiary)] font-sans tabular-nums text-[11px] shrink-0">
                 ({founderName})
               </span>
@@ -162,7 +213,7 @@ export function MarkPublishedModal({
           {/* Live LinkedIn URL */}
           <div>
             <label className="text-[10px] font-sans tabular-nums uppercase tracking-wider font-medium text-[var(--color-ink-tertiary)] block mb-1">
-              Live LinkedIn Post URL (Optional)
+              Live LinkedIn Post URL
             </label>
             <div className="relative">
               <input
@@ -198,7 +249,7 @@ export function MarkPublishedModal({
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-secondary text-xs"
+              className="btn btn-secondary text-xs cursor-pointer"
             >
               Cancel
             </button>
@@ -207,7 +258,13 @@ export function MarkPublishedModal({
               disabled={isPending}
               className="btn btn-primary text-xs cursor-pointer"
             >
-              <span>{isPending ? "Publishing..." : "Confirm Published"}</span>
+              <span>
+                {isPending
+                  ? "Saving..."
+                  : isAlreadyPublished
+                  ? "Save LinkedIn URL"
+                  : "Confirm Published"}
+              </span>
             </button>
           </div>
         </form>

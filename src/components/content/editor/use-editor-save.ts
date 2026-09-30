@@ -183,6 +183,8 @@ export function useEditorSave({
             showToast("Moved to Internal Voice & QA");
           } else if (newStatus === "approved" || finalStatus === "scheduled") {
             showToast("Approved & locked into publishing schedule");
+          } else if (newStatus === "published" || finalStatus === "published") {
+            showToast("Perspective marked live on LinkedIn");
           } else {
             showToast("Perspective saved");
           }
@@ -259,11 +261,6 @@ export function useEditorSave({
 
   // Transition status handler
   const handleStatusTransition = (newStatus: string) => {
-    if (newStatus === "published") {
-      setShowPublishModal(true);
-      return;
-    }
-
     if (newStatus === "client_review" && flaggedWords.length > 0) {
       const confirmSend = window.confirm(
         `This draft still contains ${flaggedWords.length} taboo word(s): ${flaggedWords.join(

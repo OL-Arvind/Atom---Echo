@@ -42,6 +42,13 @@ Before touching, modifying, or creating any code in this repository, you MUST fo
 * A client is not a page; an engagement is not a tag; content is an operational work object passing through a state machine.
 * Do not introduce duplicate stores or split state across multiple components.
 
+### LAW 4: "Strict 500-Line Limit & Modular Lifecycle Hooks"
+* **FORBIDDEN**: Permitting any file in `src/**/*.ts` or `src/**/*.tsx` to grow beyond 500 lines. Monolithic 1,000+ line views create maintainability hazards, cognitive overload, and merge conflicts.
+* **MANDATORY**: Decompose large views into focused presentation subcomponents and domain hooks:
+  - **Presentation**: Extract mastheads, canvas cards, inspector panes, and tab contents into dedicated subdirectories (e.g., `src/components/content/editor/`, `src/components/clients/workspace/`, `src/components/clients/documents/`).
+  - **Lifecycle & State Hooks**: Extract debounced autosaves, keyboard shortcuts, version diffs, and query param synchronization into dedicated custom hooks (`useEditorSave`, `useEditorRevisions`, `useStudioOrigin`, `useEditorReviewActions`).
+
+
 ---
 
 ## 3. Seven Questions Mandatory Before Writing Code
@@ -109,6 +116,10 @@ If you discover a conflict between requirements:
 
 * **TypeScript Check on Windows (`&` in Workspace Path)**: Because `d:\BaseWorks\Atom & Echo` contains an ampersand (`&`), `npx tsc` fails in Windows shells due to unescaped path splitting inside `npx.cmd`. Always run TypeScript verification via:
   `node "./node_modules/typescript/bin/tsc" --noEmit`
+* **Windows Shell & Dynamic Route Pathing (`-LiteralPath`)**: Next.js App Router dynamic routes use brackets (e.g. `[id]`, `[token]`), which PowerShell evaluates as regex/wildcard character classes. Always specify `-LiteralPath` for PowerShell file commands targeting these directories:
+  `(Get-Content -LiteralPath "src/app/(workspace)/content/[id]/content-editor-client.tsx").Length`
+* **Concurrent Feature Coexistence Protocol**: When another agent or branch is actively building features (e.g. Post Version History, Billing automations), never delete, rename, or stub out active server actions, domain types, or migration files. Preserve full backwards-compatibility and wrap or compose rather than replace shared entities.
+
 
 <!-- BEGIN:nextjs-agent-rules -->
 

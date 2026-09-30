@@ -4,7 +4,7 @@ interface CacheEntry<T> {
 }
 
 const queryCache = new Map<string, CacheEntry<unknown>>();
-const DEFAULT_TTL_MS = 25_000; // 25s TTL for instant tab switching
+const DEFAULT_TTL_MS = 2_000; // 2s TTL prevents duplicate concurrent DB fetches without serving stale data
 
 export function invalidateDbCache(pattern?: string) {
   if (!pattern) {

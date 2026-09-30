@@ -1,19 +1,17 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useEffect, useTransition, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Plus,
   CheckCircle2,
-  LayoutGrid,
-  List,
 } from "lucide-react";
 import { updateContentStatusAction, sendForClientReviewAction } from "@/lib/actions/content";
 import { MarkPublishedModal } from "@/components/content/mark-published-modal";
 import { PageHeader } from "@/components/layout/page-header";
-import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { StudioMasthead } from "@/components/content/studio/studio-masthead";
+import { StudioMatrixView } from "@/components/content/studio/studio-matrix-view";
 import { StudioKanbanView } from "@/components/content/studio/studio-kanban-view";
 import { StudioListView } from "@/components/content/studio/studio-list-view";
 
@@ -23,14 +21,40 @@ interface ContentStudioClientProps {
   tokenMap: Record<string, string>;
 }
 
-type ViewMode = "kanban" | "list";
+type ViewMode = "matrix" | "kanban" | "list";
 
 export function ContentStudioClient({
   initialPosts,
   engagements,
   tokenMap: initialTokenMap,
 }: ContentStudioClientProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>("kanban");
+  const [viewMode, setViewMode] = useState<ViewMode>("matrix");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("ae_studio_view_mode") as ViewMode | null;
+      if (saved && (saved === "matrix" || saved === "kanban" || saved === "list")) {
+        setViewMode(saved);
+      }
+    } catch {
+      // ignore localStorage errors
+    }
+  }, []);
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem("ae_studio_view_mode", mode);
+    } catch {
+      // ignore
+    }
+  };
+  const [posts, setPosts] = useState<any[]>(initialPosts);
+
+  useEffect(() => {
+    setPosts(initialPosts);
+  }, [initialPosts]);
+
   const [filter, setFilter] = useState<string>("all");
   const [selectedClientId, setSelectedClientId] = useState<string>("all");
   const [tokenMap, setTokenMap] = useState<Record<string, string>>(initialTokenMap);
@@ -51,6 +75,22 @@ export function ContentStudioClient({
   };
 
   const handleStatusTransition = (post: any, newStatus: string) => {
+    // Optimistic UI update: move card immediately without waiting for server roundtrip
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === post.id
+          ? {
+              ...p,
+              status: newStatus,
+              published_at:
+                newStatus === "published"
+                  ? p.published_at || new Date().toISOString()
+                  : p.published_at,
+            }
+          : p
+      )
+    );
+
     startTransition(async () => {
       const res = await updateContentStatusAction(post.id, newStatus);
       if (res.success) {
@@ -77,11 +117,14 @@ export function ContentStudioClient({
           showToast("Moved to Voice & QA");
         } else if (newStatus === "approved" || newStatus === "scheduled") {
           showToast("Locked on publishing schedule");
+        } else if (newStatus === "published") {
+          showToast("Perspective marked live on LinkedIn");
         } else {
           showToast(`Moved to ${newStatus.replace("_", " ")}`);
         }
         router.refresh();
       } else {
+        setPosts(initialPosts);
         showToast(`Error: ${res.error}`);
       }
     });
@@ -154,27 +197,36 @@ export function ContentStudioClient({
   // Client list for filtering
   const clientOptions = useMemo(() => {
     const seen = new Set<string>();
-    const list: { id: string; name: string }[] = [];
+    const list: { id: string; name: string; brandName?: string }[] = [];
     engagements.forEach((e) => {
       const cId = e.clients?.id || e.clientId;
       const cName = e.clients?.name || e.clientName;
+      const brand =
+        e.websiteUrl ||
+        e.website_url ||
+        e.clients?.website_url ||
+        e.founderEmail ||
+        e.founder_email ||
+        e.clients?.founder_email ||
+        cName;
       if (cId && !seen.has(cId)) {
         seen.add(cId);
-        list.push({ id: cId, name: cName || "Client" });
+        list.push({ id: cId, name: cName || "Client", brandName: brand });
       }
     });
-    initialPosts.forEach((p) => {
+    posts.forEach((p) => {
       const c = p.engagements?.clients;
       if (c && c.id && !seen.has(c.id)) {
         seen.add(c.id);
-        list.push({ id: c.id, name: c.name || "Client" });
+        const brand = c.website_url || c.founder_email || c.name;
+        list.push({ id: c.id, name: c.name || "Client", brandName: brand });
       }
     });
     return list;
-  }, [engagements, initialPosts]);
+  }, [engagements, posts]);
 
   // Filter posts by client and status
-  const filteredPosts = initialPosts.filter((post) => {
+  const filteredPosts = posts.filter((post) => {
     if (selectedClientId !== "all") {
       const cId = post.engagements?.clients?.id;
       if (cId !== selectedClientId) return false;
@@ -193,8 +245,8 @@ export function ContentStudioClient({
   const kanbanColumns = useMemo(() => {
     const clientScoped =
       selectedClientId === "all"
-        ? initialPosts
-        : initialPosts.filter((p) => p.engagements?.clients?.id === selectedClientId);
+        ? posts
+        : posts.filter((p) => p.engagements?.clients?.id === selectedClientId);
 
     return [
       {
@@ -230,13 +282,13 @@ export function ContentStudioClient({
         posts: clientScoped.filter((p) => p.status === "published"),
       },
     ];
-  }, [initialPosts, selectedClientId]);
+  }, [posts, selectedClientId]);
 
-  const draftCount = initialPosts.filter(
+  const draftCount = posts.filter(
     (p) => p.status === "draft" || p.status === "internal_review"
   ).length;
-  const reviewCount = initialPosts.filter((p) => p.status === "client_review").length;
-  const scheduledCount = initialPosts.filter(
+  const reviewCount = posts.filter((p) => p.status === "client_review").length;
+  const scheduledCount = posts.filter(
     (p) => p.status === "scheduled" || p.status === "approved"
   ).length;
 
@@ -252,32 +304,13 @@ export function ContentStudioClient({
 
       {/* Portal Actions to TopNav */}
       <PageHeader title="Content Studio">
-        <div className="flex items-center gap-2">
-          <SegmentedFilter
-            options={[
-              {
-                id: "kanban",
-                label: "Kanban",
-                icon: <LayoutGrid className="h-3.5 w-3.5" />,
-              },
-              {
-                id: "list",
-                label: "List",
-                icon: <List className="h-3.5 w-3.5" />,
-              },
-            ]}
-            value={viewMode}
-            onChange={(val) => setViewMode(val as "kanban" | "list")}
-          />
-
-          <Link
-            href={newPerspectiveHref}
-            className="btn btn-primary text-xs cursor-pointer inline-flex items-center gap-1.5"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>New Perspective</span>
-          </Link>
-        </div>
+        <Link
+          href={newPerspectiveHref}
+          className="btn btn-primary text-xs cursor-pointer inline-flex items-center gap-1.5 active:scale-[0.98] transition-transform"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>New Perspective</span>
+        </Link>
       </PageHeader>
 
       {/* ─── FLUSH ARCHITECTURAL CONTENT STUDIO MASTHEAD ─── */}
@@ -285,21 +318,24 @@ export function ContentStudioClient({
         draftCount={draftCount}
         reviewCount={reviewCount}
         scheduledCount={scheduledCount}
-        totalCount={initialPosts.length}
+        totalCount={posts.length}
         clientOptions={clientOptions}
         selectedClientId={selectedClientId}
         onSelectClient={setSelectedClientId}
         viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
         filter={filter}
         onFilterChange={setFilter}
       />
 
       {/* ─── WORKSPACE CANVAS ─── */}
-      <div className="flex-1 px-5 py-6 lg:px-7 lg:py-6">
-        {/* VIEW 1: KANBAN BOARD VIEW */}
-        {viewMode === "kanban" && (
-          <StudioKanbanView
-            kanbanColumns={kanbanColumns}
+      <div className="flex-1 w-full">
+        {/* VIEW 0: CLIENT CADENCE MATRIX VIEW */}
+        {viewMode === "matrix" && (
+          <StudioMatrixView
+            engagements={engagements}
+            posts={posts}
+            selectedClientId={selectedClientId}
             isPending={isPending}
             copiedId={copiedId}
             onStatusTransition={handleStatusTransition}
@@ -309,18 +345,35 @@ export function ContentStudioClient({
           />
         )}
 
+        {/* VIEW 1: KANBAN BOARD VIEW */}
+        {viewMode === "kanban" && (
+          <div className="p-4 lg:p-6">
+            <StudioKanbanView
+              kanbanColumns={kanbanColumns}
+              isPending={isPending}
+              copiedId={copiedId}
+              onStatusTransition={handleStatusTransition}
+              onCopyReviewLink={copyReviewLink}
+              onOpenWhatsApp={openWhatsAppPing}
+              onSetPublishingPost={setPublishingPost}
+            />
+          </div>
+        )}
+
         {/* VIEW 2: LIST VIEW */}
         {viewMode === "list" && (
-          <StudioListView
-            filteredPosts={filteredPosts}
-            isPending={isPending}
-            copiedId={copiedId}
-            newPerspectiveHref={newPerspectiveHref}
-            onStatusTransition={handleStatusTransition}
-            onCopyReviewLink={copyReviewLink}
-            onOpenWhatsApp={openWhatsAppPing}
-            onSetPublishingPost={setPublishingPost}
-          />
+          <div className="p-4 lg:p-6">
+            <StudioListView
+              filteredPosts={filteredPosts}
+              isPending={isPending}
+              copiedId={copiedId}
+              newPerspectiveHref={newPerspectiveHref}
+              onStatusTransition={handleStatusTransition}
+              onCopyReviewLink={copyReviewLink}
+              onOpenWhatsApp={openWhatsAppPing}
+              onSetPublishingPost={setPublishingPost}
+            />
+          </div>
         )}
       </div>
 
@@ -329,7 +382,21 @@ export function ContentStudioClient({
         post={publishingPost}
         isOpen={!!publishingPost}
         onClose={() => setPublishingPost(null)}
-        onSuccess={() => {
+        onSuccess={(data) => {
+          if (publishingPost) {
+            setPosts((prev) =>
+              prev.map((p) =>
+                p.id === publishingPost.id
+                  ? {
+                      ...p,
+                      status: "published",
+                      published_at: data?.published_at || new Date().toISOString(),
+                      linkedin_post_url: data?.linkedin_post_url || p.linkedin_post_url,
+                    }
+                  : p
+              )
+            );
+          }
           showToast("Post marked as published on LinkedIn!");
           router.refresh();
         }}

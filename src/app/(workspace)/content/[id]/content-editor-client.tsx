@@ -99,7 +99,7 @@ export function ContentEditorClient({
       ? toDatetimeLocalIST(post.scheduled_publish_date)
       : ""
   );
-  const [linkedinPostUrl] = useState<string>(
+  const [linkedinPostUrl, setLinkedinPostUrl] = useState<string>(
     post?.linkedin_post_url || ""
   );
 
@@ -434,9 +434,11 @@ export function ContentEditorClient({
                 id: currentPostId,
                 title: derivedTitle,
                 body_markdown: bodyMarkdown,
+                status: status,
                 scheduled_publish_date: scheduledDate
                   ? parseDatetimeLocalIST(scheduledDate)
                   : post?.scheduled_publish_date,
+                published_at: post?.published_at,
                 linkedin_post_url: linkedinPostUrl,
                 engagements: {
                   clients: {
@@ -450,9 +452,17 @@ export function ContentEditorClient({
         }
         isOpen={showPublishModal}
         onClose={() => setShowPublishModal(false)}
-        onSuccess={() => {
+        onSuccess={(data) => {
           setStatus("published");
-          showToast("Perspective marked live on LinkedIn!");
+          if (data?.linkedin_post_url) {
+            setLinkedinPostUrl(data.linkedin_post_url);
+          }
+          setSaveState("saved");
+          showToast(
+            data?.linkedin_post_url
+              ? "LinkedIn URL linked to perspective!"
+              : "Perspective marked live on LinkedIn!"
+          );
           router.refresh();
         }}
       />
