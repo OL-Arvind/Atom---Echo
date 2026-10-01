@@ -257,6 +257,33 @@ export interface ContentRevision {
   created_at: string;
 }
 
+export type TaskEstimatedMinutes = 1 | 2 | 3 | 5 | 10 | 15 | 30 | 45 | 60;
+
+export interface OperationalTask {
+  id: string;
+  organization_id: string;
+  title: string;
+  estimated_minutes: TaskEstimatedMinutes;
+  due_date: string;
+  assigned_to?: string | null;
+  assigned_user_name?: string | null;
+  client_id?: string | null;
+  client_name?: string | null;
+  is_completed: boolean;
+  completed_at?: string | null;
+  source_type: "manual" | "system_generated";
+  source_entity_type?:
+    | "content_item"
+    | "content_feedback"
+    | "invoice"
+    | "tool_subscription"
+    | "client_request"
+    | null;
+  source_entity_id?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface CommandCenterAlert {
   id: string;
   urgency: "critical" | "urgent" | "warning" | "info";
@@ -291,6 +318,7 @@ export interface CommandCenterAlert {
   feedback_id?: string;
   comment?: string;
   feedback_created_at?: string;
+  post_created_at?: string;
   category?: RequestCategory;
   tool_name?: string;
   cost_amount?: number;

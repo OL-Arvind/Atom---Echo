@@ -2,6 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getTodayDateStringIST, toDateStringIST } from "@/lib/date-utils";
 import { withDbCache } from "./cache";
 import { buildOperationalAlerts } from "./command-center-builder";
+import { getOperationalTasksForDate } from "@/lib/tasks/storage";
+import type { OperationalTask } from "@/types/domain";
 
 export async function getCommandCenterDataFromDb() {
   return withDbCache("command_center_data", async () => {
@@ -14,7 +16,7 @@ export async function getCommandCenterDataFromDb() {
       const todayDate = new Date();
       const fiveDaysFromNowStr = toDateStringIST(new Date(todayDate.getTime() + 5 * 86400000));
 
-      // Execute all 11 independent queries concurrently via Promise.all
+      // Execute all independent queries concurrently via Promise.all
       const [
         clientsRes,
         engagementsRes,
@@ -27,6 +29,8 @@ export async function getCommandCenterDataFromDb() {
         renewingToolsRes,
         draftInvoicesRes,
         stalledDraftsRes,
+        teamUsersRes,
+        persistedTasks,
       ] = await Promise.all([
         supabase
           .from("clients")
@@ -248,6 +252,12 @@ export async function getCommandCenterDataFromDb() {
           `)
           .in("status", ["draft", "internal_review"])
           .order("created_at", { ascending: false }),
+        supabase
+          .from("users")
+          .select("id, full_name, email, role")
+          .eq("is_active", true)
+          .order("full_name", { ascending: true }),
+        getOperationalTasksForDate(supabase, todayStr),
       ]);
 
       const clients = clientsRes.data || [];
@@ -267,6 +277,49 @@ export async function getCommandCenterDataFromDb() {
       const renewingTools = renewingToolsRes.data || [];
       const draftInvoices = draftInvoicesRes.data || [];
       const pipelineDraftsAndQa = stalledDraftsRes.data || [];
+
+      const teamMembers = (teamUsersRes?.data || []).map((u: any) => ({
+        id: u.id,
+        full_name: u.full_name || u.email,
+        email: u.email,
+        role: u.role,
+      }));
+
+      const operationalTasks: OperationalTask[] = [...(persistedTasks || [])];
+
+      // Auto-synthesize 1-min system follow-up tasks for overdue review posts (> 48h)
+      const nowMs = Date.now();
+      const fortyEightHoursMs = 48 * 3600 * 1000;
+      const overduePosts = reviewPosts.filter((p: any) => {
+        const sentTime = p.created_at ? new Date(p.created_at).getTime() : 0;
+        return sentTime > 0 && nowMs - sentTime > fortyEightHoursMs;
+      });
+
+      for (const post of overduePosts) {
+        const client = (post.engagements as any)?.clients;
+        const founderName = client?.founder_name || "Founder";
+        const postTitle = post.title || "Perspective";
+        const systemTaskId = `sys-followup-${post.id}`;
+
+        if (!operationalTasks.some((t) => t.id === systemTaskId || t.source_entity_id === post.id)) {
+          operationalTasks.push({
+            id: systemTaskId,
+            organization_id: "system",
+            title: `Follow up with ${founderName} on review ("${postTitle}")`,
+            estimated_minutes: 1,
+            due_date: todayStr,
+            assigned_to: null,
+            client_id: client?.id || null,
+            client_name: client?.name || null,
+            is_completed: false,
+            completed_at: null,
+            source_type: "system_generated",
+            source_entity_type: "content_item",
+            source_entity_id: post.id,
+            created_at: post.created_at || nowIso,
+          });
+        }
+      }
 
       const totalLeakage = unbilledExpenses.reduce((acc, t) => acc + Number(t.amount || 0), 0);
 
@@ -308,6 +361,8 @@ export async function getCommandCenterDataFromDb() {
         unresolvedFeedback,
         scheduledPosts,
         unbilledExpenses,
+        operationalTasks,
+        teamMembers,
       };
     } catch (err) {
       console.error("Error in getCommandCenterDataFromDb:", err);
@@ -324,6 +379,8 @@ export async function getCommandCenterDataFromDb() {
         unresolvedFeedback: [],
         scheduledPosts: [],
         unbilledExpenses: [],
+        operationalTasks: [],
+        teamMembers: [],
       };
     }
   });

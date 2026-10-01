@@ -1,8 +1,684 @@
-I want you to understand the project [graphify](slashCommand;graphify) 
-as i want to do some changes,
-look this will happen in real life that there is one post being written and then there are multiple versions of same post, which can come with the brainstorming, back and forth with the founder and so on, 
-here we want to save all the previous versions of that particular post, what changed, what stayed intact and so on
-is it possible to build this one?
-if yes then how?
-and also how the UI UX will function and where we will show this up? the location in the app
+Client requirements,
 
+1. by looking at the current command center, the client said he wants only upcoming posts to be shown on the command center at top, and then client revisions should be in the second half, now this is what client said, but i want you to see what all things are wired to show-up on the command center we have to take all of them into consideration so that we can actually break down this one and think how each thing should be shown and how it actually works in real life, for example, if comes up for revision from client, it might take few hours to be corrected and sent back, it is not a priority in all cases and if something is sitting with client for review, client will take 1-2 days for review, till that time it will eat up space in the command center and increase anxiety of the founder, like that we cannot treat everything in similar fashion it has to be intelligent, but simply intelligent not complicated intelligence
+2. client wants a thing, where he can add a quick task and assign it to somebody (team member), now we have to think the nunaces of it, what all things we might need in this and what we have to build and also whether this should be time based or not, where to show this up and so on
+3. on calendar currently everything is shown date wise stacked upon each other, and then there is no proper filter between things, we have to fix many nunaces in the calendar and want to make it truly scalable and easy to understand and also got to define what all things should be and will be accessible from the calendar
+4. the founder (client) has ADHD, so he gave one beautifule insight, he said if we give him 2 things, one all tasks should show how much time it will take for him to actually do the task, for example, there is a task to approve a draft invoice or call a founder with whom the post is pending for review, we will show him the exact time it will take to do this task, it will actually help him to reduce procrastination and get things done,  and striking out the task this will help me have this dopamine hit and satisfaction and give him more motivation to work.
+5. we have to build a complete Hot Leads Manageement section, this will replace the current "Outbound & GTM" section, they run a sample post campaign within which they provide few sample psot to founders, so they are maintaing a raw version of this in notion https://app.notion.com/p/atomnecho/Leads-Tracker-Sample-Posts-Campaign-3378f65ea463800b8925edf931e6f227?source=copy_link, tell me how we can go about this?
+6. and there should a automated follow-up notification for payments, renewals and client reviewing posts, so that user (founder) can take action on it
+7. a feature where the user downloads the performance excel from the linkedin and uploads in our app and the performance gets updated and tracked for both client app and user using OS
+
+i case if i missed anything,
+here the detailed mail i sent to the atom and echo,
+Hi Sudeesh,
+
+Quick recap of today's demo and what we agreed on.
+
+Decided
+
+Client onboarding
+
+Collect the client's LinkedIn profile at onboarding.
+During client creation, prompt to upload the proposal, roadmap, agreement, and contract. Skip allowed if not available.
+Command Center
+
+Redesign around action: upcoming posts on top, client revisions lower ("action required" first).
+Daily task list with time estimates (like "1 min follow-up"), strike-through on done.
+Tasks can be added manually and assigned to someone.
+Default view on mobile. The name may change, you weren't a fan of "Command Center".
+No auto follow-up. Instead, due follow-ups (client reviews, draft deadlines) surface in the Command Center.
+Content workflow
+
+Kanban gets too big with real volume, so it most likely becomes a tabbed table: Drafts, Internal QA, Client Review, Approved, Published. Columns: Post, Client, Publish Date, Internal Due Date (settable per post). I'm also going to explore whether there's something better than tabs before locking this.
+Client feedback gets a timestamp ("requested 1 hour ago") plus a Follow Up button that also lands as a task in the Command Center.
+Editor gets a desktop preview (mobile/desktop toggle) plus Notion-style version history of every change.
+For now, paste your drafts and edits here so we keep the complete change thread. LLM voice/tone suggestions come later.
+Client360 hub
+
+Tool expense tracker: licenses tracked globally, assigned per client with renewal dates, reminder a day before expiry. Also gives accurate tool cost estimates on sales calls.
+Meeting logs: auto-sync from Fathom plus manual notes for WhatsApp calls.
+Documents section (not just agreements): proposals, agreements, roadmaps in one place per client, with a view of when an agreement is due for renewal.
+Lead tracker
+
+Rebuilt from your Notion tracker: Lead Name, Assigned To, Reply Date, Follow-up Deadline, Priority, Content Status, Lead Status.
+Converted moves to the client database. Dropped stays on record as archived. Maybe Later archives with a future follow-up date (6-8 months) that shows up in the Command Center when due.
+Invoices & billing
+
+You'll share sample invoices so I can match your format.
+Add an option to mail invoices directly from the OS, from an official ID (like info@atomnecho.com).
+Quotation: we'll add at least a simple send-quotation flow. Keep proposals simple - defined scope of work, objective/success metrics, next steps. I'll automate after seeing your samples.
+Later phases (not now)
+
+AI research agents doing daily research (Google Trends, Hacker News, GitHub, X, Reddit) and suggesting content based on client positioning.
+LLM edit suggestions based on each client's voice/tone profile.
+Generate proposals and roadmaps inside the OS.
+Heyreach/SmartLeads campaign integration.
+On you
+
+Branding assets (logo, fonts, colors).
+Sample invoices, proposals, quotations, and your Notion lead tracker.
+Dummy data (clients, billing, invoices) in the demo env.
+More Command Center/UI inputs on WhatsApp tomorrow.
+Review the Heyreach/SmartLeads dashboard with Nikhil and share inputs.
+Paste your post drafts and edits in the OS to keep the full change history.
+On me
+
+Integrate all requested features by tomorrow.
+UI/UX redesign starts Sunday.
+OS delivery stays 4 Oct.
+Flag anything I missed.
+
+and here is the meeting transcript, if in case anything is missed out in the mail,
+Atom n Echo OS Demo - September 24
+VIEW RECORDING - 55 mins (No highlights): https://fathom.video/share/3GpoD2ab9kohx5Wvdain9dLu6sCsD_Lf
+
+---
+
+0:15 - Aravind (BaseWorks)
+  I mean, I was working for this and I have some different, thing after this too, so I don't know, it has become the part of character, I think.  Just a second, I'll share my screen.
+
+0:41 - Sudeesh D S (Atom & Echo)
+  Is it visible? Yeah. So, okay. So the UI is pretty, I mean, decent or raw right now because I was waiting for the website to go live.
+
+0:59 - Aravind (BaseWorks)
+  Now I have. I have, I mean, all the parts with me of website, so I can just copy the branding from there, and I'll make sure that can give you all the materials.
+
+1:16 - Sudeesh D S (Atom & Echo)
+  Sure, sure, sure. That will be very helpful for me.
+
+1:19 - Aravind (BaseWorks)
+  So I'll make sure all the fonts and everything, the new logo and everything will match here, and all the, I mean, brand colors and everything will come.
+
+1:29 - Sudeesh D S (Atom & Echo)
+  Anyway, I'll share all that with you. Sure. Sure. So, I'll show you how the flow works right now.
+
+1:35 - Aravind (BaseWorks)
+  Mm-hmm. So, the first thing we have to do is to onboard a client. Let's say we onboard a client.  Now, founder's name is Mukesh, and we have his mail ID.
+
+2:00 - Sudeesh D S (Atom & Echo)
+  I guess these are all the details you get, right?
+
+2:03 - Aravind (BaseWorks)
+  From the client. So right now we have two services here, Indian founder branding and gold outbound outreach.
+
+2:16 - Sudeesh D S (Atom & Echo)
+  And we have hybrid plan as well. So for now I'll select this one.
+
+2:21 - Aravind (BaseWorks)
+  We can add the billing date here. So on that particular day, the billing will be automatically generated. Okay. Let's say it's 10.  So this client will be visible in the client list here. So for example, the logo is automatically fetched from the end.
+
+2:45 - Sudeesh D S (Atom & Echo)
+  It is not the real Reliance logo because probably the website is something else.
+
+2:50 - Aravind (BaseWorks)
+  So, okay. So they come here inside this one. Now, all these numbers, everything is... And for example, if you have, if you don't want your internal employees to see these numbers, for example, the revenue or something, you can hide it from them.  Okay. Inside this one, now you can directly, I mean, reach out to them on WhatsApp, you can share a link.  This link is related to this app. Now the client will get an app, right? So you can share this app's link on their WhatsApp.  And there they'll be able to see all the posts, anything they have to approve or they have to pass a comment on.  They'll be able to see that. And they'll also able to see what all is being scheduled, what they have approved and what is being published on their LinkedIn.  And you can even draft an invoice and delete or pause all the posts of a particular. Okay, let's say we generate, okay, before generation, there are a few more things, so we are planning the complete AI agent to take over after a month or two, so AI will start producing our suggesting content as per the profile of the founder.
+
+4:27 - Sudeesh D S (Atom & Echo)
+  Okay, we missed one main important feature, we are not collecting Linden profile of the client. Yeah, sorry, I missed it.
+
+4:42 - Aravind (BaseWorks)
+  And I'll tell whatever I feel is important in between, please don't mind because I will talk later. No, no, no, it's fine, that's why you have this one, I mean, because, I mean, we should not build anything which is not very useful, right?  Yeah, so we have all these sections of branding and branding wasn't their target audience they want to target to.  And we also have these words which the AI will avoid while it generates the content or something.
+
+5:18 - Sudeesh D S (Atom & Echo)
+  And there is one more thing here.
+
+5:21 - Aravind (BaseWorks)
+  This is not the part of phase one, but in phase two, we'll have an AI agent which will do a complete research every day.
+
+5:30 - Sudeesh D S (Atom & Echo)
+  That would be great, but how do you actually do that?
+
+5:35 - Aravind (BaseWorks)
+  Now, we have, I mean, multiple small agents working in the background, which will go on to Google Trends, which will be on, for example, I'm a tech guy, so my most of time goes on Hacker News.  It will be on Hacker News, it will be on GitHub, and it will be tracking all those. And whatever people might be talking about on x on Reddit, it will have all the context of that on daily basis and the database of that particular agent will be getting updated day by day.
+
+6:13 - Sudeesh D S (Atom & Echo)
+  Now based on that research and this positioning, it will keep suggesting you the content.
+
+6:19 - Aravind (BaseWorks)
+  Now, for example, for two months, it might not perform very well.
+
+6:24 - Sudeesh D S (Atom & Echo)
+  It might act as a dumb internal UI.
+
+6:28 - Aravind (BaseWorks)
+  But from month three or month four, this will be very much refined. So we can have that set up as well.
+
+6:43 - Sudeesh D S (Atom & Echo)
+  Yeah.
+
+6:48 - Aravind (BaseWorks)
+  So, I mean, voice and positioning section will come into our story much later, but this is very useful to automate all your things.  Uh... Yeah, so you can even log the software expense, whatever you have, for example, you get a subscription of PayReach for the client, let's say it's 5,000 a month, and you can add the date of, Will I get a reminder?
+
+7:28 - Sudeesh D S (Atom & Echo)
+  Yeah, you will get a reminder a day before, when this is going to expire.
+
+7:35 - Aravind (BaseWorks)
+  I just saved this one, it is shown here, it is unbuilt, you can even save the credentials of client, so this is encrypted, no one can see it, and
+
+8:00 - Sudeesh D S (Atom & Echo)
+  If someone accesses this right, from your end, you'll be able to see who accessed it.
+
+8:13 - Aravind (BaseWorks)
+  So I revealed the password and if I go here at the activity log, so now here you'll be able to see that someone with this IP address using this browser accessed it because I'm operating with your account to this.  So the operator is this name. For example, if any of your employees access it or does something with the password, so you'll know that.
+
+8:41 - Sudeesh D S (Atom & Echo)
+  And how long the activity log will be stored? It depends upon you.
+
+8:48 - Aravind (BaseWorks)
+  I mean, if you want it to be stored for 12 months, it will be for 12 months. And then the last part, client review link.
+
+8:57 - Sudeesh D S (Atom & Echo)
+  So you send the link directly from here and they And we also had the option for clients to see all the login credentials, so for example, create a custom Gmail, we create a lot of things for clients, they keep asking for these passwords, not everyone will ask that, but we'll make it configurable just from one click in that same link, which the client is reviewing his content, you'll be able to see whether to give him the password to access or not, understood.
+
+9:48 - Aravind (BaseWorks)
+  And yeah, one more section is missing here, which will be meeting logs and Fathom integration.
+
+9:55 - Sudeesh D S (Atom & Echo)
+  No, no, all the Currently, I update in Notion, but I don't do it for every client, every time. So it should be two options.  So one is, it should automatically, the MoM should come and sit and reflect date, time, and all the nodes.  And also, it should also have an option where I manually add it, because sometimes I have calls with plans on just, WhatsApp.  Okay, understood. Yeah. So when I'm talking to them, I can just, like, you know, add the notes. Perfect. Makes sense.
+
+10:44 - Aravind (BaseWorks)
+  So, so you'll have this multi-logging system where you'll, it will come automatically as well as you can even have.
+
+11:03 - Sudeesh D S (Atom & Echo)
+  And the agreements thing, right?
+
+11:05 - Aravind (BaseWorks)
+  So you'll have agreement section as well here. So whatever drafts you share with the client, that is one thing.  For example, we discussed that thing, right, where you just, in one click, you send the client the case study kind of thing, customized for ease use case.  Yeah.
+
+11:31 - Sudeesh D S (Atom & Echo)
+  Right.
+
+11:31 - Aravind (BaseWorks)
+  So that is for the next phase we have, but we can have an agreement section where you can manage all the agreements, everything in one section.  So I'm just going to relax and you see everything. And also you can show like, you know, when is the agreement due for a new one?
+
+11:46 - Sudeesh D S (Atom & Echo)
+  Yeah, that look. So you said, right. So you have this issue of remembering a lot of things at the same time.  So this complete command center is designed in that building.
+
+11:59 - Aravind (BaseWorks)
+  So. So. You never have to visit all these places. Everything what has to be done and what has to be taken up in priority will all be visible here.  It looks messy right now because it's not very good.
+
+12:13 - Sudeesh D S (Atom & Echo)
+  Because upcoming posts, everything, I would rather have it in a calendar or something, I'm not sure. Yeah.
+
+12:22 - Aravind (BaseWorks)
+  Okay, okay. So, I mean, the UI UX will be much better for this.
+
+12:26 - Sudeesh D S (Atom & Echo)
+  So, for example, whatever posts are going to be published, it will be all visible here. The invoice, the unbuilt software, if the client asks for any revision from his end, so it will be visible from here.
+
+12:40 - Aravind (BaseWorks)
+  And you can change everything directly from here and mark it result and send it again back to the client.
+
+12:46 - Sudeesh D S (Atom & Echo)
+  I would rather push that down and push upcoming posts to the left because upcoming posts is one of the important things.  So, action, so it should be like action required. Action Action Coming Post, and then Client Revision Requested, because see, Client Revision Requested will not happen every time.  Yeah. Okay.
+
+13:11 - Aravind (BaseWorks)
+  So it might happen sometimes, it might not happen sometimes.
+
+13:15 - Sudeesh D S (Atom & Echo)
+  So let me come below. And okay, if I click on the Close button, what will happen? This one, right?  Yeah.
+
+13:24 - Aravind (BaseWorks)
+  For now, is marking it as a result. But if you want to ignore this and move it to something else, it will.  And I mean, give me some time. second.
+
+13:34 - Sudeesh D S (Atom & Echo)
+  One second. I'm sorry. I'm sorry. One second. So this is, oh, okay. See, the viewpoints was not so clear.  So whatever the command box that is offering to the left, to the right, is basically this one. Yeah, this one.
+
+13:51 - Aravind (BaseWorks)
+  So you have never, I mean, it will make you never to visit all these tabs separately. So everything.
+
+14:00 - Sudeesh D S (Atom & Echo)
+  Then this is fine again. See, I did not understand first. Okay. Okay. I thought client is asking for addition is a completely different tab.  I didn't know it was an extension of this tab. Yeah.
+
+14:14 - Aravind (BaseWorks)
+  I mean, look, so you have multiple different tabs here. So look, so the problem with notion is that parts are not connected, interconnected.  You will have everything in the calendar itself. So 10th, you'll have this retainer, right? 23rd, this post is going, it is already scheduled.  Can we also have a filter?
+
+14:38 - Sudeesh D S (Atom & Echo)
+  Calendar can show task, filter, post filter, and all the billing filters. Okay. That would be nice, right? Yeah, yeah.  Correct.
+
+14:52 - Aravind (BaseWorks)
+  So we can show all at once.
+
+14:57 - Sudeesh D S (Atom & Echo)
+  Yeah. We also show. But we'll have a filter.
+
+15:00 - Aravind (BaseWorks)
+  So look, so whatever needs your attention, right? It will all be visible in this command center.
+
+15:12 - Sudeesh D S (Atom & Echo)
+  Okay.
+
+15:13 - Aravind (BaseWorks)
+  In the same command center, can I also add things from my end?
+
+15:20 - Sudeesh D S (Atom & Echo)
+  Like? If I want to add a task, can I add directives in the command center? Yeah, yeah, you can.
+
+15:28 - Aravind (BaseWorks)
+  I mean, look, so, okay, you can even add a task and even if you want, you can assign it to somebody.
+
+15:40 - Sudeesh D S (Atom & Echo)
+  So adding task, so let's say I access this in mobile, right? The first thing I should see is like, you know, command center, but with a different name, guess, command center doesn't go well.  Yeah, this is not what I mean, this thing, but yeah.
+
+16:00 - Aravind (BaseWorks)
+  If I get resources from your end about your site, I'll copy the same, this thing, the copywriting from your website, so I will also work on this, give me access to this, I will also work on this, is open only, I will send it to you, just send it on the meeting itself, the site can't be reached, I think I hosted it some time back only, no, no, okay.
+
+17:11 - Sudeesh D S (Atom & Echo)
+  So, shall I continue from here?
+
+17:13 - Aravind (BaseWorks)
+  Yes, yes. Command Center, I will go through it again.
+
+17:17 - Sudeesh D S (Atom & Echo)
+  I'll give you more inputs on Command Center. Sure, sure, sure. I'll show you the updated UI UX I have in mind.
+
+17:25 - Aravind (BaseWorks)
+  So, I mean, it will be very, very easy for you to operate this. And this is the complete Content Studio you have.  You can filter it based on the client. So, these are the five progress bars I have.
+
+17:48 - Sudeesh D S (Atom & Echo)
+  is drafting, internal QA, and it moves to client review. It will be visible on that app. Let me show you that.
+
+18:20 - Aravind (BaseWorks)
+  So here it is showing as for pending rate, so he can add request changes, again the UI is very varied right now, and send feedback, or either he can prove it, if it does that, you will be able to see it here, it just needs more data.
+
+18:53 - Sudeesh D S (Atom & Echo)
+  Can you also show timing? Yeah, that is possible. Creates urgency in the activity level, I requested one hour ago, two hour ago, five hour ago, it's not, I wouldn't know, like, when they requested it.  Correct.
+
+19:17 - Aravind (BaseWorks)
+  Yeah. So you can even edit it, everything from here, and again, send back to the client. Again, it will go to, again, this internal QA, and the client will be able to see that.
+
+19:34 - Sudeesh D S (Atom & Echo)
+  That feature is good. Can you open up a post? Yeah. Yeah. Yeah. This mobile fold. This, right. This just shows the preview.  Yeah. Does it also show desktop preview both together?
+
+19:58 - Aravind (BaseWorks)
+  Can it also show desktop preview?
+
+20:01 - Sudeesh D S (Atom & Echo)
+  desktop to you. Okay, can add that too. Yeah.
+
+20:07 - Aravind (BaseWorks)
+  I mean, you can just give option there, mobile and desktop. I can just click it. Yeah. That would be really great one because you know what we used to do in the beginning?
+
+20:23 - Sudeesh D S (Atom & Echo)
+  We used to have this Excel sheet with a cell as the same size of LinkedIn post view.
+
+20:37 - Aravind (BaseWorks)
+  And we used to add the post there and wrap it and then see like, know, how the post would look.
+
+20:43 - Sudeesh D S (Atom & Echo)
+  Oh, understood.
+
+20:45 - Aravind (BaseWorks)
+  Just to make sure because if you write a 10 lines post, only the two first two lines will be listed.
+
+20:52 - Sudeesh D S (Atom & Echo)
+  Yeah, that is one thing.
+
+20:53 - Aravind (BaseWorks)
+  You also have to make sure the entire post looks very neat and clean.
+
+20:58 - Sudeesh D S (Atom & Echo)
+  It's not here to read. So we used to do that before. Now I'm just used to it. Since I have a little bit of experience, I immediately know whether the course will look good or not.  I don't need it too.
+
+21:12 - Aravind (BaseWorks)
+  But having this feels really good.
+
+21:16 - Sudeesh D S (Atom & Echo)
+  It will help your upcoming employees as well. They'll be able to manage everything very easily.
+
+21:25 - Aravind (BaseWorks)
+  I'll try to mimic the perfect LinkedIn post review. So then it will make much more sense. And whoever is editing this, they can actually go here and understand the preferences of this client.  And just to have one more thing here, I don't know whether I'll be able to add that part in this phase or not.  But if we have a small LLM integration here, Right now it is not in grade.
+
+22:01 - Sudeesh D S (Atom & Echo)
+  We can look into that for the next phase because, see, anyway, I juggle between multiple tools. Let's say I get the first draft from Cloud.  I don't finalize it. I go to Perplexity. I do the research again. I then can come back to GPT.  I do the research again.
+
+22:23 - Aravind (BaseWorks)
+  And I keep fixing the post in multiple tools.
+
+22:26 - Sudeesh D S (Atom & Echo)
+  And then I do my own version of post on top of it. Right? So right now that is not needed.  It is what I think. So let me work on the post myself and put it here, edit myself. And then we can write.
+
+22:44 - Aravind (BaseWorks)
+  But it's possible. You have a feature, right? Client's voice and tone and everything.
+
+22:51 - Sudeesh D S (Atom & Echo)
+  This is something every client will have, okay? For example, one of my clients is very particular report. Fathom words that we use while talking to people.  Anyone who is reading that post from his company would immediately know that this guy only wrote this post because he uses those words when he is talking to us.
+
+23:19 - Aravind (BaseWorks)
+  So those are the words, strengths, and sentences that I would like to add once the post is ready.
+
+23:29 - Sudeesh D S (Atom & Echo)
+  Basically, humanizing it a lot. Right now I am doing it manually. Instead of doing it manually, the post has access to the client's voice, words, choice of words and everything.  It can show another version saying that, hey, this is more relevant to your client's voice. Yes. I can take it or leave it, is a different method.  Okay. So it can suggest to you. Okay. Build is possible, but LLM, I don't think you have to focus on LLM right now.
+
+24:04 - Aravind (BaseWorks)
+  So the only reason I was telling you that because look, if we try to automate things in the later part, we'll have to have this data on how you actually prompt LLM, what data you get, how many steps you are doing there, right?  So then we'll be able to automate it. But anyways, if you do everything that manually, but one thing you have to do here, you just paste whatever field is good, right?  For example, you get a version from Drog, before doing any changes there, just try to paste it here.
+
+24:41 - Sudeesh D S (Atom & Echo)
+  Okay. Okay.
+
+24:43 - Aravind (BaseWorks)
+  So it will create a complete thread of all the changes you made and the final post which got uploaded there.  So we'll have a complete track of what all changes you made and the post there.
+
+24:55 - Sudeesh D S (Atom & Echo)
+  motion, I track it through versions. In Notion, there is version option. Have you seen it? No. Okay. I'll just share my screen.  Okay.
+
+25:14 - Aravind (BaseWorks)
+  You can see my screen, Yeah.
+
+25:21 - Sudeesh D S (Atom & Echo)
+  Probably it's the only client to have multiple options, which will open this place. Yeah. So in Notion, there is something called?
+
+25:43 - Aravind (BaseWorks)
+  Okay. It is similar to Git.
+
+25:46 - Sudeesh D S (Atom & Echo)
+  Yeah. So here, it shows everything that I have done. Everything that I have seen. Very important because I keep going back to the versions.  Yeah. I forgot to mention it to you. Just because you bought it up.
+
+26:01 - Aravind (BaseWorks)
+  So we can have these because it will be useful for you and useful for us also, to automate things in future.  Okay. So this is one part of it, the content pipeline.
+
+26:26 - Sudeesh D S (Atom & Echo)
+  Then moving to calendar, you'll have everything here, you can see all the agendas.
+
+26:34 - Aravind (BaseWorks)
+  Now, this is not properly configured, it is showing things from October as well. So I'll make sure you only see relevant part of next three or four days.
+
+26:43 - Sudeesh D S (Atom & Echo)
+  Okay. Okay. then? What is content pipeline? Content pipeline is this Kanban board itself.
+
+26:53 - Aravind (BaseWorks)
+  Portal content is standing in which. And why it is showing in calendar?
+
+26:58 - Sudeesh D S (Atom & Echo)
+  Any particular reason? Okay. No, this is just a cross-linking between them.
+
+27:02 - Aravind (BaseWorks)
+  I mean, if you want to see directly by not clicking here, but going directly from here, you can do that.  That's all.
+
+27:12 - Sudeesh D S (Atom & Echo)
+  So now, see, I'll tell you what will happen here. In Kanban, you have created Kanban. I will have 10, 15 posts in drafts, 10, 15 posts in internal QA, 8 to 9 posts in client review.  Approved or scheduled, I will have like 10 to 1. And published, I will have like 15, 20. Okay. So imagine that in Kanban, it will be like too big.  Yeah, correct. So how do we manage that? So I was thinking, why don't we do something to tell you, this is just an option, okay, we can tweak it however it is feasible, how about showing the tabs, drafts, Internal QA, Client Review, and when you go to that tab, it will show which post, when it is due for publishing, and which client this post belongs to.  And what is the due date to complete this post from draft or complete this post from internal QA, complete this post from client review, for example, let's say I'm supposed to post one post on 1st October, okay.  Okay, so today is 24th. I want the post to be reviewed by client before 30th. Yeah. Okay, it can show the due date.  Understood.
+
+29:13 - Aravind (BaseWorks)
+  Like, if the system, yeah, the system will decide the due date for you then. I can tell, I can decide the due date myself also because sometimes the due date changes.
+
+29:24 - Sudeesh D S (Atom & Echo)
+  Okay. Okay, so let's say one of my client, okay, his name is Pudian, this is a German client. Okay.  We were supposed to publish one post last Friday. Okay. So I had the post ready last Monday. Okay. So the due date for my client to review that post was Wednesday.  Okay. He reviewed it this Wednesday. Okay. It was almost seven, eight days late. Correct. And I kept following up again and again and again and again.  Mm-hmm. Mm
+
+30:00 - Aravind (BaseWorks)
+  Instead, if it is due, if it shows due here, and ask me to follow up, I can just click it and follow up directly.
+
+30:11 - Sudeesh D S (Atom & Echo)
+  And I remember also, see, what will happen is, I forgot to follow up on Friday. I forgot to follow up on Monday.  I followed up again on Tuesday and Wednesday. When will you review it?
+
+30:27 - Aravind (BaseWorks)
+  Yeah, makes sense. Can we have an auto-follow?
+
+30:32 - Sudeesh D S (Atom & Echo)
+  I wouldn't recommend that. Let it show it to me. Like, you know, hey, these are the follow ups you have to do.  In command center, it can show, like, you know, what are the follow ups I have to do? Like, you know, what are the view that is there?  So everything in command center, it can show.
+
+30:48 - Aravind (BaseWorks)
+  Let's say if there is a draft that I have to complete, and I have added the view date, let it show, hey, this draft needs to be completed by today.
+
+30:55 - Sudeesh D S (Atom & Echo)
+  And in the command center, if I click on a date, it can show all the tasks. Thank Thank See, one thing that has amazingly worked for me is striking out the task, okay, so I'll take a notepad, I will list on all the tasks, okay, and I start striking out every, like, after all the tasks I finished, each task, that has worked amazingly well for me, so you can add the same thing in command center also, the section, where it lists on all the tasks for the day, okay, see, whatever you have built now, it is great, along with that, if I have only the screen, where like, you know, can select today's task, and it shows only the screen, with all the tasks listed, and I click on, done, it strikes out, makes sense, so if there is a follow-up, I can do that, and another amazing thing that you can integrate, I don't know if it is,
+
+32:00 - Aravind (BaseWorks)
+  Fathom, but I know there's an amazing thing that you can integrate.
+
+32:04 - Sudeesh D S (Atom & Echo)
+  A lot of people have this problem that each task will take a certain amount of time.
+
+32:16 - Aravind (BaseWorks)
+  People don't do certain tasks because they think it will take too much of time or they can do it later.
+
+32:22 - Sudeesh D S (Atom & Echo)
+  Let's say, along with the task, it takes only one minute to follow up.
+
+32:30 - Aravind (BaseWorks)
+  I don't know if it is possible.
+
+32:32 - Sudeesh D S (Atom & Echo)
+  I'm just talking. it is possible. It is very much possible. it is very interesting as well. Yeah.
+
+32:37 - Aravind (BaseWorks)
+  I mean, you will not procrastinate. Yeah.
+
+32:42 - Sudeesh D S (Atom & Echo)
+  So if it shows, if it keeps popping up the day, all the one minute tasks, all the five minute tasks, all the 10 minute tasks, I can complete that process immediately.  So these are the things that is very important. So in the content Kanban, if we are able to like, you know, because for every client, if you open the notion, if you open my notion and see, every client will have underdevelopment posts, published posts, ideas, everything is there.  Okay. If we keep adding in Kanban like this, it will grow, it will become very big. Correct. So I would rather have these in tables, like rows, and I'll drafting internal QA client as tabs.  Okay. I'll look, I'll consider these tabs, but if I get something better out of this, I'll show you. Better is even fun.  The only problem with Kanban is it will grow. Correct.
+
+33:56 - Aravind (BaseWorks)
+  If, I mean, if there are few cards in Kanban, then... It makes sense. Otherwise, it will be a mess.  So anyway, have access to it.
+
+34:04 - Sudeesh D S (Atom & Echo)
+  Like, what I'm doing, I'll add a posts, I'll add a few clients, I'll add a few billing, I'll add a few invoices, then you'll get more ideas, how it might come.  Yes.
+
+34:22 - Aravind (BaseWorks)
+  Look, so this outbound campaign is currently incomplete.
+
+34:26 - Sudeesh D S (Atom & Echo)
+  I'm yet to build this.
+
+34:28 - Aravind (BaseWorks)
+  Where you'll, I mean, all the, your outreach thing will be completely managed from here. Okay. If you want to integrate Hairies and Smart Leads in the next phase, we can have that as well.  Okay.
+
+34:45 - Sudeesh D S (Atom & Echo)
+  So, in the mail you said, right, you want at least a section to manage hot leads. Leads, yes. Yeah.
+
+34:53 - Aravind (BaseWorks)
+  What was that, I mean, if you can give me more clarity around that, it will be better. . .  . didn't see the lead tracker in Notion?
+
+35:01 - Sudeesh D S (Atom & Echo)
+  I didn't actually. I'll just open it. I recommend you go through my Notion ones. So this is the lead tracker we have, okay?  You can see, right? Just a second.
+
+35:25 - Aravind (BaseWorks)
+  Are you sharing the screen? You can see, right?
+
+35:34 - Sudeesh D S (Atom & Echo)
+  Yeah, yeah, yeah. So this is lead tracker that we have, okay? So lead name, who is this lead assigned to?
+
+35:43 - Aravind (BaseWorks)
+  When this lead replied to us, what is the deadline that we have to follow up?
+
+35:48 - Sudeesh D S (Atom & Echo)
+  If the lead is priority or not?
+
+35:51 - Aravind (BaseWorks)
+  So this lead, this particular lead tracker was built, keeping sample posts in mind. Okay.
+
+35:58 - Sudeesh D S (Atom & Echo)
+  So this campaign, what we...
+
+36:00 - Aravind (BaseWorks)
+  So we were offering is we were offering two sample posts for all the leads, whoever responded.
+
+36:06 - Sudeesh D S (Atom & Echo)
+  And we used to tell them once they respond, we used to tell them we'll send you the sample post in 72 hours.  So that's why the deadline is there. And that's why the content status is there. These two are absolutely important for the dashboard, but I'm just showing you the glimpse.  So what is the lead status? What is the follow-up status? So now here I was limited with what to add in the follow-up status.  For example, here I have multiple tabs. So next follow-up, follow-up done. So follow-up done is like, you know, if I click on follow-up one, it means follow-up one is done.
+
+36:47 - Aravind (BaseWorks)
+  So next follow-up is on, maybe like 27th.
+
+36:52 - Sudeesh D S (Atom & Echo)
+  If follow-up two is done, then the next follow-up is on maybe like 17th September, something like that. Go. you.  Yeah. Yeah. Okay. See, this is not how we should do it, but this is the best I could do on machine.
+
+37:07 - Aravind (BaseWorks)
+  This also takes a lot of effort to build and basis to build. Yeah, so this I built and I added all the leads and we were handling everything here.
+
+37:20 - Sudeesh D S (Atom & Echo)
+  And another idea of why we built here is because we had this content inside itself.
+
+37:30 - Aravind (BaseWorks)
+  The sample course that we were offering, we had this inside itself. Correct.
+
+37:35 - Sudeesh D S (Atom & Echo)
+  That's the reason why we built this. But I'm showing you the lead practice that, you know, I had in my weekly leads, daily follow-up that I have to do, weekly follow-up that I have to do, all these things.  Makes sense. So that is what I meant when I said, you know, lead practice. Yeah, we'll have, I mean, a better version of this.  to this. I do I
+
+38:02 - Aravind (BaseWorks)
+  And in next phase, when we will have this A-Reach and SmartLeads integration? Right now, I will do it manually because I don't think we'll have too many leads.
+
+38:16 - Sudeesh D S (Atom & Echo)
+  Every time I create a lead, I'll select the state and when I say like, you know, the lead is converted to client, it should go and check in client database.
+
+38:25 - Aravind (BaseWorks)
+  When I say the lead is dropped, it should drop completely.
+
+38:30 - Sudeesh D S (Atom & Echo)
+  But I have it in the database saying that we have reached out to this lead in the past. And when I say, maybe in future, it should drop somewhere with the follow-up date, like maybe six months or eight months time, so that it also shows an activity log, like in command center, when the time comes.
+
+38:52 - Aravind (BaseWorks)
+  Yes, it's like we, I mean, we did for that works. Okay. Mm-hmm. And in networks, we built this, let me show you that.  So for this integration, so I integrated the APIs and webhooks, so everything will be managed from here itself. There is no need to go to HaleyChant, Smart Leads, Dashboard.  That is nice. Yeah. So, for everybody. it is showing some singular.
+
+39:57 - Sudeesh D S (Atom & Echo)
+  Like? It is not. She our message.
+
+40:03 - Aravind (BaseWorks)
+  I didn't get you. She is not our lead. She is our She is your lead. Okay, understood. So actually, Heyreach will show all the inbox messages here, right?
+
+40:24 - Sudeesh D S (Atom & Echo)
+  That would become difficult. No, no, I'll show you the actual thing here.
+
+40:30 - Aravind (BaseWorks)
+  So we have the simple filter on this right now. So I get all the leads from Heyreach, and I will figure out whatever reply I have gotten from the party.  For example, Sheetal Sinde is not the part of the campaign, but she reached out to Sheetan writing this.
+
+40:54 - Sudeesh D S (Atom & Echo)
+  And for example, Vinay Prasad.
+
+40:58 - Aravind (BaseWorks)
+  Okay. He also Did the same thing.
+
+41:01 - Sudeesh D S (Atom & Echo)
+  Okay. This is part of our campaign, right? Oh, , man. Can you scroll?
+
+41:09 - Aravind (BaseWorks)
+  I guess we sent same by two times.
+
+41:17 - Sudeesh D S (Atom & Echo)
+  Yeah. When was the first message when?
+
+41:21 - Aravind (BaseWorks)
+  . 11th August, 11th 14th, and then September.
+
+41:25 - Sudeesh D S (Atom & Echo)
+  just, one second, can you just wait? Nikhil, we have sent this first connection message to someone to whom they have already texted in August.  Man, sorry, that is September 14th. I thought it was September 24th. Like, why did you send the same message to the same person two times?  Oh, , dude. Okay. Okay. I was just talking to Arvind. He's showing the integration. It came out really well, dude.  They don't have to go to AARIT or Smartly.
+
+42:26 - Aravind (BaseWorks)
+  Yeah, they are sending it directly from here.
+
+42:28 - Sudeesh D S (Atom & Echo)
+  Yeah. Cool, dude. Okay. I will talk to you.
+
+42:39 - Aravind (BaseWorks)
+  Ideally, we have to launch it.
+
+42:42 - Sudeesh D S (Atom & Echo)
+  Dude, launch it. Let's see. You just monitor till morning, okay? If you see any, like, you know, messages that have been twice, pause it.  We'll revisit it again. Okay. Cool.
+
+43:04 - Aravind (BaseWorks)
+  So I saw September 14th, I thought it was September 24th, I mean the filter works in this way that if there are any, for example, we can even select based out of this, so I can even add one more, this thing, if random people are messaging Chetan for any other reason, they can, they can be omitted from here, and only thing with which are part of campaign.  this what I'll do is, this what I'll do is, I'll sit with Pickle tomorrow.
+
+43:42 - Sudeesh D S (Atom & Echo)
+  Okay. Okay. I'll go through this dashboard, but this is good. Yeah. We can do this for us also, because we'll anyway start the campaign.  Yeah. Okay. You anyway have this, right, you can like shift this to our internal.
+
+44:01 - Aravind (BaseWorks)
+  Yeah, can because the only thing which makes it different is the client ID. If I remove this, I'll be able to see all the data here itself, so yeah, we can do this.
+
+44:16 - Sudeesh D S (Atom & Echo)
+  in our main Smartly, we'll be able to see our internal campaign and also Chetan's internal campaign because Chetan has client access through our Smartly.  Yeah, okay.
+
+44:29 - Aravind (BaseWorks)
+  So I don't think that is required. Anyway, we have this right.
+
+44:33 - Sudeesh D S (Atom & Echo)
+  I'll ask Chetan to give me this access.
+
+44:36 - Aravind (BaseWorks)
+  But this is good, dude. This is really good. Yeah, I mean, and the only thing which helps us here is that you are chatting with the client and you can directly promote this team from here itself.  And it goes and sits in the Kanban again.
+
+44:53 - Sudeesh D S (Atom & Echo)
+  The active pipeline. We'll have, I mean, something, I mean, which is more. More relevant to you. Whatever you have done for him, it's good.  Nice. I'll sit with Tickle tomorrow and I'll go through it and I'll give you some inputs on that. Sure, sure, sure.  It will be very helpful because you understand your workflow much better.
+
+45:16 - Aravind (BaseWorks)
+  So now this is invoices. Yeah, this is invoices. And for example, this one, Atom & Echo, the A-Reach Tool.
+
+45:30 - Sudeesh D S (Atom & Echo)
+  I'll give you, I'll give you, shall I give you the invoices that I'm raising right now so that you can copy.  yeah. I mean, this is a dummy invoice. You have to send me all these things which you are doing right now.  So we can be with that.
+
+45:45 - Aravind (BaseWorks)
+  You mean option to directly mail them, no?
+
+45:47 - Sudeesh D S (Atom & Echo)
+  Yeah, you'll have that.
+
+45:49 - Aravind (BaseWorks)
+  I mean, we'll have this recent integration. So you can create an ID like connect or info at Atom & Echo or some.  From which all the mails, all the official, these things will go to the client and it will be automated, completely.  We will work on this, I will tell you like, you know, how I need models on billing, but this is a good start for me.
+
+46:16 - Sudeesh D S (Atom & Echo)
+  Yeah, okay.
+
+46:19 - Aravind (BaseWorks)
+  And you can even add all the, you said, right, you want notifications of the tool, which are near expiry.  You can add everything here. And if you want to log any expense.
+
+46:32 - Sudeesh D S (Atom & Echo)
+  Go to add tool license. Go to add tool license. Yeah. We should be able to select the client, no?
+
+46:41 - Aravind (BaseWorks)
+  Wait, I'll show you how to add it to the client, pass it back to the client. So here you can add all the, these things.  No, since you mentioned renewal date, I'm just adding the tool license, cost and currency.
+
+46:58 - Sudeesh D S (Atom & Echo)
+  There is no point in renewal. Renewal date, no? Because it's really relevant, if you are relevant, renewal date is different for different client.  Okay, makes sense. So you are, okay. So you are client different, software is not different. Yeah, yeah. So for Chetan, it renews on 10th, Florian, it renews on 20th, for Vivek, it renews on 15th.  So it's different for different clients.
+
+47:37 - Aravind (BaseWorks)
+  Okay. Okay. So I'll, I'll take note of that too. So all the, so you'll have this main section where you'll be able to add all the tools in general.
+
+47:48 - Sudeesh D S (Atom & Echo)
+  And then in the client section itself, you can mark these tools. For example, this tool is being used for this client and this is the renewal date.  So that's, that's, that's, a good idea because we will, for example, let's say. I'm going to call with a client, with a lead, and he asked me, like, you know, hey, what will be the tools expenses?  So we don't have a definitive number. Correct. So we can, if we have an option here where, like, you know, I can immediately select tools and see how much it will cost every month.  can immediately tell them, like, you know, this is what the tools will cost. Yeah.
+
+48:23 - Aravind (BaseWorks)
+  We'll have this in the client interface itself, inside that. So inside, that's why we named this as Client360.
+
+48:32 - Sudeesh D S (Atom & Echo)
+  So it will have everything related to the client.
+
+48:37 - Aravind (BaseWorks)
+  Tools, if you, in future, when we have, we will have these AI generated drafts or the proposals for them, case studies, everything will come here inside.
+
+48:48 - Sudeesh D S (Atom & Echo)
+  Yeah, we need to add proposals as well. I mean, it seems sometimes we need to send proposals. Uh-huh.-huh.-huh.
+
+48:59 - Aravind (BaseWorks)
+  But...
+
+49:02 - Sudeesh D S (Atom & Echo)
+  Quotation, do you, is it needed right now or in the next phase? Quotation, if it is very, I mean, important for you, we can ask.
+
+49:12 - Aravind (BaseWorks)
+  See, the problem is, all these proposals and quotations, my co-founder is to take care of.
+
+49:20 - Sudeesh D S (Atom & Echo)
+  Okay. Okay, I was just going on a sales call and I used to, like, get out. The rest of the process, onboarding, everything, used to take care.
+
+49:30 - Aravind (BaseWorks)
+  No, it's not there, so I don't know how important it is.
+
+49:35 - Sudeesh D S (Atom & Echo)
+  I think it is important, but at least to send quotation. Let's add that too.
+
+49:40 - Aravind (BaseWorks)
+  If you have some copies of quotation and proposals, old copies, just send me those and look into that and I'll find a way how to automate them too.
+
+49:49 - Sudeesh D S (Atom & Echo)
+  Once again, it will just quickly check. Yeah, sure.
+
+50:32 - Aravind (BaseWorks)
+  We have many proposals.
+
+51:04 - Sudeesh D S (Atom & Echo)
+  Just share it with you, I want it to be very simple, I don't want have too many terms, I just want to have a defined scope of the work, define objective success metrics, what would be their past, and what are the next steps in the proposal.  For example, I will send you this, this is a very simple proposal which I like, I'll send you more, but for now,  It's a very simple proposal. The proposals keep changing based on client's requirements. Yeah. So what I used to do is I used to create this roadmap and proposals using clause.  Okay. I used to defend everything. VELO, and it used to look good, and one good thing about VELO, it used to integrate the client's branding to the roadmap or the proposal.  It used to look good, but I'm not sure how important it is to current, or we can do one thing.  We'll add, anyway, we'll have agreements, right? Instead of agreements, I have an option which says documents, or something else, which will show the proposal, then agreement, all these things, the roadmap, everything, so that I can track all these things for every client.  So generating our proposal, generating roadmap, everything, can come in next place. So this place will have all the documents at one place.  At least you start uploading them. So while I'm creating the client, let it ask for uploading proposal, roadmap, agreement, contract, okay?  If I don't have, I'll skip it. Okay.
+
+54:21 - Aravind (BaseWorks)
+  Okay. If I have, I'll upload it. Okay. So today and tomorrow, I'll make sure that whatever you have asked, I'll try to integrate all those features.
+
+54:34 - Sudeesh D S (Atom & Echo)
+  And from Sunday onwards, I'll start updating the UI, UX. Okay. I'll go through the dashboard tomorrow. I'll give you some more info on what else can be changed.  sure, sure. And then I'll let you know you can work. So you feel, just start dumping it on WhatsApp.  Okay. Done. Okay. Yeah. So I'll have a track on that. Sure, Rav. Awesome. both of us. Okay, cool. Yeah, thank you.  Thank you so much.
+
+55:05 - Aravind (BaseWorks)
+  Thank you, Anas, thank you. Bye.

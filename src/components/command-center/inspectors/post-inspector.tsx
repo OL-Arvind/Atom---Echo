@@ -74,10 +74,10 @@ export function PostInspector({
                 }`}
               >
                 {isInternalQa
-                  ? "Internal Voice & Hook QA"
+                  ? "Needs Internal Review"
                   : isOverdueDraft
-                  ? "Draft Behind Schedule"
-                  : "Awaiting Founder Sign-Off"}
+                  ? "Draft Overdue"
+                  : "With Founder for Review"}
               </span>
               {selectedAlert.target_pillar && (
                 <>
@@ -195,12 +195,12 @@ export function PostInspector({
                 {copiedToken === selectedAlert.id ? (
                   <>
                     <Check className="h-3.5 w-3.5" />
-                    <span>Dispatched &amp; Link Copied</span>
+                    <span>Sent &amp; Link Copied</span>
                   </>
                 ) : (
                   <>
                     <Check className="h-3.5 w-3.5" />
-                    <span>{isPending ? "Dispatching..." : "Approve QA · Send to Founder ↗"}</span>
+                    <span>{isPending ? "Sending..." : "Approve & Send to Founder ↗"}</span>
                   </>
                 )}
               </button>
@@ -211,7 +211,7 @@ export function PostInspector({
                 className="inline-flex items-center justify-center gap-1.5 btn btn-secondary text-xs px-3 py-1.5 cursor-pointer"
               >
                 <WhatsAppIcon size={13} className="text-[#25D366]" />
-                <span>Approve & Send via WhatsApp</span>
+                <span>Send on WhatsApp</span>
               </button>
 
               {postTargetId && (
@@ -248,7 +248,7 @@ export function PostInspector({
                 className="inline-flex items-center justify-center gap-1.5 btn btn-secondary text-xs px-3 py-1.5 cursor-pointer"
               >
                 <WhatsAppIcon size={13} className="text-[#25D366]" />
-                <span>Ping on WhatsApp</span>
+                <span>Nudge on WhatsApp</span>
               </button>
 
               <button

@@ -63,7 +63,7 @@ export function FeedbackInspector({
               )}
               <span className="text-[var(--color-ink-ghost)]">&middot;</span>
               <span className="text-amber-500 dark:text-amber-400 font-medium">
-                {isInternalQaNote ? "Internal QA revision requested" : "Revision requested by founder"}
+                {isInternalQaNote ? "Internal edits requested" : "Founder requested edits"}
               </span>
               {selectedAlert.target_pillar && (
                 <>
@@ -205,7 +205,7 @@ export function FeedbackInspector({
               className="inline-flex items-center justify-center gap-1.5 btn btn-accent text-xs font-semibold px-3 py-1.5 shadow-xs"
             >
               <ArrowUpRight className="h-3.5 w-3.5" />
-              <span>Refine in Story Editor</span>
+              <span>Open in Studio</span>
             </Link>
           )}
 
@@ -215,7 +215,7 @@ export function FeedbackInspector({
               className="inline-flex items-center justify-center gap-1.5 btn btn-secondary text-xs px-3 py-1.5 cursor-pointer"
             >
               <WhatsAppIcon size={13} className="text-[#25D366]" />
-              <span>Ack on WhatsApp</span>
+              <span>Reply on WhatsApp</span>
             </button>
           )}
 
@@ -225,7 +225,7 @@ export function FeedbackInspector({
             className="inline-flex items-center justify-center gap-1.5 btn btn-secondary text-xs px-3 py-1.5 cursor-pointer"
           >
             <Check className="h-3.5 w-3.5 text-[var(--color-accent)]" />
-            <span>{isPending ? "Updating..." : "Mark as Resolved"}</span>
+            <span>{isPending ? "Updating..." : "Mark Edits Done"}</span>
           </button>
         </div>
 
@@ -237,7 +237,7 @@ export function FeedbackInspector({
               className="hover:text-[var(--color-ink)] inline-flex items-center gap-1 transition-colors"
             >
               <ExternalLink className="h-3 w-3" />
-              <span className="hidden sm:inline">Preview Portal</span>
+              <span className="hidden sm:inline">Preview Client View</span>
             </Link>
           )}
         </div>

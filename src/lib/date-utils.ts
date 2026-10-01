@@ -255,3 +255,23 @@ export function calculateNextPublishSlotIST(existingDate?: string | null): strin
   const optimalSlotUtc = new Date(Date.UTC(targetYear, targetMonth - 1, targetDay, 4, 30, 0, 0));
   return optimalSlotUtc.toISOString();
 }
+
+/**
+ * Formats a timestamp into human-readable relative time (e.g. "Just now", "25m ago", "2h ago", "3d ago").
+ */
+export function formatRelativeTimeIST(dateInput: Date | string | number | null | undefined): string {
+  if (!dateInput) return "";
+  const d = typeof dateInput === "string" || typeof dateInput === "number" ? new Date(dateInput) : dateInput;
+  if (isNaN(d.getTime())) return "";
+
+  const diffMs = Date.now() - d.getTime();
+  if (diffMs < 0) return "Upcoming";
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return "Just now";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}

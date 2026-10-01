@@ -8,13 +8,16 @@ import { BillingInspector } from "./inspectors/billing-inspector";
 import { RequestInspector } from "./inspectors/request-inspector";
 import { InvoiceInspector } from "./inspectors/invoice-inspector";
 import { ToolRenewalInspector } from "./inspectors/tool-renewal-inspector";
+import { TaskInspector } from "./inspectors/task-inspector";
 import type {
   CommandCenterAlert,
   CommandCenterExpenseItem,
+  OperationalTask,
 } from "@/types/domain";
 
 interface AlertInspectorPaneProps {
   selectedAlert: CommandCenterAlert | null;
+  selectedTask?: OperationalTask | null;
   unbilledExpensesTotal: number;
   unbilledExpenses: CommandCenterExpenseItem[];
   copiedToken: string | null;
@@ -29,10 +32,13 @@ interface AlertInspectorPaneProps {
   onOpenInvoiceWhatsAppPing: (alert: CommandCenterAlert) => void;
   onResolveClientRequest: (alert: CommandCenterAlert) => void;
   onAdvanceToolRenewal: (alert: CommandCenterAlert) => void;
+  onToggleTask?: (taskId: string, currentStatus: boolean) => void;
+  onDeleteTask?: (taskId: string) => void;
 }
 
 export function AlertInspectorPane({
   selectedAlert,
+  selectedTask,
   unbilledExpensesTotal,
   unbilledExpenses,
   copiedToken,
@@ -47,7 +53,21 @@ export function AlertInspectorPane({
   onOpenInvoiceWhatsAppPing,
   onResolveClientRequest,
   onAdvanceToolRenewal,
+  onToggleTask,
+  onDeleteTask,
 }: AlertInspectorPaneProps) {
+  // If a task is selected, show the focused Task Inspector
+  if (selectedTask && onToggleTask && onDeleteTask) {
+    return (
+      <TaskInspector
+        task={selectedTask}
+        onToggleTask={onToggleTask}
+        onDeleteTask={onDeleteTask}
+        isPending={isPending}
+      />
+    );
+  }
+
   if (!selectedAlert) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-12 text-center space-y-3">
@@ -56,10 +76,10 @@ export function AlertInspectorPane({
         </div>
         <div>
           <h3 className="text-sm font-semibold text-[var(--color-ink)] font-display">
-            Editorial Desk is Clear
+            Desk is Clear
           </h3>
           <p className="text-xs text-[var(--color-ink-tertiary)] mt-1 max-w-sm mx-auto leading-relaxed">
-            No pending founder reviews, editorial revisions, or unbilled tooling right now.
+            All reviews, client edits, and billing items are up to date.
           </p>
         </div>
       </div>

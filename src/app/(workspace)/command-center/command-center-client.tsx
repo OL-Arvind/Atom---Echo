@@ -1,36 +1,26 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
-import { OnboardClientModal } from "@/components/clients/onboard-client-modal";
+import { CheckCircle2, Plus } from "lucide-react";
 import { HeaderActions } from "@/components/layout/header-actions";
 import { AlertInspectorPane } from "@/components/command-center/alert-inspector-pane";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { CommandCenterQueueList } from "@/components/command-center/command-center-queue-list";
-import { CommandCenterUpcomingHorizon } from "@/components/command-center/command-center-upcoming-horizon";
-import { getExpenseClientId } from "@/components/command-center/command-center-utils";
-import {
-  generateDraftInvoiceAction,
-  updateClientRequestStatusAction,
-} from "@/lib/actions/client";
-import {
-  approveContentAction,
-  resolveContentFeedbackAction,
-  sendForClientReviewAction,
-} from "@/lib/actions/content";
-import {
-  advanceToolSubscriptionRenewalAction,
-  updateInvoiceStatusAction,
-} from "@/lib/actions/billing";
-import { formatDisplayDateIST } from "@/lib/date-utils";
+import { DailyActionChecklist } from "@/components/command-center/daily-action-checklist";
+import { QuickTaskModal } from "@/components/command-center/quick-task-modal";
+import { UpcomingReleasesTopBar } from "@/components/command-center/upcoming-releases-top-bar";
+import { WaitingOnClientsList } from "@/components/command-center/waiting-on-clients-list";
+import { useCommandCenterActions } from "@/components/command-center/use-command-center-actions";
+import { useResizableSplit } from "@/components/command-center/use-resizable-split";
+import { useOperationalTasks } from "@/components/command-center/use-operational-tasks";
 import type {
   Client,
   CommandCenterAlert,
   CommandCenterExpenseItem,
   CommandCenterReviewPost,
   CommandCenterScheduledPost,
+  OperationalTask,
 } from "@/types/domain";
 
 interface CommandCenterClientProps {
@@ -47,6 +37,8 @@ interface CommandCenterClientProps {
     unresolvedFeedback?: unknown[];
     scheduledPosts?: CommandCenterScheduledPost[];
     unbilledExpenses: CommandCenterExpenseItem[];
+    operationalTasks?: OperationalTask[];
+    teamMembers?: Array<{ id: string; full_name: string; email: string }>;
   };
 }
 
@@ -55,298 +47,178 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
   const [selectedAlertId, setSelectedAlertId] = useState<string | null>(
     initialData.alerts && initialData.alerts.length > 0 ? initialData.alerts[0].id : null
   );
-  const [filter, setFilter] = useState<"all" | "review" | "billing" | "request">("all");
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "tasks" | "reviews" | "waiting" | "billing">("all");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [copiedToken, setCopiedToken] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
-  };
+  }, []);
 
-  const removeAlertFromQueue = (alertId: string) => {
-    setAlerts((prev) => {
-      const next = prev.filter((a) => a.id !== alertId);
-      if (selectedAlertId === alertId) {
-        setSelectedAlertId(next.length > 0 ? next[0].id : null);
+  // Draggable Splitter Hook
+  const { leftWidth, isResizing, containerRef, startResizing, resetWidth } = useResizableSplit({
+    defaultWidth: 480,
+    minWidth: 360,
+    maxWidth: 720,
+    storageKey: "atom-echo-command-center-left-width",
+  });
+
+  // Operational Tasks Hook
+  const {
+    tasks,
+    isTaskPending,
+    handleToggleTask,
+    handleAddTask,
+    handleDeleteTask,
+  } = useOperationalTasks({
+    initialTasks: initialData.operationalTasks || [],
+    showToast,
+    selectedTaskId,
+    onSelectTask: (id) => {
+      setSelectedTaskId(id);
+      if (id) setSelectedAlertId(null);
+    },
+  });
+
+  // Command Center Alert Actions Hook
+  const {
+    copiedToken,
+    isPending: isActionPending,
+    copyReviewLink,
+    openWhatsAppPing,
+    handleQuickApprove,
+    handleResolveFeedback,
+    openFeedbackWhatsAppPing,
+    handleQuickDraftInvoice,
+    handleApproveInvoice,
+    handleResolveClientRequest,
+    handleAdvanceToolRenewal,
+    openInvoiceWhatsAppPing,
+  } = useCommandCenterActions({
+    alerts,
+    setAlerts,
+    selectedAlertId,
+    setSelectedAlertId,
+    showToast,
+    unbilledExpenses: initialData.unbilledExpenses || [],
+    defaultClientId: initialData.clients[0]?.id,
+  });
+
+  // Global 'N' keyboard shortcut to open task modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
       }
-      return next;
-    });
-  };
 
-  const copyReviewLink = (alert: CommandCenterAlert) => {
-    const token = alert.review_token;
-    if (token && alert.post_status !== "internal_review") {
-      const shareUrl = `${window.location.origin}/review/${token}`;
-      navigator.clipboard.writeText(shareUrl);
-      setCopiedToken(alert.id);
-      showToast(`Copied 1-tap review link for ${alert.founder_name || "Founder"}`);
-      setTimeout(() => setCopiedToken(null), 2500);
-      return;
-    }
-
-    const targetId = alert.post_id || alert.entity_id || alert.client_id;
-    if (!targetId) {
-      showToast("Unable to generate review link for this item.");
-      return;
-    }
-
-    startTransition(async () => {
-      const res = await sendForClientReviewAction(targetId, window.location.origin);
-      if (res.success && res.reviewUrl) {
-        navigator.clipboard.writeText(res.reviewUrl);
-        setCopiedToken(alert.id);
-        setAlerts((prev) =>
-          prev.map((a) =>
-            a.id === alert.id
-              ? {
-                  ...a,
-                  post_status: "client_review",
-                  review_token: res.token,
-                  waiting_on: `${alert.founder_name || "Founder"} (Founder Sign-Off)`,
-                }
-              : a
-          )
-        );
-        showToast(
-          alert.post_status === "internal_review"
-            ? `QA approved! Dispatched to ${alert.founder_name || "Founder"} & copied review link`
-            : `Copied 1-tap review link for ${alert.founder_name || "Founder"}`
-        );
-        setTimeout(() => setCopiedToken(null), 2500);
-        router.refresh();
-      } else {
-        showToast(`Error: ${res.error || "Could not generate review link"}`);
+      if ((e.key === "n" || e.key === "N") && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        setIsTaskModalOpen(true);
       }
-    });
-  };
-
-  const openWhatsAppPing = (alert: CommandCenterAlert) => {
-    const phone = alert.founder_phone ? alert.founder_phone.replace(/[^0-9]/g, "") : "";
-    const openWaWithUrl = (shareUrl: string) => {
-      const message = encodeURIComponent(
-        `Hi ${alert.founder_name || "there"}, here is your latest thought leadership post ready for 1-tap review: ${shareUrl}`
-      );
-      if (phone) {
-        window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-      } else {
-        window.open(`https://wa.me/?text=${message}`, "_blank");
-      }
-      showToast(`Opened WhatsApp chat for ${alert.founder_name || "Founder"}`);
     };
 
-    if (alert.review_token && alert.post_status !== "internal_review") {
-      openWaWithUrl(`${window.location.origin}/review/${alert.review_token}`);
-      return;
-    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
-    const targetId = alert.post_id || alert.entity_id || alert.client_id;
-    if (!targetId) {
-      showToast("No active review link available for this client yet.");
-      return;
-    }
+  const activeTasks = useMemo(() => tasks.filter((t) => !t.is_completed), [tasks]);
 
-    startTransition(async () => {
-      const res = await sendForClientReviewAction(targetId, window.location.origin);
-      if (res.success && res.reviewUrl) {
-        setAlerts((prev) =>
-          prev.map((a) =>
-            a.id === alert.id
-              ? {
-                  ...a,
-                  post_status: "client_review",
-                  review_token: res.token,
-                  waiting_on: `${alert.founder_name || "Founder"} (Founder Sign-Off)`,
-                }
-              : a
-          )
-        );
-        openWaWithUrl(res.reviewUrl);
-        router.refresh();
+  // Operational Classification:
+  // - actionAlerts: team action required (internal QA, stalled drafts, invoices, feedback, software)
+  // - waitingAlerts: with founder for sign-off
+  // - reviewAlerts: internal voice QA, feedback edits, drafts
+  // - billingAlerts: unbilled software, invoice drafts, renewals
+  const { actionAlerts, waitingAlerts, reviewAlerts, billingAlerts } = useMemo(() => {
+    const action: CommandCenterAlert[] = [];
+    const waiting: CommandCenterAlert[] = [];
+    const reviews: CommandCenterAlert[] = [];
+    const billing: CommandCenterAlert[] = [];
+
+    alerts.forEach((alert) => {
+      if (alert.entity_type === "content_item" && alert.post_status === "client_review") {
+        waiting.push(alert);
       } else {
-        showToast(`Error: ${res.error || "Could not generate review link"}`);
+        action.push(alert);
+      }
+
+      if (
+        alert.entity_type === "content_feedback" ||
+        alert.post_status === "internal_review" ||
+        alert.post_status === "draft"
+      ) {
+        reviews.push(alert);
+      }
+
+      if (
+        alert.entity_type === "billing" ||
+        alert.entity_type === "invoice_draft" ||
+        alert.entity_type === "tool_renewal"
+      ) {
+        billing.push(alert);
       }
     });
-  };
 
-  const handleQuickApprove = (alert: CommandCenterAlert) => {
-    if (!alert.entity_id) return;
-    startTransition(async () => {
-      const res = await approveContentAction(alert.entity_id);
-      if (res.success) {
-        removeAlertFromQueue(alert.id);
-        showToast(`Approved "${alert.post_title || "Post"}" and scheduled publication`);
-        router.refresh();
-      } else {
-        showToast(`Error: ${res.error}`);
-      }
-    });
-  };
+    return {
+      actionAlerts: action,
+      waitingAlerts: waiting,
+      reviewAlerts: reviews,
+      billingAlerts: billing,
+    };
+  }, [alerts]);
 
-  const handleResolveFeedback = (alert: CommandCenterAlert) => {
-    const feedbackId = alert.feedback_id || alert.entity_id;
-    if (!feedbackId) return;
-    startTransition(async () => {
-      const res = await resolveContentFeedbackAction(feedbackId);
-      if (res.success) {
-        removeAlertFromQueue(alert.id);
-        showToast("Revision note marked as resolved.");
-        router.refresh();
-      } else {
-        showToast(`Error: ${res.error}`);
-      }
-    });
-  };
+  const filterOptions = useMemo(
+    () => [
+      { id: "all", label: "All", count: actionAlerts.length + activeTasks.length },
+      { id: "tasks", label: "To-Do", count: activeTasks.length },
+      { id: "reviews", label: "Reviews", count: reviewAlerts.length },
+      { id: "waiting", label: "With Clients", count: waitingAlerts.length },
+      { id: "billing", label: "Billing", count: billingAlerts.length },
+    ],
+    [
+      actionAlerts.length,
+      activeTasks.length,
+      reviewAlerts.length,
+      waitingAlerts.length,
+      billingAlerts.length,
+    ]
+  );
 
-  const openFeedbackWhatsAppPing = (alert: CommandCenterAlert) => {
-    const phone = alert.founder_phone ? alert.founder_phone.replace(/[^0-9]/g, "") : "";
-    const founderName = alert.founder_name || "there";
-    const postTitle = alert.post_title || "your post";
-    const message = encodeURIComponent(
-      `Hi ${founderName}, we received your revision request on "${postTitle}". We're updating the draft now and will share the new version shortly!`
-    );
-    if (phone) {
-      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-    } else {
-      window.open(`https://wa.me/?text=${message}`, "_blank");
-    }
-    showToast(`Opened WhatsApp chat for ${founderName}`);
-  };
+  const activeItemsCount = useMemo(() => {
+    if (filter === "tasks") return activeTasks.length;
+    if (filter === "reviews") return reviewAlerts.length;
+    if (filter === "waiting") return waitingAlerts.length;
+    if (filter === "billing") return billingAlerts.length;
+    return actionAlerts.length + activeTasks.length;
+  }, [
+    filter,
+    activeTasks.length,
+    reviewAlerts.length,
+    waitingAlerts.length,
+    billingAlerts.length,
+    actionAlerts.length,
+  ]);
 
-  const handleQuickDraftInvoice = (clientId?: string) => {
-    const expenseClientIds = Array.from(
-      new Set(
-        (initialData.unbilledExpenses || [])
-          .map((exp) => getExpenseClientId(exp))
-          .filter(Boolean) as string[]
-      )
-    );
-    const targetClientIds = clientId
-      ? [clientId]
-      : expenseClientIds.length > 0
-      ? expenseClientIds
-      : initialData.clients[0]?.id
-      ? [initialData.clients[0].id]
-      : [];
-
-    if (targetClientIds.length === 0) return;
-
-    startTransition(async () => {
-      let draftedCount = 0;
-      let lastError: string | undefined;
-      for (const cid of targetClientIds) {
-        const res = await generateDraftInvoiceAction(cid);
-        if (res.success) {
-          draftedCount++;
-        } else {
-          lastError = res.error;
-        }
-      }
-
-      if (draftedCount > 0) {
-        removeAlertFromQueue("alert-tool-leakage");
-        showToast(
-          draftedCount === 1
-            ? "Draft invoice generated with pass-through software expenses."
-            : `${draftedCount} draft invoices generated with pass-through software expenses.`
-        );
-        router.refresh();
-      } else {
-        showToast(`Error: ${lastError || "Could not generate draft invoice."}`);
-      }
-    });
-  };
-
-  const handleApproveInvoice = (alert: CommandCenterAlert) => {
-    if (!alert.entity_id) return;
-    startTransition(async () => {
-      const res = await updateInvoiceStatusAction(alert.entity_id, "approved");
-      if (res.success) {
-        removeAlertFromQueue(alert.id);
-        showToast(`Invoice ${alert.invoice_number || ""} approved for sending.`);
-        router.refresh();
-      } else {
-        showToast(`Error: ${res.error}`);
-      }
-    });
-  };
-
-  const handleResolveClientRequest = (alert: CommandCenterAlert) => {
-    if (!alert.entity_id) return;
-    startTransition(async () => {
-      const res = await updateClientRequestStatusAction(alert.entity_id, "resolved");
-      if (res.success) {
-        removeAlertFromQueue(alert.id);
-        showToast("Client request resolved and pipeline resumed.");
-        router.refresh();
-      } else {
-        showToast(`Error: ${res.error}`);
-      }
-    });
-  };
-
-  const handleAdvanceToolRenewal = (alert: CommandCenterAlert) => {
-    if (!alert.entity_id) return;
-    startTransition(async () => {
-      const res = await advanceToolSubscriptionRenewalAction(alert.entity_id);
-      if (res.success) {
-        removeAlertFromQueue(alert.id);
-        showToast(
-          `Confirmed ${res.toolName || "tool"} renewal · Next cycle: ${res.nextRenewalDate}`
-        );
-        router.refresh();
-      } else {
-        showToast(`Error: ${res.error}`);
-      }
-    });
-  };
-
-  const openInvoiceWhatsAppPing = (alert: CommandCenterAlert) => {
-    const phone = alert.founder_phone ? alert.founder_phone.replace(/[^0-9]/g, "") : "";
-    const clientName = alert.client_name || "your account";
-    const invoiceNum = alert.invoice_number || "Invoice";
-    const amount = alert.total_amount ? `₹${Number(alert.total_amount).toLocaleString("en-IN")}` : "";
-    const dueDate = alert.due_date ? formatDisplayDateIST(alert.due_date) : "";
-
-    const message = encodeURIComponent(
-      `Hi ${alert.founder_name || "there"},\n\n` +
-      `Here is the invoice summary for ${clientName}:\n` +
-      `📄 Invoice: ${invoiceNum}\n` +
-      `💰 Amount: ${amount}\n` +
-      (dueDate ? `📅 Due Date: ${dueDate}\n\n` : `\n`) +
-      `Please let us know once the transfer is initiated. Thank you!`
-    );
-    if (phone) {
-      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-    } else {
-      window.open(`https://wa.me/?text=${message}`, "_blank");
-    }
-    showToast(`Opened WhatsApp chat for ${alert.founder_name || "Founder"}`);
-  };
-
-  const filteredAlerts = useMemo(() => {
-    if (filter === "review") {
-      return alerts.filter(
-        (a) => a.entity_type === "content_item" || a.entity_type === "content_feedback"
-      );
-    }
-    if (filter === "billing") {
-      return alerts.filter(
-        (a) =>
-          a.entity_type === "billing" ||
-          a.entity_type === "invoice_draft" ||
-          a.entity_type === "tool_renewal"
-      );
-    }
-    if (filter === "request") return alerts.filter((a) => a.entity_type === "client_request");
-    return alerts;
-  }, [alerts, filter]);
+  const selectedTask = useMemo(() => {
+    if (!selectedTaskId) return null;
+    return tasks.find((t) => t.id === selectedTaskId) || null;
+  }, [tasks, selectedTaskId]);
 
   const selectedAlert = useMemo(() => {
-    return alerts.find((a) => a.id === selectedAlertId) || alerts[0] || null;
-  }, [alerts, selectedAlertId]);
+    if (selectedTaskId) return null;
+    if (selectedAlertId) {
+      return alerts.find((a) => a.id === selectedAlertId) || alerts[0] || null;
+    }
+    return alerts[0] || null;
+  }, [alerts, selectedAlertId, selectedTaskId]);
 
   return (
     <div className="w-full h-full flex-1 flex flex-col min-h-0">
@@ -358,85 +230,211 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
         </div>
       )}
 
-      {/* Action Portal Target into TopNav */}
+      {/* Task Creation Modal */}
+      <QuickTaskModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        onAddTask={handleAddTask}
+        teamMembers={initialData.teamMembers}
+        clients={initialData.clients as any}
+        isPending={isTaskPending}
+      />
+
+      {/* Action Portal Target into TopNav: New Task Button */}
       <HeaderActions>
-        <OnboardClientModal buttonText="Onboard Founder" />
+        <button
+          type="button"
+          onClick={() => setIsTaskModalOpen(true)}
+          className="btn btn-primary text-xs font-semibold px-3 py-1.5 shadow-xs flex items-center gap-1.5 cursor-pointer"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>New Task</span>
+          <kbd className="hidden sm:inline-block text-[10px] bg-black/20 dark:bg-white/20 px-1.5 py-0.2 rounded font-mono">
+            N
+          </kbd>
+        </button>
       </HeaderActions>
 
       {/* Full-bleed Native Workstation Console */}
-      <div className="flex-1 flex flex-col lg:flex-row h-full min-h-0 w-full bg-[var(--color-surface)] overflow-hidden">
-        {/* LEFT PANE: Attention Queue & Integrated Horizon (Calibrated 410px Scan Measure) */}
-        <div className="w-full lg:w-[410px] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-[var(--color-line)] bg-[var(--color-base-raised)] h-full min-h-0">
-          {/* Header with Filter Tabs */}
-          <div className="border-b border-[var(--color-line)] p-4 sm:p-5 bg-[var(--color-base-subtle)]/40 shrink-0">
-            <div className="flex items-center justify-between mb-3.5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-[var(--color-ink)] tracking-tight font-display">Editorial Queue</span>
+      <div
+        ref={containerRef}
+        className="flex-1 flex flex-col lg:flex-row h-full min-h-0 w-full bg-[var(--color-surface)] overflow-hidden"
+      >
+        {/* LEFT PANE: Resizable Attention Surface & Focused Workspace */}
+        <div
+          style={{
+            width: typeof window !== "undefined" && window.innerWidth >= 1024 ? `${leftWidth}px` : undefined,
+          }}
+          className="w-full lg:w-auto shrink-0 flex flex-col border-b lg:border-b-0 border-[var(--color-line)] bg-[var(--color-base-raised)] h-full min-h-0 relative"
+        >
+          {/* Header with Integrated Inline Segmented Filter */}
+          <div className="border-b border-[var(--color-line)] px-4 py-2.5 sm:px-5 sm:py-3 bg-[var(--color-base-subtle)]/40 shrink-0">
+            <div className="flex items-center justify-between gap-2.5 flex-wrap">
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs font-semibold text-[var(--color-ink)] tracking-tight font-display">
+                  Today&apos;s Desk
+                </span>
                 <span className="text-xs font-sans text-[var(--color-ink-tertiary)] tabular-nums">
-                  ({alerts.length})
+                  ({activeItemsCount} to do)
                 </span>
               </div>
-              <Link
-                href="/operations"
-                className="text-[11px] text-[var(--color-ink-tertiary)] hover:text-[var(--color-ink)] transition-colors"
-              >
-                Audit trail &rarr;
-              </Link>
+
+              <div className="min-w-0 max-w-full overflow-x-auto no-scrollbar py-0.5">
+                <SegmentedFilter
+                  options={filterOptions}
+                  value={filter}
+                  onChange={(val) => {
+                    setFilter(val as any);
+                    if (val === "tasks") {
+                      const firstTask = tasks.find((t) => !t.is_completed) || tasks[0];
+                      if (firstTask) {
+                        setSelectedTaskId(firstTask.id);
+                        setSelectedAlertId(null);
+                      }
+                    } else if (val === "waiting") {
+                      if (waitingAlerts.length > 0) {
+                        setSelectedAlertId(waitingAlerts[0].id);
+                        setSelectedTaskId(null);
+                      }
+                    } else if (val === "reviews") {
+                      if (reviewAlerts.length > 0) {
+                        setSelectedAlertId(reviewAlerts[0].id);
+                        setSelectedTaskId(null);
+                      }
+                    } else if (val === "billing") {
+                      if (billingAlerts.length > 0) {
+                        setSelectedAlertId(billingAlerts[0].id);
+                        setSelectedTaskId(null);
+                      }
+                    }
+                  }}
+                />
+              </div>
             </div>
-
-            {/* Cohesive Segmented Filter Track */}
-            <SegmentedFilter
-              options={[
-                { id: "all", label: "All", count: alerts.length },
-                {
-                  id: "review",
-                  label: "Reviews",
-                  count: alerts.filter(
-                    (a) => a.entity_type === "content_item" || a.entity_type === "content_feedback"
-                  ).length,
-                },
-                {
-                  id: "request",
-                  label: "Notes",
-                  count: alerts.filter((a) => a.entity_type === "client_request").length,
-                },
-                {
-                  id: "billing",
-                  label: "Retainers",
-                  count: alerts.filter(
-                    (a) =>
-                      a.entity_type === "billing" ||
-                      a.entity_type === "invoice_draft" ||
-                      a.entity_type === "tool_renewal"
-                  ).length,
-                },
-              ]}
-              value={filter}
-              onChange={(val) => setFilter(val as "all" | "review" | "billing" | "request")}
-            />
           </div>
 
-          {/* Queue List Items */}
-          <div className="flex-1 overflow-y-auto min-h-0">
-            <CommandCenterQueueList
-              filteredAlerts={filteredAlerts}
-              selectedAlertId={selectedAlert?.id ?? null}
-              onSelectAlert={setSelectedAlertId}
-            />
-          </div>
+          {/* Conditional Layout Based on Active Tab */}
+          {filter === "tasks" ? (
+            /* Dedicated ADHD Tasks Focus View */
+            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+              <DailyActionChecklist
+                tasks={tasks}
+                onToggleTask={handleToggleTask}
+                onDeleteTask={handleDeleteTask}
+                isPending={isTaskPending}
+                compact={false}
+                selectedTaskId={selectedTaskId}
+                onSelectTask={(id) => {
+                  setSelectedTaskId(id);
+                  setSelectedAlertId(null);
+                }}
+              />
+            </div>
+          ) : filter === "waiting" ? (
+            /* Dedicated With Clients Queue */
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <CommandCenterQueueList
+                filteredAlerts={waitingAlerts}
+                selectedAlertId={selectedAlert?.id ?? null}
+                onSelectAlert={(id) => {
+                  setSelectedAlertId(id);
+                  setSelectedTaskId(null);
+                }}
+              />
+            </div>
+          ) : filter === "reviews" ? (
+            /* Dedicated Reviews Queue */
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <CommandCenterQueueList
+                filteredAlerts={reviewAlerts}
+                selectedAlertId={selectedAlert?.id ?? null}
+                onSelectAlert={(id) => {
+                  setSelectedAlertId(id);
+                  setSelectedTaskId(null);
+                }}
+              />
+            </div>
+          ) : filter === "billing" ? (
+            /* Dedicated Billing Queue */
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <CommandCenterQueueList
+                filteredAlerts={billingAlerts}
+                selectedAlertId={selectedAlert?.id ?? null}
+                onSelectAlert={(id) => {
+                  setSelectedAlertId(id);
+                  setSelectedTaskId(null);
+                }}
+              />
+            </div>
+          ) : (
+            /* "All" Overview (De-boxed, balanced, spacious) */
+            <>
+              {/* Slim hairline release ticker (only if posts exist) */}
+              <UpcomingReleasesTopBar scheduledPosts={initialData.scheduledPosts} />
 
-          {/* Integrated Upcoming Releases Horizon */}
-          <CommandCenterUpcomingHorizon scheduledPosts={initialData.scheduledPosts} />
+              {/* Compact tasks strip (top 3) */}
+              <DailyActionChecklist
+                tasks={tasks}
+                onToggleTask={handleToggleTask}
+                onDeleteTask={handleDeleteTask}
+                isPending={isTaskPending}
+                compact={true}
+                onSwitchToTasksTab={() => setFilter("tasks")}
+                selectedTaskId={selectedTaskId}
+                onSelectTask={(id) => {
+                  setSelectedTaskId(id);
+                  setSelectedAlertId(null);
+                }}
+              />
+
+              {/* Primary Action Queue */}
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <CommandCenterQueueList
+                  filteredAlerts={actionAlerts}
+                  selectedAlertId={selectedAlert?.id ?? null}
+                  onSelectAlert={(id) => {
+                    setSelectedAlertId(id);
+                    setSelectedTaskId(null);
+                  }}
+                />
+              </div>
+
+              {/* Collapsed With Founders footer summary */}
+              <WaitingOnClientsList
+                waitingAlerts={waitingAlerts}
+                selectedAlertId={selectedAlert?.id ?? null}
+                onSelectAlert={(id) => {
+                  setSelectedAlertId(id);
+                  setSelectedTaskId(null);
+                }}
+                onOpenWhatsAppPing={openWhatsAppPing}
+                initiallyExpanded={false}
+              />
+            </>
+          )}
+        </div>
+
+        {/* INTERACTIVE RESIZER SPLITTER (Linear / Emil Kowalski Craft Standard) */}
+        <div
+          onMouseDown={startResizing}
+          onDoubleClick={resetWidth}
+          title="Drag to resize · Double-click to reset (480px)"
+          className={`hidden lg:flex w-2 -ml-1 relative z-20 cursor-col-resize items-center justify-center group hover:bg-[var(--color-accent)]/20 active:bg-[var(--color-accent)]/40 transition-colors select-none ${
+            isResizing ? "bg-[var(--color-accent)]/30" : ""
+          }`}
+        >
+          <div className="h-8 w-0.5 rounded-full bg-[var(--color-line-strong)] group-hover:bg-[var(--color-accent)] transition-colors" />
         </div>
 
         {/* RIGHT PANE: Dedicated Instant Action Inspector (Fluid Canvas) */}
         <div className="flex-1 min-w-0 flex flex-col bg-[var(--color-base)]">
           <AlertInspectorPane
             selectedAlert={selectedAlert}
+            selectedTask={selectedTask}
             unbilledExpensesTotal={initialData.unbilledExpensesTotal}
             unbilledExpenses={initialData.unbilledExpenses}
             copiedToken={copiedToken}
-            isPending={isPending}
+            isPending={isActionPending || isTaskPending}
             onCopyReviewLink={copyReviewLink}
             onOpenWhatsAppPing={openWhatsAppPing}
             onQuickApprove={handleQuickApprove}
@@ -447,6 +445,8 @@ export function CommandCenterClient({ initialData }: CommandCenterClientProps) {
             onOpenInvoiceWhatsAppPing={openInvoiceWhatsAppPing}
             onResolveClientRequest={handleResolveClientRequest}
             onAdvanceToolRenewal={handleAdvanceToolRenewal}
+            onToggleTask={handleToggleTask}
+            onDeleteTask={handleDeleteTask}
           />
         </div>
       </div>

@@ -30,5 +30,6 @@
 * **Slice 3 (Zero-Login Mobile PWA)**: VERIFIED (cryptographic tokens, 1-tap Approve, inline revision comments).
 * **Slice 4 (Encrypted Credential Vault & Emergency Hold)**: VERIFIED (AES-256-GCM encryption, 30s reveal, request board, emergency post freeze).
 * **Slice 5 (Tool Catalog, Retainer Invoicing Engine & Cron)**: VERIFIED (tool subscriptions catalog, unbilled pass-through expenses, automated anchor-cycle draft generation, invoice review & print route `/billing/invoices/[id]`, `/api/cron/billing`).
+* **Enhancement Slice 1 (Command Center Decluttering & ADHD Action Architecture)**: VERIFIED (Eliminated vertical overcrowding via 5 dedicated focus tabs: All, To-Do, Reviews, With Clients, Billing; widened desktop sidebar to 460-480px; removed duplicate bottom horizon; transformed upcoming releases into slim 32px hairline ticker; collapsed With Founders footer by default; added dedicated TaskInspector on right fluid canvas; overhauled copywriting from AI/Jira jargon to crisp, human language; verified 0 TypeScript errors via `tsc --noEmit`).
 
 

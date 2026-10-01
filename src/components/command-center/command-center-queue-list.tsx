@@ -20,9 +20,9 @@ export function CommandCenterQueueList({
     return (
       <div className="p-8 text-center space-y-1.5">
         <CheckCircle2 className="h-4 w-4 text-[var(--color-accent)] mx-auto" />
-        <p className="text-xs font-medium text-[var(--color-ink)]">Queue is clear</p>
+        <p className="text-xs font-medium text-[var(--color-ink)]">Desk is clear</p>
         <p className="text-[11.5px] text-[var(--color-ink-muted)]">
-          Every founder account in this category is progressing smoothly.
+          All client reviews, edits, and tasks are up to date.
         </p>
       </div>
     );
@@ -45,29 +45,29 @@ export function CommandCenterQueueList({
 
         if (isFeedback) {
           const { tags, note } = parseFeedbackComment(alert.comment);
-          primaryLabel = alert.post_title || "Thought Leadership Post";
+          primaryLabel = alert.post_title || "LinkedIn Post";
           const tagSnippet = tags.length > 0 ? tags.join(" · ") : "";
-          const detail = note || tagSnippet || "Revision requested";
+          const detail = note || tagSnippet || "Edits requested";
           secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · ${detail}`;
           badgeLabel = alert.waiting_on?.includes("Internal QA")
-            ? "QA revision"
-            : "Revision requested";
+            ? "Team edits"
+            : "Client edits";
         } else if (isReview) {
           primaryLabel = alert.post_title || alert.title;
           if (alert.post_status === "internal_review") {
-            secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · Ready for Internal Voice QA`;
-            badgeLabel = "Voice QA";
+            secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · Ready for internal review`;
+            badgeLabel = "Needs review";
           } else if (alert.post_status === "draft") {
-            secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · Draft behind schedule`;
-            badgeLabel = "Overdue draft";
+            secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · Draft overdue`;
+            badgeLabel = "Draft overdue";
           } else {
-            secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · Awaiting sign-off`;
-            badgeLabel = "Pending review";
+            secondaryLabel = `${alert.founder_name || "Founder"} (${alert.client_name || "Account"}) · With founder for sign-off`;
+            badgeLabel = "With founder";
           }
         } else if (isInvoiceDraft) {
           primaryLabel = `${alert.client_name || "Client"}${alert.founder_name ? ` (${alert.founder_name})` : ""}`;
           secondaryLabel = `Draft Invoice ${alert.invoice_number || ""} · ₹${Number(alert.total_amount || 0).toLocaleString("en-IN")}`;
-          badgeLabel = "Needs sign-off";
+          badgeLabel = "Ready to send";
         } else if (isToolRenewal) {
           primaryLabel = alert.tool_name || alert.title;
           secondaryLabel = `Renews ${alert.next_renewal_date} · ${alert.currency || "INR"} ${Number(alert.cost_amount || 0).toLocaleString("en-IN")}`;
@@ -75,11 +75,11 @@ export function CommandCenterQueueList({
         } else if (isBillingExpense) {
           primaryLabel = "Unbilled Software";
           secondaryLabel = alert.title;
-          badgeLabel = "Software cost";
+          badgeLabel = "Unbilled tool";
         } else if (alert.entity_type === "client_request") {
           primaryLabel = alert.founder_name || alert.client_name || "Client Request";
           secondaryLabel = alert.title;
-          badgeLabel = isCritical ? "Urgent hold" : "Client request";
+          badgeLabel = isCritical ? "Urgent request" : "Client request";
         }
 
         const dotColor = isCritical
@@ -89,6 +89,9 @@ export function CommandCenterQueueList({
           : isReview
           ? "bg-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20"
           : "bg-[var(--color-ink-muted)]";
+
+        const waitingOnDisplay =
+          alert.waiting_on === "Internal QA" ? "Our team" : alert.waiting_on;
 
         return (
           <div
@@ -118,10 +121,12 @@ export function CommandCenterQueueList({
                 {secondaryLabel}
               </p>
 
-              <div className="text-[11px] text-[var(--color-ink-muted)] pt-0.5 flex items-center gap-1.5">
-                <span>Waiting on</span>
-                <span className="text-[var(--color-ink-tertiary)]">{alert.waiting_on}</span>
-              </div>
+              {waitingOnDisplay && (
+                <div className="text-[11px] text-[var(--color-ink-muted)] pt-0.5 flex items-center gap-1.5">
+                  <span>Waiting on</span>
+                  <span className="text-[var(--color-ink-tertiary)]">{waitingOnDisplay}</span>
+                </div>
+              )}
             </div>
 
             <ChevronRight

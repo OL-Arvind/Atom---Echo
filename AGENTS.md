@@ -119,6 +119,7 @@ If you discover a conflict between requirements:
 * **Windows Shell & Dynamic Route Pathing (`-LiteralPath`)**: Next.js App Router dynamic routes use brackets (e.g. `[id]`, `[token]`), which PowerShell evaluates as regex/wildcard character classes. Always specify `-LiteralPath` for PowerShell file commands targeting these directories:
   `(Get-Content -LiteralPath "src/app/(workspace)/content/[id]/content-editor-client.tsx").Length`
 * **Concurrent Feature Coexistence Protocol**: When another agent or branch is actively building features (e.g. Post Version History, Billing automations), never delete, rename, or stub out active server actions, domain types, or migration files. Preserve full backwards-compatibility and wrap or compose rather than replace shared entities.
+* **Supabase Live DB Verification Hygiene**: Before drafting or running any new schema migration or introducing new tables, always verify the live Supabase schema and current table states using Node inspection scripts (e.g. `node scripts/check-db.mjs` with `@supabase/supabase-js`) rather than guessing table columns or constraints. Maintain clean rollback paths and verify table counts after each migration.
 
 
 <!-- BEGIN:nextjs-agent-rules -->
