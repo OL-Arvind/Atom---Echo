@@ -86,6 +86,19 @@ All web application code built for Atom & Echo must follow BaseWorks premium des
 * **Strict Ban on Tinted / Colored-Fill Buttons**:
   - **NEVER** style buttons with translucent colored backgrounds and matching colored borders (e.g. `bg-[var(--color-danger-bg)] border-[var(--color-danger-line)] text-[var(--color-danger-text)]`, `bg-[var(--color-warn-bg)]`, `bg-[var(--color-ok-bg)]`, or `.btn-danger`).
   - Only **4 button surfaces** are permitted across the entire OS: **Solid Paper White** (`.btn-primary`), **Quiet Obsidian Neutral** (`.btn-secondary`), **Transparent Ghost** (`.btn-ghost`), and **Solid Acid Lime** (`.btn-accent`). Even for sign-out, status transitions, or confirmations, use crisp `.btn-primary` or `.btn-secondary` without decorative icon clutter.
+* **Calm Active Selection States (No Tinted Flood-Fills)**:
+  - **NEVER** use tinted or colored flood-fill backgrounds (such as pastel or pistachio green `bg-[var(--color-surface-active)]`) to indicate row selection in primary queue lists or task views.
+  - Use a quiet neutral background (`bg-[var(--color-base-subtle)]` or `bg-[var(--color-surface)]`) accompanied by a crisp obsidian edge hairline (`border-l-2 border-l-[var(--color-ink)]`).
+* **De-Boxed Plain One-Line Capture Fields & Focus Ring Neutralization**:
+  - In quick-capture modals, task dialogs, and fast entry flows, **NEVER** enclose inputs in rounded boxed containers with bulky padding (`rounded-md border p-3`).
+  - Use a clean, borderless single-line baseline (`border-0 border-b border-[var(--color-line-strong)] pb-2.5 pt-1 text-base bg-transparent`).
+  - Explicitly suppress browser and CSS `:focus-visible` colored outlines (`style={{ outline: "none", boxShadow: "none" }}`) so theme accent greens never bleed into input outlines. On focus, transition the baseline cleanly to crisp obsidian (`focus:border-[var(--color-ink)]`).
+* **Single Canonical Trigger Invariant (No Duplicate Action Buttons)**:
+  - **NEVER** duplicate the same operational creation trigger in both the global navigation shell and the local list canvas.
+  - If a primary creation action is elevated to the header (e.g. `+ New Task [N]`), remove all redundant inline trigger buttons from the queue list to eliminate visual clutter and operator hesitation.
+* **Horizontal Consolidation of Queue Headers & View Tabs**:
+  - In command queues and master lists, **NEVER** stack the section title and segmented filter tabs into separate vertical rows.
+  - Integrate the title and segmented filter side-by-side on a single unified row (`flex items-center justify-between flex-wrap gap-2.5`) with resilient overflow handling (`overflow-x-auto no-scrollbar`). This maximizes vertical screen real estate so actionable items sit high in the viewport.
 * **No Multi-Tiered Eyebrow / Label Stacking**:
   - Never stack redundant micro-headers (e.g., `"Client Feedback Note"` directly above `"1-Tap Portal Comment"` directly above `"Aravind commented:"`). State the context once, cleanly.
 * **No Decorative Icon Clutter**:
